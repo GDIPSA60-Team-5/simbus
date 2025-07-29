@@ -1,0 +1,6 @@
+/.metadata/
+**/.metadata/
+**/.classpath
+**/.project
+**/.settings/
+/spring-backend/src/main/resources/application.properties
