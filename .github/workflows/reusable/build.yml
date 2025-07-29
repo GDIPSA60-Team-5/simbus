@@ -1,0 +1,34 @@
+name: Build
+on:
+  workflow_call:
+    inputs:
+      folder:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ inputs.folder }}
+        run: |
+          cd ${{ inputs.folder }}
+          case "${{ inputs.folder }}" in
+            next-frontend)
+              npm ci
+              npm run build
+              ;;
+            spring-backend)
+              ./mvnw package
+              ;;
+            android-kotlin)
+              ./gradlew assembleRelease
+              ;;
+            llm-backend)
+              pip install -r requirements.txt
+              # Add build commands here if needed
+              ;;
+          esac

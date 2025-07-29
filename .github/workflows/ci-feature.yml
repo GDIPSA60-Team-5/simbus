@@ -1,0 +1,32 @@
+name: CI - Feature Branch
+
+on:
+  push:
+    branches:
+      - "feature/**"
+
+jobs:
+  detect_changes:
+    uses: ./.github/workflows/reusable/change-detect.yml
+
+  lint:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.changed_folders != '' }}
+    strategy:
+      matrix:
+        folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+    if: contains(needs.detect_changes.outputs.changed_folders, matrix.folder)
+    uses: ./.github/workflows/reusable/lint.yml
+    with:
+      folder: ${{ matrix.folder }}
+
+  sast:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.changed_folders != '' }}
+    strategy:
+      matrix:
+        folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+    if: contains(needs.detect_changes.outputs.changed_folders, matrix.folder)
+    uses: ./.github/workflows/reusable/sast.yml
+    with:
+      folder: ${{ matrix.folder }}
