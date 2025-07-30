@@ -21,7 +21,10 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     with:
       image_tag: ${{ github.sha }}
-      terraform_dir: infra/terraform/envs/dev
+      terraform_dir: infra/terraform/env/dev
       ansible_dir: ansible
       inventory_file: infra/ansible/inventory/dev
       ssh_key_secret: DEPLOY_SSH_KEY
+    secrets:
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}

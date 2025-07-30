@@ -23,7 +23,11 @@ on:
         description: "Docker image tag to use in deployment"
         required: true
         type: string
-
+    secrets:
+      DEPLOY_SSH_KEY:
+        required: true
+      DOCKER_USERNAME:
+        required: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
