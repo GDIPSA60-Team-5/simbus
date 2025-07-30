@@ -10,7 +10,7 @@ on:
 
 jobs:
   detect_changes:
-    uses: ./.github/workflows/change-detect.yml
+    uses: ./.github/workflows/change-detect.yml@main
     if: startsWith(github.ref, 'refs/heads/feature')
 
   lint_and_sast:
@@ -32,7 +32,7 @@ jobs:
           !startsWith(github.ref, 'refs/heads/feature') ||
           (needs.detect_changes.outputs.changed_folders != '' &&
            contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
-        uses: ./.github/workflows/lint.yml
+        uses: ./.github/workflows/lint.yml@main
         with:
           folder: ${{ matrix.folder }}
 
@@ -41,6 +41,29 @@ jobs:
           !startsWith(github.ref, 'refs/heads/feature') ||
           (needs.detect_changes.outputs.changed_folders != '' &&
            contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
-        uses: ./.github/workflows/sast.yml
+        uses: ./.github/workflows/sast.yml@main
         with:
           folder: ${{ matrix.folder }}
+
+  dockerize:
+    needs: lint_and_sast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dockerize All Compose Services
+        uses: ./.github/workflows/dockerize.yml@main
+        with:
+          image_tag: ${{ github.sha }}
+          registry: ""
+
+  deploy:
+    needs: dockerize
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy All Compose Services
+        uses: ./.github/workflows/deploy.yml@main
+        with:
+          image_tag: ${{ github.sha }}
+          terraform_dir: infra/terraform/envs/dev
+          ansible_dir: ansible
+          inventory_file: infra/ansible/inventory/dev
+          ssh_key_secret: DEPLOY_SSH_KEY

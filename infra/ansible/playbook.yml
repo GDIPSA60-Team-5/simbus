@@ -1,0 +1,29 @@
+- hosts: all
+  become: yes
+  vars:
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
+    docker_username: "{{ lookup('env', 'DOCKER_USERNAME') }}"
+
+  tasks:
+    - name: Ensure Docker is installed
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Copy templated docker-compose.yml
+      template:
+        src: docker-compose.yml.j2
+        dest: /home/ubuntu/docker-compose.yml
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Pull latest images
+      shell: docker-compose pull
+      args:
+        chdir: /home/ubuntu
+
+    - name: Start services
+      shell: docker-compose up -d
+      args:
+        chdir: /home/ubuntu

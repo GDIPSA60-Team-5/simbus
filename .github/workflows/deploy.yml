@@ -1,0 +1,78 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      terraform_dir:
+        description: "Path to Terraform configs"
+        required: true
+        type: string
+      ansible_dir:
+        description: "Path to Ansible playbooks"
+        required: true
+        type: string
+      inventory_file:
+        description: "Ansible inventory file path"
+        required: true
+        type: string
+      ssh_key_secret:
+        description: "Secret name for SSH private key"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.6.0"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.terraform_dir }}
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ${{ inputs.terraform_dir }}
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: ${{ inputs.terraform_dir }}
+        run: terraform apply -auto-approve
+
+      - name: Get Terraform Output (Instance IP)
+        id: tf-output
+        working-directory: ${{ inputs.terraform_dir }}
+        run: |
+          INSTANCE_IP=$(terraform output -raw instance_public_ip)
+          echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_OUTPUT
+          echo "Extracted IP: $INSTANCE_IP"
+
+      - name: Write SSH key to file
+        run: |
+          echo "${{ secrets[inputs.ssh_key_secret] }}" > private_key.pem
+          chmod 400 private_key.pem
+
+      - name: Add instance to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
+
+      - name: Run Ansible playbook to deploy
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ steps.tf-output.outputs.INSTANCE_IP }}
+          username: ubuntu
+          key: ${{ secrets[inputs.ssh_key_secret] }}
+          script: |
+            export IMAGE_TAG=${{ inputs.image_tag }}
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            ansible-playbook -i ${{ inputs.inventory_file }} playbook.yaml
