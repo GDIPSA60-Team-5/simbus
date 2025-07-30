@@ -10,17 +10,18 @@ on:
 
 jobs:
   detect_changes:
-    uses: ./.github/workflows/change-detect.yml
     if: startsWith(github.ref, 'refs/heads/feature')
+    uses: ./.github/workflows/change-detect.yml
 
   lint_and_sast:
-    needs: detect_changes
+    needs: [detect_changes]
     runs-on: ubuntu-latest
     strategy:
       matrix:
         folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+
     steps:
-      - name: Skip unchanged folder
+      - name: Skip unchanged folder on feature branches
         if: |
           startsWith(github.ref, 'refs/heads/feature') &&
           needs.detect_changes.outputs.changed_folders != '' &&
@@ -29,18 +30,30 @@ jobs:
 
       - name: Run lint for ${{ matrix.folder }}
         if: |
-          !startsWith(github.ref, 'refs/heads/feature') ||
+          github.ref != 'refs/heads/main' && 
+          github.ref != 'refs/heads/dev' && 
+          github.ref != 'refs/heads/staging' && 
           (needs.detect_changes.outputs.changed_folders != '' &&
            contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
+          ||
+          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/dev' || 
+          github.ref == 'refs/heads/staging'
         uses: ./.github/workflows/lint.yml
         with:
           folder: ${{ matrix.folder }}
 
       - name: Run SAST for ${{ matrix.folder }}
         if: |
-          !startsWith(github.ref, 'refs/heads/feature') ||
+          github.ref != 'refs/heads/main' && 
+          github.ref != 'refs/heads/dev' && 
+          github.ref != 'refs/heads/staging' && 
           (needs.detect_changes.outputs.changed_folders != '' &&
            contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
+          ||
+          github.ref == 'refs/heads/main' || 
+          github.ref == 'refs/heads/dev' || 
+          github.ref == 'refs/heads/staging'
         uses: ./.github/workflows/sast.yml
         with:
           folder: ${{ matrix.folder }}
