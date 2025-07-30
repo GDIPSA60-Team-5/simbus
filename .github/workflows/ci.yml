@@ -10,7 +10,7 @@ on:
 
 jobs:
   detect_changes:
-    uses: ./.github/workflows/change-detect.yml@main
+    uses: ./.github/workflows/change-detect.yml
     if: startsWith(github.ref, 'refs/heads/feature')
 
   lint_and_sast:
@@ -32,7 +32,7 @@ jobs:
           !startsWith(github.ref, 'refs/heads/feature') ||
           (needs.detect_changes.outputs.changed_folders != '' &&
            contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
-        uses: ./.github/workflows/lint.yml@main
+        uses: ./.github/workflows/lint.yml
         with:
           folder: ${{ matrix.folder }}
 
@@ -41,7 +41,7 @@ jobs:
           !startsWith(github.ref, 'refs/heads/feature') ||
           (needs.detect_changes.outputs.changed_folders != '' &&
            contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
-        uses: ./.github/workflows/sast.yml@main
+        uses: ./.github/workflows/sast.yml
         with:
           folder: ${{ matrix.folder }}
 
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dockerize All Compose Services
-        uses: ./.github/workflows/dockerize.yml@main
+        uses: ./.github/workflows/dockerize.yml
         with:
           image_tag: ${{ github.sha }}
           registry: ""
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy All Compose Services
-        uses: ./.github/workflows/deploy.yml@main
+        uses: ./.github/workflows/deploy.yml
         with:
           image_tag: ${{ github.sha }}
           terraform_dir: infra/terraform/envs/dev
