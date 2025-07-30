@@ -19,18 +19,28 @@ jobs:
     strategy:
       matrix:
         folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
-    if: |
-      (startsWith(github.ref, 'refs/heads/feature') &&
-       needs.detect_changes.outputs.changed_folders != '' &&
-       contains(needs.detect_changes.outputs.changed_folders, matrix.folder)) ||
-      (!startsWith(github.ref, 'refs/heads/feature'))
     steps:
+      - name: Skip unchanged folder
+        if: |
+          startsWith(github.ref, 'refs/heads/feature') &&
+          needs.detect_changes.outputs.changed_folders != '' &&
+          !contains(needs.detect_changes.outputs.changed_folders, matrix.folder)
+        run: echo "Skipping ${{ matrix.folder }} (not changed)"
+
       - name: Run lint for ${{ matrix.folder }}
+        if: |
+          !startsWith(github.ref, 'refs/heads/feature') ||
+          (needs.detect_changes.outputs.changed_folders != '' &&
+           contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
         uses: ./.github/workflows/lint.yml
         with:
           folder: ${{ matrix.folder }}
 
       - name: Run SAST for ${{ matrix.folder }}
+        if: |
+          !startsWith(github.ref, 'refs/heads/feature') ||
+          (needs.detect_changes.outputs.changed_folders != '' &&
+           contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
         uses: ./.github/workflows/sast.yml
         with:
           folder: ${{ matrix.folder }}
