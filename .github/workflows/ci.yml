@@ -1,0 +1,36 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - "feature/**"
+      - "dev"
+      - "staging"
+      - "main"
+
+jobs:
+  detect_changes:
+    uses: .github/workflows/change-detect.yml@main
+    if: startsWith(github.ref, 'refs/heads/feature')
+
+  lint_and_sast:
+    needs: detect_changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+    if: |
+      (startsWith(github.ref, 'refs/heads/feature') &&
+       needs.detect_changes.outputs.changed_folders != '' &&
+       contains(needs.detect_changes.outputs.changed_folders, matrix.folder)) ||
+      (!startsWith(github.ref, 'refs/heads/feature'))
+    steps:
+      - name: Run lint for ${{ matrix.folder }}
+        uses: ./.github/workflows/lint.yml
+        with:
+          folder: ${{ matrix.folder }}
+
+      - name: Run SAST for ${{ matrix.folder }}
+        uses: ./.github/workflows/sast.yml
+        with:
+          folder: ${{ matrix.folder }}

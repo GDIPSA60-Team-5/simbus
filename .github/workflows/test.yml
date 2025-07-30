@@ -1,0 +1,31 @@
+name: Test
+on:
+  workflow_call:
+    inputs:
+      folder:
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Tests for ${{ inputs.folder }}
+        run: |
+          cd ${{ inputs.folder }}
+          case "${{ inputs.folder }}" in
+            next-frontend)
+              npm ci && npm test
+              ;;
+            spring-backend)
+              ./mvnw test
+              ;;
+            android-kotlin)
+              ./gradlew test
+              ;;
+            llm-backend)
+              pip install -r requirements.txt && pytest
+              ;;
+          esac
