@@ -41,5 +41,8 @@ jobs:
       - name: Build and tag images with docker compose
         run: docker compose build
 
+      - name: Show built image tags
+        run: docker images
+
       - name: Push images to dockerhub
         run: docker compose push
