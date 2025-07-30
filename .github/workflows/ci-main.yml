@@ -13,6 +13,9 @@ jobs:
     with:
       image_tag: ${{ github.sha }}
       registry: ""
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
   deploy:
     needs: dockerize
