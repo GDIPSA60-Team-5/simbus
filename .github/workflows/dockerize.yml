@@ -1,4 +1,5 @@
 name: Dockerize
+
 on:
   workflow_call:
     inputs:
@@ -7,7 +8,7 @@ on:
         required: true
         type: string
       registry:
-        description: "Docker registry prefix (optional)"
+        description: "Docker registry (optional)"
         required: false
         type: string
         default: ""
@@ -30,10 +31,17 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and tag images with docker-compose
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          DOCKER_REGISTRY: ${{ inputs.registry }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          export IMAGE_TAG=${{ github.sha }}
-          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          echo "Using tag: $IMAGE_TAG"
+          echo "Using registry: $DOCKER_REGISTRY"
           docker-compose build
 
-      - name: Push images
-        run: docker-compose push
+      - name: Push images with docker-compose
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          docker-compose push
