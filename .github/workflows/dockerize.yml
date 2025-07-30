@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       registry:
-        description: "Docker registry (optional)"
+        description: "Docker registry prefix (optional)"
         required: false
         type: string
         default: ""
@@ -30,18 +30,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and tag images with docker-compose
-        env:
-          IMAGE_TAG: ${{ inputs.image_tag }}
-          DOCKER_REGISTRY: ${{ inputs.registry }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      - name: Build and tag images with docker compose
         run: |
-          echo "Using tag: $IMAGE_TAG"
-          echo "Using registry: $DOCKER_REGISTRY"
-          docker-compose build
+          export IMAGE_TAG=${{ inputs.image_tag }}
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          docker compose build
 
-      - name: Push images with docker-compose
-        env:
-          IMAGE_TAG: ${{ inputs.image_tag }}
-        run: |
-          docker-compose push
+      - name: Push images
+        run: docker compose push
