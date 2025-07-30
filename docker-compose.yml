@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: ./next-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./spring-backend
+    ports:
+      - "8080:8080"
