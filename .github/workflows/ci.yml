@@ -8,75 +8,69 @@ on:
       - "staging"
       - "main"
 
-jobs:
-  detect_changes:
-    if: startsWith(github.ref, 'refs/heads/feature')
-    uses: ./.github/workflows/change-detect.yml
+detect_changes:
+  if: startsWith(github.ref, 'refs/heads/feature')
+  uses: ./.github/workflows/change-detect.yml
 
-  lint_and_sast:
-    needs: [detect_changes]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+lint_and_sast:
+  needs: [detect_changes]
+  runs-on: ubuntu-latest
+  if: always() && (needs.detect_changes.result == 'success' || !startsWith(github.ref, 'refs/heads/feature'))
+  strategy:
+    matrix:
+      folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    steps:
-      - name: Skip unchanged folder on feature branches
-        if: |
-          startsWith(github.ref, 'refs/heads/feature') &&
-          needs.detect_changes.outputs.changed_folders != '' &&
-          !contains(needs.detect_changes.outputs.changed_folders, matrix.folder)
-        run: echo "Skipping ${{ matrix.folder }} (not changed)"
+    - name: Skip unchanged folder on feature branches
+      if: |
+        startsWith(github.ref, 'refs/heads/feature') &&
+        needs.detect_changes.outputs.changed_folders != '' &&
+        !contains(needs.detect_changes.outputs.changed_folders, matrix.folder)
+      run: |
+        echo "Skipping ${{ matrix.folder }} (not changed)"
+        echo "SKIP_FOLDER=true" >> $GITHUB_ENV
 
-      - name: Run lint for ${{ matrix.folder }}
-        if: |
-          github.ref != 'refs/heads/main' && 
-          github.ref != 'refs/heads/dev' && 
-          github.ref != 'refs/heads/staging' && 
-          (needs.detect_changes.outputs.changed_folders != '' &&
-           contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
-          ||
-          github.ref == 'refs/heads/main' || 
-          github.ref == 'refs/heads/dev' || 
-          github.ref == 'refs/heads/staging'
-        uses: ./.github/workflows/lint.yml
-        with:
-          folder: ${{ matrix.folder }}
+    - name: Run lint for ${{ matrix.folder }}
+      if: env.SKIP_FOLDER != 'true'
+      uses: ./.github/workflows/lint.yml
+      with:
+        folder: ${{ matrix.folder }}
 
-      - name: Run SAST for ${{ matrix.folder }}
-        if: |
-          github.ref != 'refs/heads/main' && 
-          github.ref != 'refs/heads/dev' && 
-          github.ref != 'refs/heads/staging' && 
-          (needs.detect_changes.outputs.changed_folders != '' &&
-           contains(needs.detect_changes.outputs.changed_folders, matrix.folder))
-          ||
-          github.ref == 'refs/heads/main' || 
-          github.ref == 'refs/heads/dev' || 
-          github.ref == 'refs/heads/staging'
-        uses: ./.github/workflows/sast.yml
-        with:
-          folder: ${{ matrix.folder }}
+    - name: Run SAST for ${{ matrix.folder }}
+      if: env.SKIP_FOLDER != 'true'
+      uses: ./.github/workflows/sast.yml
+      with:
+        folder: ${{ matrix.folder }}
 
-  dockerize:
-    needs: lint_and_sast
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dockerize All Compose Services
-        uses: ./.github/workflows/dockerize.yml
-        with:
-          image_tag: ${{ github.sha }}
-          registry: ""
+dockerize:
+  needs: lint_and_sast
+  runs-on: ubuntu-latest
+  if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/staging'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-  deploy:
-    needs: dockerize
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy All Compose Services
-        uses: ./.github/workflows/deploy.yml
-        with:
-          image_tag: ${{ github.sha }}
-          terraform_dir: infra/terraform/envs/dev
-          ansible_dir: ansible
-          inventory_file: infra/ansible/inventory/dev
-          ssh_key_secret: DEPLOY_SSH_KEY
+    - name: Dockerize All Compose Services
+      uses: ./.github/workflows/dockerize.yml
+      with:
+        image_tag: ${{ github.sha }}
+        registry: ""
+
+deploy:
+  needs: dockerize
+  runs-on: ubuntu-latest
+  if: needs.dockerize.result == 'success'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy All Compose Services
+      uses: ./.github/workflows/deploy.yml
+      with:
+        image_tag: ${{ github.sha }}
+        terraform_dir: infra/terraform/envs/dev
+        ansible_dir: ansible
+        inventory_file: infra/ansible/inventory/dev
+        ssh_key_secret: DEPLOY_SSH_KEY
