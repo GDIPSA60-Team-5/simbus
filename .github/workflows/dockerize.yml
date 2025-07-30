@@ -50,5 +50,11 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
+      - name: Show resolved image names
+        run: |
+          export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+          export IMAGE_TAG="${{ inputs.image_tag }}"
+          docker compose config | grep image
+
       - name: Push images to dockerhub
         run: docker compose push
