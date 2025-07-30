@@ -44,5 +44,11 @@ jobs:
       - name: Show built image tags
         run: docker images
 
+      - name: Echo docker username prefix
+        run: |
+          echo "::notice title=DOCKER_USERNAME::$DOCKER_USERNAME"
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
       - name: Push images to dockerhub
         run: docker compose push
