@@ -10,7 +10,7 @@ on:
 
 jobs:
   detect_changes:
-    uses: .github/workflows/change-detect.yml@main
+    uses: ./.github/workflows/change-detect.yml
     if: startsWith(github.ref, 'refs/heads/feature')
 
   lint_and_sast:
