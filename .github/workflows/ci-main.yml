@@ -1,0 +1,33 @@
+name: Main Branch CI
+
+on:
+  push:
+    branches:
+      - "main"
+      - "dev"
+      - "staging"
+
+jobs:
+  dockerize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dockerize All Compose Services
+        uses: ./.github/workflows/dockerize.yml
+        with:
+          image_tag: ${{ github.sha }}
+          registry: ""
+
+  deploy:
+    needs: dockerize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy All Compose Services
+        uses: ./.github/workflows/deploy.yml
+        with:
+          image_tag: ${{ github.sha }}
+          terraform_dir: infra/terraform/envs/dev
+          ansible_dir: ansible
+          inventory_file: infra/ansible/inventory/dev
+          ssh_key_secret: DEPLOY_SSH_KEY
