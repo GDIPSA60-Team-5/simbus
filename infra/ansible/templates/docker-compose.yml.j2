@@ -1,39 +1,10 @@
-name: Dockerize
-on:
-  workflow_call:
-    inputs:
-      image_tag:
-        description: "Docker image tag"
-        required: true
-        type: string
-      registry:
-        description: "Docker registry prefix (optional)"
-        required: false
-        type: string
-        default: ""
+services:
+  frontend:
+    image: {{ docker_username }}/frontend:{{ image_tag }}
+    ports:
+      - "3000:3000"
 
-jobs:
-  dockerize:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to Docker registry
-        if: ${{ inputs.registry != '' }}
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ inputs.registry }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and tag images with docker-compose
-        run: |
-          export IMAGE_TAG=${{ github.sha }}
-          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          docker-compose build
-
-      - name: Push images
-        run: docker-compose push
+  backend:
+    image: {{ docker_username }}/backend:{{ image_tag }}
+    ports:
+      - "8080:8080"

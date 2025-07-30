@@ -31,10 +31,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and tag images with docker compose
-        run: |
-          export IMAGE_TAG=${{ inputs.image_tag }}
-          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          docker compose build
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: docker compose build
 
       - name: Push images
         run: docker compose push
