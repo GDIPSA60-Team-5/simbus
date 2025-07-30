@@ -19,6 +19,10 @@ on:
         description: "Secret name for SSH private key"
         required: true
         type: string
+      image_tag:
+        description: "Docker image tag to use in deployment"
+        required: true
+        type: string
 
 jobs:
   deploy:
