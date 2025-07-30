@@ -9,7 +9,6 @@ on:
 
 jobs:
   dockerize:
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/dockerize.yml
     with:
       image_tag: ${{ github.sha }}
@@ -17,7 +16,6 @@ jobs:
 
   deploy:
     needs: dockerize
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/deploy.yml
     with:
       image_tag: ${{ github.sha }}
