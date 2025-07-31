@@ -89,7 +89,7 @@ jobs:
       - name: Add instance to known_hosts
         run: |
           mkdir -p ~/.ssh
-          timeout 10 ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Run Ansible playbook to deploy
         uses: appleboy/ssh-action@v0.1.6
