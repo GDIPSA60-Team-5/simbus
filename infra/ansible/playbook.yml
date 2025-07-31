@@ -11,6 +11,12 @@
         state: present
         update_cache: yes
 
+    - name: Install docker-compose
+      become: yes
+      shell: |
+        curl -L "https://github.com/docker/compose/releases/download/v1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+
     - name: Copy templated docker-compose.yml
       template:
         src: docker-compose.yml.j2
@@ -19,11 +25,11 @@
         mode: "0644"
 
     - name: Pull latest images
-      shell: docker compose pull
+      shell: docker-compose pull
       args:
         chdir: /home/ubuntu
 
     - name: Start services
-      shell: docker compose up -d
+      shell: docker-compose up -d
       args:
         chdir: /home/ubuntu
