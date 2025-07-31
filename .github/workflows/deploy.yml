@@ -28,9 +28,12 @@ on:
         required: true
       DEPLOY_SSH_KEY:
         required: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    container:
+      image: cytopia/ansible:latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -40,6 +43,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.terraform.d/plugin-cache
+            ${{ inputs.terraform_dir }}/.terraform
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -48,15 +61,28 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ inputs.terraform_dir }}
-        run: terraform init
+        run: terraform init -plugin-dir=$HOME/.terraform.d/plugin-cache
 
       - name: Terraform Plan
+        id: tf-plan
         working-directory: ${{ inputs.terraform_dir }}
-        run: terraform plan
+        run: |
+          terraform plan -out=tfplan > plan_output.txt
+          # Check for "No changes" and set an output
+          if grep -q "No changes. Infrastructure is up-to-date." plan_output.txt; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Terraform Apply
+      - name: Show Terraform Plan
         working-directory: ${{ inputs.terraform_dir }}
-        run: terraform apply -auto-approve
+        run: cat plan_output.txt
+
+      - name: Terraform Apply (only if changes)
+        if: steps.tf-plan.outputs.changes == 'true'
+        working-directory: ${{ inputs.terraform_dir }}
+        run: terraform apply -auto-approve tfplan
 
       - name: Get Terraform Output (Instance IP)
         id: tf-output
@@ -74,7 +100,7 @@ jobs:
       - name: Add instance to known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
+          timeout 10 ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Run Ansible playbook to deploy
         uses: appleboy/ssh-action@v0.1.6
@@ -85,4 +111,5 @@ jobs:
           script: |
             export IMAGE_TAG=${{ inputs.image_tag }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            cd ${{ inputs.ansible_dir }}
             ansible-playbook -i ${{ inputs.inventory_file }} playbook.yaml
