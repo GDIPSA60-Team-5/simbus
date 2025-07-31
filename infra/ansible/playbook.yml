@@ -11,11 +11,12 @@
         state: present
         update_cache: yes
 
-    - name: Install docker-compose
+    - name: Install Docker Compose CLI plugin
       become: yes
       shell: |
-        curl -L "https://github.com/docker/compose/releases/download/v1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
+        mkdir -p /usr/local/lib/docker/cli-plugins
+        curl -SL https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+        chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
     - name: Copy templated docker-compose.yml
       template:
@@ -25,11 +26,11 @@
         mode: "0644"
 
     - name: Pull latest images
-      shell: docker-compose pull
+      shell: docker compose pull
       args:
         chdir: /home/ubuntu
 
     - name: Start services
-      shell: docker-compose up -d
+      shell: docker compose up -d
       args:
         chdir: /home/ubuntu
