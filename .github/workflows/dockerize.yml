@@ -40,14 +40,11 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
-      - name: Show built image tags
-        run: docker images
-
-      - name: Debug image names
-        run: |
-          export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
-          export IMAGE_TAG="${{ inputs.image_tag }}"
-          docker compose config | grep image
-
       - name: Push images to dockerhub
-        run: docker compose push
+        run: |
+          echo "::group::Docker Push"
+          docker compose push
+          echo "::endgroup::"
+
+      - name: Show pushed image summary
+        run: docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"

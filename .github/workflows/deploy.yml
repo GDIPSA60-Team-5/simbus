@@ -43,6 +43,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create plugin cache directory
+        run: mkdir -p $HOME/.terraform.d/plugin-cache
+
       - name: Cache Terraform plugins
         uses: actions/cache@v4
         with:
