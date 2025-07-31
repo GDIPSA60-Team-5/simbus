@@ -15,10 +15,6 @@ on:
         description: "Ansible inventory file path"
         required: true
         type: string
-      ssh_key_secret:
-        description: "Secret name for SSH private key"
-        required: true
-        type: string
       image_tag:
         description: "Docker image tag to use in deployment"
         required: true
@@ -29,6 +25,8 @@ on:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
+        required: true
+      DEPLOY_SSH_KEY:
         required: true
 jobs:
   deploy:
@@ -70,7 +68,7 @@ jobs:
 
       - name: Write SSH key to file
         run: |
-          echo "${{ secrets[inputs.ssh_key_secret] }}" > private_key.pem
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > private_key.pem
           chmod 400 private_key.pem
 
       - name: Add instance to known_hosts
@@ -83,7 +81,7 @@ jobs:
         with:
           host: ${{ steps.tf-output.outputs.INSTANCE_IP }}
           username: ubuntu
-          key: ${{ secrets[inputs.ssh_key_secret] }}
+          key_path: private_key.pem
           script: |
             export IMAGE_TAG=${{ inputs.image_tag }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
