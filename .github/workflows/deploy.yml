@@ -99,6 +99,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
+      - name: Overwrite Ansible inventory with Terraform IP
+        run: |
+          echo "[all]" > ${{ inputs.inventory_file }}
+          echo "${{ steps.tf-output.outputs.INSTANCE_IP }}" >> ${{ inputs.inventory_file }}
+
       - name: Run Ansible playbook to deploy
         run: |
           export IMAGE_TAG=${{ inputs.image_tag }}
