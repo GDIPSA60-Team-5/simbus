@@ -11,11 +11,16 @@ terraform {
   }
 }
 
+data "aws_vpc" "default" {
+  default = true
+}
+
+
 
 resource "aws_security_group" "simbus_security_terraform" {
   name        = "app-security-group"
   description = "Allow SSH, frontend and backend traffic"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     description = "Allow SSH"
