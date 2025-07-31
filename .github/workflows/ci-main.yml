@@ -26,4 +26,6 @@ jobs:
       inventory_file: infra/ansible/inventory/dev
       ssh_key_secret: DEPLOY_SSH_KEY
     secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
