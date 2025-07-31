@@ -100,15 +100,16 @@ jobs:
           ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Overwrite Ansible inventory with Terraform IP
+        working-directory: ${{ inputs.ansible_dir }}
         run: |
           echo "[all]" > ${{ inputs.inventory_file }}
           echo "${{ steps.tf-output.outputs.INSTANCE_IP }}" >> ${{ inputs.inventory_file }}
 
       - name: Run Ansible playbook to deploy
+        working-directory: ${{ inputs.ansible_dir }}
         run: |
           export IMAGE_TAG=${{ inputs.image_tag }}
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          cd ${{ inputs.ansible_dir }}
           ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
