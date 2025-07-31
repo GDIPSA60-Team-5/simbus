@@ -32,6 +32,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOY_PUBLIC_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       TF_IN_AUTOMATION: true
 
     steps:
