@@ -104,6 +104,6 @@ jobs:
           export IMAGE_TAG=${{ inputs.image_tag }}
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           cd ${{ inputs.ansible_dir }}
-          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yaml
+          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
