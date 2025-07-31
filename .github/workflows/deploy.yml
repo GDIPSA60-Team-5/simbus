@@ -110,6 +110,6 @@ jobs:
         run: |
           export IMAGE_TAG=${{ inputs.image_tag }}
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml
+          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml --private-key ../../private_key.pem -u ubuntu
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
