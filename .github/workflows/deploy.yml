@@ -43,19 +43,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create plugin cache directory
-        run: mkdir -p $HOME/.terraform.d/plugin-cache
-
-      - name: Cache Terraform plugins
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.terraform.d/plugin-cache
-            ${{ inputs.terraform_dir }}/.terraform
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
-          restore-keys: |
-            ${{ runner.os }}-terraform-
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -64,14 +51,13 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ inputs.terraform_dir }}
-        run: terraform init -plugin-dir=$HOME/.terraform.d/plugin-cache
+        run: terraform init
 
       - name: Terraform Plan
         id: tf-plan
         working-directory: ${{ inputs.terraform_dir }}
         run: |
           terraform plan -out=tfplan > plan_output.txt
-          # Check for "No changes" and set an output
           if grep -q "No changes. Infrastructure is up-to-date." plan_output.txt; then
             echo "changes=false" >> $GITHUB_OUTPUT
           else
