@@ -32,8 +32,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    container:
-      image: cytopia/ansible:latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -81,6 +79,16 @@ jobs:
           echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_OUTPUT
           echo "Extracted IP: $INSTANCE_IP"
 
+      - name: Set up Python (for Ansible)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
       - name: Write SSH key to file
         run: |
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > private_key.pem
@@ -92,13 +100,10 @@ jobs:
           ssh-keyscan ${{ steps.tf-output.outputs.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Run Ansible playbook to deploy
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ steps.tf-output.outputs.INSTANCE_IP }}
-          username: ubuntu
-          key_path: private_key.pem
-          script: |
-            export IMAGE_TAG=${{ inputs.image_tag }}
-            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-            cd ${{ inputs.ansible_dir }}
-            ansible-playbook -i ${{ inputs.inventory_file }} playbook.yaml
+        run: |
+          export IMAGE_TAG=${{ inputs.image_tag }}
+          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          cd ${{ inputs.ansible_dir }}
+          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yaml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
