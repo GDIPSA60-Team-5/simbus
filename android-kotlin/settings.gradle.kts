@@ -20,5 +20,12 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "BusAppKotlin"
-include(":app")
- 
+include(":app", ":core", ":feature:login")
+
+file("feature").listFiles()
+    ?.filter { it.isDirectory }
+    ?.forEach { dir ->
+        val moduleName = ":feature:${dir.name}"
+        include(moduleName)
+        project(moduleName).projectDir = dir
+    }

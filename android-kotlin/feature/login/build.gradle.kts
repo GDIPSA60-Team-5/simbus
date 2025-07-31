@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.busappkotlin"
+    namespace = "com.example.busappkotlin.feature.login"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.busappkotlin"
+        applicationId = "com.example.busappkotlin.feature.login"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
@@ -35,18 +35,8 @@ android {
     }
 }
 
-val featureModules = file("../feature").listFiles()
-    ?.filter { it.isDirectory }
-    ?.map { ":feature:${it.name}" }
-    ?: emptyList()
-
-featureModules.forEach { moduleName ->
-    dependencies {
-        implementation(project(moduleName))
-    }
-}
-
 dependencies {
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
