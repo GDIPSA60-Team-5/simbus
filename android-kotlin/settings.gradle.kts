@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "BusAppKotlin"
 include(":feature_chatbot")
+include(":feature_login")

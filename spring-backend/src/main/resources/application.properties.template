@@ -1,0 +1,22 @@
+spring.application.name=spring-backend
+
+# MongoDB Configuration
+spring.data.mongodb.uri=mongodb://localhost:27017/simbus-mongo
+
+# PostgreSQL Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/simbus-postgres
+spring.datasource.username=postgres
+spring.datasource.password=root
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
+
+# OneMap Api Token (ask paul)
+onemap.base-url=https://www.onemap.gov.sg
+onemap.token=your_one_map_api_token
+
+# JWT Secret Token (any 256 based will do)
+jwt.secret=your_jwt_token
+jwt.expiration-in-ms=3600000
