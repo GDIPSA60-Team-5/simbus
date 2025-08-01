@@ -13,8 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
-import com.example.feature_chatbot.api.ChatbotApi
-import com.example.feature_chatbot.api.chatbotApi
+import com.example.feature_chatbot.api.ApiClient
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.domain.ChatController
@@ -106,7 +105,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupChatController() {
         chatController = ChatController(
             adapter = chatAdapter,
-            api = chatbotApi,
+            api = ApiClient.chatbotApi,
             onNewBotMessage = { botText ->
                 runOnUiThread {
                     animateBotMessageTyping(botText)
