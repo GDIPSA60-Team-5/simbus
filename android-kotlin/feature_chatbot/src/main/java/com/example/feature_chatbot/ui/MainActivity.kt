@@ -13,7 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
-import com.example.feature_chatbot.api.DummyDirectionsApi
+import com.example.feature_chatbot.api.ChatbotApi
+import com.example.feature_chatbot.api.chatbotApi
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.domain.ChatController
@@ -103,10 +104,9 @@ class MainActivity : AppCompatActivity() {
         })
     }
     private fun setupChatController() {
-        val directionsApi = DummyDirectionsApi()
         chatController = ChatController(
             adapter = chatAdapter,
-            api = directionsApi,
+            api = chatbotApi,
             onNewBotMessage = { botText ->
                 runOnUiThread {
                     animateBotMessageTyping(botText)
