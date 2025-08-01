@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: ./next-frontend
+    image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
+    ports:
+      - "3000:3000"
+
+  backend:
+    build:
+      context: ./spring-backend
+    image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
+    ports:
+      - "8080:8080"

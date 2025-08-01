@@ -1,0 +1,31 @@
+name: Main Branch CI
+
+on:
+  push:
+    branches:
+      - "main"
+      - "dev"
+      - "staging"
+
+jobs:
+  dockerize:
+    uses: ./.github/workflows/dockerize.yml
+    with:
+      image_tag: ${{ github.sha }}
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  deploy:
+    needs: dockerize
+    uses: ./.github/workflows/deploy.yml
+    with:
+      image_tag: ${{ github.sha }}
+      terraform_dir: infra/terraform/env/dev
+      ansible_dir: infra/ansible
+      inventory_file: inventory/dev
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}

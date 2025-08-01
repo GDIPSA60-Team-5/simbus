@@ -1,0 +1,10 @@
+services:
+  frontend:
+    image: {{ docker_username }}/frontend:{{ image_tag }}
+    ports:
+      - "3000:3000"
+
+  backend:
+    image: {{ docker_username }}/backend:{{ image_tag }}
+    ports:
+      - "8080:8080"

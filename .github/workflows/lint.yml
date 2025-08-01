@@ -1,0 +1,31 @@
+name: Lint
+on:
+  workflow_call:
+    inputs:
+      folder:
+        required: true
+        type: string
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint ${{ inputs.folder }}
+        run: |
+          cd ${{ inputs.folder }}
+          case "${{ inputs.folder }}" in
+            next-frontend)
+              npm ci && npm run lint
+              ;;
+            spring-backend)
+              ./mvnw verify -DskipTests
+              ;;
+            android-kotlin)
+              ./gradlew ktlintCheck
+              ;;
+            llm-backend)
+              pip install -r requirements.txt && ruff check .
+              ;;
+          esac
