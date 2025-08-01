@@ -1,5 +1,6 @@
 package com.example.springbackend.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,5 +10,5 @@ import com.example.springbackend.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID>{
-
+    Optional<User> findByUserName(String userName);
 }
