@@ -6,7 +6,7 @@ spring.data.mongodb.uri=mongodb://localhost:27017/simbus-mongo
 # PostgreSQL Configuration
 spring.datasource.url=jdbc:postgresql://localhost:5432/simbus-postgres
 spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.password=
 
 # JPA Configuration
 spring.jpa.hibernate.ddl-auto=update
