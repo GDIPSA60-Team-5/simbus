@@ -1,6 +1,6 @@
 from llm.model import get_model
 from llm.prompts import build_extraction_prompt, build_followup_prompt
-from llm.state import INTENTS, REQUIRED_SLOTS, MAX_HISTORY_LENGTH, reset_conversation_for_user, user_conversations
+from llm.state import INTENTS, REQUIRED_SLOTS, SLOT_TYPES, MAX_HISTORY_LENGTH, reset_conversation_for_user, user_conversations
 from llm.utils import get_recent_history, typewriter_print, merge_slots, extract_json_from_response, show_help, get_user_context
 
 model = get_model()
@@ -12,14 +12,14 @@ with model.chat_session():
             break
 
         user_id = 1  # Can be replaced with session or actual user ID
-        ctx = get_user_context(user_id, user_conversations, REQUIRED_SLOTS)
+        ctx = get_user_context(user_id, user_conversations)
         ctx["history"].append({"role": "user", "content": user_input})
 
         print("🤖 Thinking...", end="", flush=True)
 
         # Extract intent and slots
         recent_history = get_recent_history(ctx["history"], MAX_HISTORY_LENGTH)
-        known_slots = list(ctx["state"]["slots"].keys())
+        known_slots = list(SLOT_TYPES.keys())
         extraction_prompt = build_extraction_prompt(INTENTS, known_slots, recent_history)
         response = model.generate(extraction_prompt, max_tokens=100)
         extracted = extract_json_from_response(response)

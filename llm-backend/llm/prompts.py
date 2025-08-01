@@ -1,4 +1,5 @@
 import json
+from llm.utils import current_datetime, serialize_for_json
 
 def build_extraction_prompt(intents, slots, history):
     system_prompt = f"""
@@ -10,7 +11,14 @@ Possible intents:
 Extract these slot fields if available:
 {json.dumps(slots, indent=2)}
 
-Return a JSON with 'intent' and 'slots'.
+Special rules:
+- The current date and time is {current_datetime()}
+- If the user specifies a time (e.g., "at 9 AM" or "in the evening") but not a date, use today's date with the given time.
+- Format all date and time values as ISO 8601 strings (e.g., "2025-08-01T09:00:00").
+- If the user gives a date and time separately, combine them into a full datetime string.
+
+Return only a valid JSON object with fields intent and slots.
+Do not wrap the output in quotes or code blocks. Do not omit closing braces.
 """
     dialogue = "\n".join(
         f"{'User' if turn['role'] == 'user' else 'Assistant'}: {turn['content']}"
@@ -25,9 +33,17 @@ def build_followup_prompt(intent, required_slots, current_slots, history):
 
     if missing_slots:
         status_message = (
-            "Some required information is still missing. Please ask a follow-up question to collect:\n"
-            f"{json.dumps(missing_slots, indent=2)}"
-            "Your task is to prompt the user **only** for these missing values."
+            f"""
+            Some required information is still missing. Please ask a follow-up question to collect:
+            {json.dumps(missing_slots, indent=2)}
+            Your task is to prompt the user **only** for these missing values.
+            
+            Special rules:
+            - The current date and time is {current_datetime()}
+            - If the user specifies a time (e.g., "at 9 AM" or "in the evening") but not a date, use today's date with the given time.
+            - Format all date and time values as ISO 8601 strings (e.g., "2025-08-01T09:00:00").
+            - If the user gives a date and time separately, combine them into a full datetime string.
+            """
         )
     else:
         status_message = (
@@ -42,7 +58,7 @@ Here are the expected slot values for this intent:
 {json.dumps(required_slots, indent=2)}
 
 Here are the values provided so far:
-{json.dumps(current_slots, indent=2)}
+{json.dumps(serialize_for_json(current_slots), indent=2)}
 
 {status_message}
 
