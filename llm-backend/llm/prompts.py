@@ -30,7 +30,7 @@ def build_followup_prompt(intent, required_slots, current_slots, history):
         )
     else:
         status_message = (
-            "All required slot values have been provided. Please send a confirmation or success message to the user."
+            "All required slot values have been provided. Please send a success message to the user."
         )
 
     system_prompt = f"""

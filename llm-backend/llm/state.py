@@ -8,16 +8,14 @@ REQUIRED_SLOTS = {
     "reset": []
 }
 
-conversation_state = {
-    "intent": None,
-    "slots": {slot: None for slot in set(s for lst in REQUIRED_SLOTS.values() for s in lst)}
-}
-
 user_conversations = {}
 
 MAX_HISTORY_LENGTH = 7
 
 def reset_conversation_for_user(user_id):
     if user_id in user_conversations:
-        user_conversations[user_id]["state"] = {"intent": None, "slots": {}}
+        user_conversations[user_id]["state"] = {
+            "intent": None,
+            "slots": {slot: None for slot in set(s for lst in REQUIRED_SLOTS.values() for s in lst)}
+        }
         user_conversations[user_id]["history"] = []
