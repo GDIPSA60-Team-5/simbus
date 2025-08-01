@@ -61,4 +61,4 @@ with model.chat_session():
         reply = model.generate(followup_prompt, max_tokens=300)
         ctx["history"].append({"role": "assistant", "content": reply})
         typewriter_print(reply)
-        print(user_conversations) # to visualize the current state of extracted information
+        print(f"\n{user_conversations}\n") # to visualize the current state of extracted information
