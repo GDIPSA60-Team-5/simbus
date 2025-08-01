@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.busappkotlin"
+    namespace = "com.example.feature_chatbot"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.busappkotlin"
+        applicationId = "com.example.feature_chatbot"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
