@@ -50,12 +50,12 @@ def get_recent_history(conversation_history, MAX_HISTORY_LENGTH):
     return conversation_history[-MAX_HISTORY_LENGTH:]
 
 
-def get_user_context(user_id, user_conversations):
+def get_user_context(user_id, user_conversations, REQUIRED_SLOTS):
     if user_id not in user_conversations:
         user_conversations[user_id] = {
             "state": {
                 "intent": None,
-                "slots": {}
+                "slots": {slot: None for slot in set(s for lst in REQUIRED_SLOTS.values() for s in lst)}
             },
             "history": []
         }
