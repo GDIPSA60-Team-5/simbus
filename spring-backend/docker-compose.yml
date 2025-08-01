@@ -1,0 +1,29 @@
+services:
+  simbus-postgres:
+    image: postgres:latest
+    container_name: simbus-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: simbus-postgres
+      POSTGRES_USER: postgres
+
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  simbus-mongo:
+    image: mongo:latest
+    container_name: simbus-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: simbus-mongo
+    volumes:
+      - mongodata:/data/db
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  mongodata:
