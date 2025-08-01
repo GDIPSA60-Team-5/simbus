@@ -12,7 +12,7 @@ with model.chat_session():
             break
 
         user_id = 1  # Can be replaced with session or actual user ID
-        ctx = get_user_context(user_id, user_conversations)
+        ctx = get_user_context(user_id, user_conversations, REQUIRED_SLOTS)
         ctx["history"].append({"role": "user", "content": user_input})
 
         print("🤖 Thinking...", end="", flush=True)
@@ -61,3 +61,4 @@ with model.chat_session():
         reply = model.generate(followup_prompt, max_tokens=300)
         ctx["history"].append({"role": "assistant", "content": reply})
         typewriter_print(reply)
+        print(user_conversations) # to visualize the current state of extracted information
