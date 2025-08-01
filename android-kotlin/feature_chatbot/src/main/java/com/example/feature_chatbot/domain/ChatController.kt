@@ -1,7 +1,7 @@
 package com.example.feature_chatbot.domain
 
 import com.example.feature_chatbot.data.ChatAdapter
-import com.example.feature_chatbot.data.ChatMessage
+import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.api.DirectionsApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,17 +15,25 @@ class ChatController(
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun userSent(text: String) {
-        adapter.addMessage(ChatMessage(text, isUser = true))
+        adapter.addMessage(ChatItem.Message(text, isUser = true))
 
-        // Handle bot response
         scope.launch {
             try {
                 val botResponse = api.getResponseFor(text)
-                adapter.addMessage(ChatMessage(botResponse, isUser = false))
-                onNewBotMessage(botResponse)
+                addBotMessage(botResponse)
             } catch (e: Exception) {
-                adapter.addMessage(ChatMessage("Sorry, I couldn't process that.", isUser = false))
+                addBotMessage("Sorry, I couldn't process that.")
+                e.printStackTrace()
             }
         }
+    }
+
+
+    private fun addBotMessage(text: String) {
+        onNewBotMessage(text)
+    }
+
+    private fun removeTyping(msg: ChatItem.Message) {
+         adapter.removeMessage(msg)
     }
 }

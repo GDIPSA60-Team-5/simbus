@@ -9,13 +9,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.api.DummyDirectionsApi
 import com.example.feature_chatbot.data.ChatAdapter
+import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.domain.ChatController
 import com.example.feature_chatbot.domain.SpeechManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,6 +35,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatAdapter: ChatAdapter
     private lateinit var chatInput: EditText
     private lateinit var sendIcon: ImageButton
+    private lateinit var scrollToBottomButton: ImageButton
+
+    private var isAutoScrolling = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +50,10 @@ class MainActivity : AppCompatActivity() {
         setupChatController()
         setupSpeechManager()
         setupListeners()
+
+        chatRecyclerView.post {
+            centerGreeting()
+        }
     }
 
     private fun applyWindowInsets() {
@@ -54,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initUiReferences() {
+        scrollToBottomButton = findViewById(R.id.scroll_to_bottom_button)
         chatRecyclerView = findViewById(R.id.chat_recycler_view)
         chatInput = findViewById(R.id.chat_input)
         sendIcon = findViewById(R.id.send_icon)
@@ -61,25 +73,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // Pass callback to adapter for auto-scrolling
         chatAdapter = ChatAdapter(mutableListOf()) {
             scrollToBottom()
         }
 
         chatRecyclerView.adapter = chatAdapter
-        chatRecyclerView.layoutManager = LinearLayoutManager(this).apply {
-            stackFromEnd = true
-        }
-    }
+        val layoutManager = LinearLayoutManager(this)
+        chatRecyclerView.layoutManager = layoutManager
 
+        chatRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (isAutoScrolling) return
+
+                // delay evaluation one frame to avoid transient layout state flashes
+                chatRecyclerView.post {
+                    val itemCount = chatAdapter.itemCount
+                    val lastVisible = layoutManager.findLastVisibleItemPosition()
+                    val atBottom = lastVisible >= itemCount - 1
+                    val shouldShow = !atBottom && itemCount > 1
+
+                    if (shouldShow && scrollToBottomButton.visibility != ImageButton.VISIBLE) {
+                        scrollToBottomButton.visibility = ImageButton.VISIBLE
+                    } else if (!shouldShow && scrollToBottomButton.visibility != ImageButton.GONE) {
+                        scrollToBottomButton.visibility = ImageButton.GONE
+                    }
+                }
+            }
+        })
+    }
     private fun setupChatController() {
         val directionsApi = DummyDirectionsApi()
         chatController = ChatController(
             adapter = chatAdapter,
             api = directionsApi,
             onNewBotMessage = { botText ->
-                // This callback is already handled by the adapter's onMessageAdded callback
-                // No need to duplicate scrolling logic here
+                runOnUiThread {
+                    animateBotMessageTyping(botText)
+                }
             }
         )
     }
@@ -94,8 +125,8 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     chatInput.setText(final)
                     if (::chatController.isInitialized) {
+                        scrollToBottomButton.visibility = ImageButton.GONE
                         chatController.userSent(final)
-                        // Scrolling is now handled by the adapter callback
                     }
                 }
             },
@@ -104,6 +135,35 @@ class MainActivity : AppCompatActivity() {
             }
         )
     }
+
+    private fun centerGreeting() {
+        val layoutManager = chatRecyclerView.layoutManager as LinearLayoutManager
+        val greetingPosition = 0 // Greeting always at position 0
+
+        val viewHolder = chatRecyclerView.findViewHolderForAdapterPosition(greetingPosition)
+        if (viewHolder == null) {
+            // Try again once layout happens
+            chatRecyclerView.post { centerGreeting() }
+            return
+        }
+
+        val recyclerViewHeight = chatRecyclerView.height
+        val greetingHeight = viewHolder.itemView.height
+
+        val topPadding = (recyclerViewHeight / 2) - (greetingHeight / 2)
+
+        // Set padding top dynamically to center the greeting
+        chatRecyclerView.setPadding(
+            chatRecyclerView.paddingLeft,
+            topPadding,
+            chatRecyclerView.paddingRight,
+            chatRecyclerView.paddingBottom
+        )
+
+        // Scroll to position 0 with zero offset to ensure it's visible
+        layoutManager.scrollToPositionWithOffset(greetingPosition, 0)
+    }
+
 
     private fun setupListeners() {
         sendIcon.setOnClickListener { handleSend() }
@@ -114,22 +174,45 @@ class MainActivity : AppCompatActivity() {
                 ensureAudioPermission()
             }
         }
+        scrollToBottomButton.setOnClickListener {
+            scrollToBottom()
+        }
+    }
+
+
+
+    private fun animateBotMessageTyping(botText: String) {
+        val botMessage = ChatItem.Message("", isUser = false)
+        chatAdapter.addMessage(botMessage)
+
+        val index = chatAdapter.itemCount - 1
+
+        lifecycleScope.launch {
+            for (i in botText.indices) {
+                val partialText = botText.substring(0, i + 1)
+                chatAdapter.updateMessageAt(index, partialText)
+                delay(30)
+            }
+        }
     }
 
     private fun handleSend() {
         val userMessage = chatInput.text.toString().trim()
         if (userMessage.isNotEmpty() && ::chatController.isInitialized) {
+            scrollToBottomButton.visibility = ImageButton.GONE
             chatController.userSent(userMessage)
             chatInput.text.clear()
-            // Scrolling is now handled by the adapter callback
         }
     }
 
     private fun scrollToBottom() {
+        scrollToBottomButton.visibility = ImageButton.GONE
+
         if (chatAdapter.itemCount > 0) {
-            // Use post to ensure the layout has been updated
             chatRecyclerView.post {
+                isAutoScrolling = true
                 chatRecyclerView.smoothScrollToPosition(chatAdapter.itemCount - 1)
+                chatRecyclerView.postDelayed({ isAutoScrolling = false }, 50)
             }
         }
     }

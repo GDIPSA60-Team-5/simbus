@@ -66,33 +66,33 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:id="@+id/greeting_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:gravity="center"
-            android:text="Good Morning, Aung!"
-            android:textColor="#ffffff"
-            android:textSize="28sp" />
-
-        <TextView
-            android:id="@+id/greeting_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:gravity="center"
-            android:text="Where can i take you today?"
-            android:textColor="#CCFFFFFF"
-            android:textSize="17sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chat_recycler_view"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:clipToPadding="false"
-            android:padding="16dp" />
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/chat_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:padding="16dp" />
+
+            <ImageButton
+                android:id="@+id/scroll_to_bottom_button"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="16dp"
+                android:background="@drawable/circle_bg"
+                android:contentDescription="Scroll to bottom"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_down_arrow"
+                android:visibility="gone"
+                android:layout_gravity="bottom|end" />
+        </FrameLayout>
     </LinearLayout>
 
     <!-- Footer (pinned to bottom) -->
