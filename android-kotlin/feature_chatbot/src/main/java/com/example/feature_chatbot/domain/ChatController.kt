@@ -5,9 +5,11 @@ import com.example.feature_chatbot.api.ChatbotApi
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.ChatItem
+import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 class ChatController(
     private val adapter: ChatAdapter,
@@ -17,60 +19,58 @@ class ChatController(
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun userSent(text: String) {
+        // Add the user's message and a temporary "Typing..." message
         adapter.addMessage(ChatItem.Message(text, isUser = true))
-
-        // This assumes the bot response will be a String
         val temporaryBotMessage = ChatItem.Message("Typing...", isUser = false)
         adapter.addMessage(temporaryBotMessage)
 
         scope.launch {
             try {
-                // The API now returns the sealed class
                 val botResponse = api.getResponseFor(text)
 
-                // Remove the "Typing..." message
+                // Remove the "Typing..." message before displaying the new one
                 removeTyping(temporaryBotMessage)
 
-                // Use a 'when' expression to handle each type of response
-                when (botResponse) {
-                    is BotResponse.Directions -> {
-                        // Format the DirectionsResponse into a displayable string
-                        val message = formatDirectionsResponse(botResponse)
-                        onNewBotMessage(message)
-                    }
-                    is BotResponse.Message -> {
-                        // Display the simple message
-                        onNewBotMessage(botResponse.text)
-                    }
-                    is BotResponse.Error -> {
-                        // Display the error message
-                        onNewBotMessage(botResponse.message)
-                    }
-                }
+                // Get the displayable message from the bot response
+                val messageToDisplay = botResponse.toDisplayString()
+                onNewBotMessage(messageToDisplay)
+
             } catch (e: Exception) {
-                // This catch block handles network errors or JSON parsing issues
                 removeTyping(temporaryBotMessage)
-                onNewBotMessage("Sorry, I couldn't connect to the service.")
+
+                // Log the full error for debugging purposes
                 e.printStackTrace()
+
+                val userFacingMessage = getErrorMessage(e)
+                onNewBotMessage(userFacingMessage)
             }
         }
     }
-    private fun formatDirectionsResponse(response: BotResponse.Directions): String {
-        val routesText = response.suggestedRoutes?.joinToString(separator = "\n") { route ->
-            // Use the actual properties from the Route data class
-            val durationText = "${route.durationInMinutes} minutes"
 
-            "Summary: ${route.summary}\nDuration: $durationText"
-        } ?: "No routes found." // Handle the case where suggestedRoutes is null or empty
-
-        return "Directions from ${response.startLocation} to ${response.endLocation}:\n$routesText"
+    // Moved the formatting logic into the sealed class itself
+    private fun BotResponse.toDisplayString(): String {
+        return when (this) {
+            is BotResponse.Directions -> {
+                val routesText = suggestedRoutes?.joinToString(separator = "\n") { route ->
+                    "Summary: ${route.summary}\nDuration: ${route.durationInMinutes} minutes"
+                } ?: "No routes found."
+                "Directions from $startLocation to $endLocation:\n$routesText"
+            }
+            is BotResponse.Message -> this.text
+            is BotResponse.Error -> this.message
+        }
     }
-    // The other functions can remain the same
+
+    // Extracted the error message handling into a separate function
+    private fun getErrorMessage(e: Exception): String {
+        return when (e) {
+            is JsonSyntaxException -> "Sorry, I had trouble understanding the data from the server. Please try again."
+            is IOException -> "Sorry, I couldn't connect to the server. Please check your internet connection."
+            else -> "An unexpected error occurred. Please try again later."
+        }
+    }
+
     private fun removeTyping(msg: ChatItem.Message) {
         adapter.removeMessage(msg)
-    }
-
-    private fun addBotMessage(text: String) {
-        onNewBotMessage(text)
     }
 }
