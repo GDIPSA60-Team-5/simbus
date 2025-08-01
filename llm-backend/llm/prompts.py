@@ -27,10 +27,12 @@ def build_followup_prompt(intent, required_slots, current_slots, history):
         status_message = (
             "Some required information is still missing. Please ask a follow-up question to collect:\n"
             f"{json.dumps(missing_slots, indent=2)}"
+            "Your task is to prompt the user **only** for these missing values."
         )
     else:
         status_message = (
-            "All required slot values have been provided. Please send a success message to the user."
+            "All required slot values have been provided. Please send a confirmation message to the user.\n"
+            "Do not ask for any extra information or question."
         )
 
     system_prompt = f"""
