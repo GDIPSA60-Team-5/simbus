@@ -19,12 +19,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<MessageResponse> register(@RequestBody AuthRequest authRequest) {
         String result = authService.register(authRequest);
         if (result.equals("registration successful")) {
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(new MessageResponse(result));
         } else {
-            return ResponseEntity.badRequest().body(result);
+            return ResponseEntity.badRequest().body(new MessageResponse(result));
         }
     }
+
 }
