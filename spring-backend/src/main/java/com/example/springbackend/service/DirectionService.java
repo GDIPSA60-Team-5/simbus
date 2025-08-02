@@ -65,88 +65,70 @@ public class DirectionService {
      */
     private DirectionsResponseDTO parseAndMapResponse(String jsonResponse) {
         try {
-            System.out.println("OneMap API raw response: " + jsonResponse);  // Log raw response
-
             JsonNode root = objectMapper.readTree(jsonResponse);
             JsonNode planNode = root.path("plan");
 
             if (planNode.isMissingNode() || planNode.isNull()) {
-                System.out.println("No 'plan' node found in JSON response.");
-                return new DirectionsResponseDTO();
+                return new DirectionsResponseDTO("Origin", "Destination", List.of());
             }
 
-            DirectionsResponseDTO responseDto = new DirectionsResponseDTO();
-            String startLoc = planNode.path("from").path("name").asText(null);
-            String endLoc = planNode.path("to").path("name").asText(null);
+            String startLoc = planNode.path("from").path("name").asText("Origin");
+            String endLoc = planNode.path("to").path("name").asText("Destination");
 
-            System.out.println("Parsed start location: " + startLoc);
-            System.out.println("Parsed end location: " + endLoc);
-
-            responseDto.setStartLocation(startLoc != null ? startLoc : "Origin");
-            responseDto.setEndLocation(endLoc != null ? endLoc : "Destination");
-
-            List<RouteDTO> routes = new ArrayList<>();
             JsonNode itinerariesNode = planNode.path("itineraries");
+            List<RouteDTO> routes = new ArrayList<>();
 
-            if (!itinerariesNode.isArray()) {
-                System.out.println("'itineraries' node is missing or not an array.");
-            } else {
-                System.out.println("Found " + itinerariesNode.size() + " itineraries.");
-
+            if (itinerariesNode.isArray()) {
                 for (int i = 0; i < itinerariesNode.size() && i < 3; i++) {
                     JsonNode itineraryNode = itinerariesNode.get(i);
-                    RouteDTO routeDto = new RouteDTO();
-                    routeDto.setDurationInMinutes(itineraryNode.path("duration").asInt(0) / 60);
 
-                    List<LegDTO> legs = new ArrayList<>();
+                    int durationInMinutes = itineraryNode.path("duration").asInt(0) / 60;
                     JsonNode legsNode = itineraryNode.path("legs");
+                    List<LegDTO> legs = new ArrayList<>();
                     StringBuilder summaryBuilder = new StringBuilder();
-                    String routeGeometry = "";
+                    StringBuilder routeGeometryBuilder = new StringBuilder();
 
-                    if (!legsNode.isArray()) {
-                        System.out.println("Itinerary " + i + ": 'legs' node is missing or not an array.");
-                    } else {
-                        System.out.println("Itinerary " + i + ": found " + legsNode.size() + " legs.");
+                    if (legsNode.isArray()) {
                         for (JsonNode legNode : legsNode) {
-                            LegDTO legDto = new LegDTO();
-                            legDto.setType(legNode.path("mode").asText("UNKNOWN"));
-                            legDto.setDurationInMinutes(legNode.path("duration").asInt(0) / 60);
-                            legDto.setBusServiceNumber(legNode.path("routeShortName").asText(null));
+                            String type = legNode.path("mode").asText("UNKNOWN");
+                            int legDuration = legNode.path("duration").asInt(0) / 60;
+                            String busServiceNumber = legNode.path("routeShortName").asText(null);
 
                             String instruction = String.format(
                                     "%s from %s to %s",
-                                    legDto.getType(),
+                                    type,
                                     legNode.path("from").path("name").asText("a location"),
                                     legNode.path("to").path("name").asText("a location")
                             );
-                            legDto.setInstruction(instruction);
-                            legs.add(legDto);
 
-                            if ("BUS".equals(legDto.getType()) && summaryBuilder.length() == 0) {
-                                summaryBuilder.append("Bus Service ").append(legDto.getBusServiceNumber());
+                            legs.add(new LegDTO(type, legDuration, busServiceNumber, instruction));
+
+                            if ("BUS".equals(type) && summaryBuilder.length() == 0) {
+                                summaryBuilder.append("Bus Service ").append(busServiceNumber);
                             }
 
-                            JsonNode geometryNode = legNode.path("legGeometry").path("points");
-                            if (geometryNode != null && geometryNode.isTextual()) {
-                                routeGeometry += geometryNode.asText();
+                            String geometry = legNode.path("legGeometry").path("points").asText(null);
+                            if (geometry != null) {
+                                routeGeometryBuilder.append(geometry);
                             }
                         }
                     }
-                    routeDto.setLegs(legs);
-                    routeDto.setSummary(summaryBuilder.toString());
-                    routeDto.setRouteGeometry(routeGeometry);
-                    routes.add(routeDto);
+
+                    routes.add(new RouteDTO(
+                            durationInMinutes,
+                            legs,
+                            summaryBuilder.toString(),
+                            routeGeometryBuilder.toString()
+                    ));
                 }
             }
-            responseDto.setSuggestedRoutes(routes);
 
-            System.out.println("Returning DirectionsResponseDTO with " + routes.size() + " routes.");
-            return responseDto;
+            return new DirectionsResponseDTO(startLoc, endLoc, routes);
 
         } catch (Exception e) {
-            System.err.println("Exception during parseAndMapResponse:");
             e.printStackTrace();
-            return new DirectionsResponseDTO();
+            return new DirectionsResponseDTO("Origin", "Destination", List.of());
         }
     }
+
 }
