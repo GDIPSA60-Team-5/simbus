@@ -66,7 +66,7 @@ class ChatController(
                 } ?: "No routes found."
                 "Directions from $startLocation to $endLocation:\n$routesText"
             }
-            is BotResponse.Message -> text
+            is BotResponse.Message -> message
             is BotResponse.Error -> message
         }
     }
