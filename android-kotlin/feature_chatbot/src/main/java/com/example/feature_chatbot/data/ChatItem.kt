@@ -2,5 +2,7 @@ package com.example.feature_chatbot.data
 
 sealed class ChatItem {
     object Greeting : ChatItem()
-    data class Message(val text: String, val isUser: Boolean) : ChatItem()
+    data class UserMessage(val text: String) : ChatItem()
+    data class BotMessage(val botResponse: BotResponse) : ChatItem()
+    data class TypingIndicator(val message: String = "Typing...") : ChatItem()
 }

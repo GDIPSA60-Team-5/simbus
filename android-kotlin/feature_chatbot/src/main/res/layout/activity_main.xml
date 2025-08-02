@@ -38,8 +38,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp">
 
             <ImageView
                 android:id="@+id/backArrow"
@@ -77,7 +77,6 @@
                 android:id="@+id/chat_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false"
                 android:padding="16dp" />
 
             <ImageButton

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/custom_route_leg_chip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    style="@style/Widget.MaterialComponents.Chip.Action"
+    app:chipIconVisible="true"
+    app:chipMinHeight="32dp"
+    app:chipIconSize="24dp"
+    app:textStartPadding="2dp"
+    app:textEndPadding="2dp"
+    app:chipEndPadding="2dp"
+    app:chipStartPadding="2dp"
+    app:chipCornerRadius="16dp" />
