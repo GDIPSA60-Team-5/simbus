@@ -3,6 +3,7 @@ package com.example.springbackend.controller;
 import com.example.springbackend.dto.*;
 import com.example.springbackend.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,5 +16,15 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest authRequest) {
         return authService.login(authRequest);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody AuthRequest authRequest) {
+        String result = authService.register(authRequest);
+        if (result.equals("registration successful")) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
     }
 }
