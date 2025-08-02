@@ -16,9 +16,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class DirectionService {
+
+    private static final Logger log = LoggerFactory.getLogger(DirectionService.class);
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -31,16 +35,13 @@ public class DirectionService {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
-    /**
-     * Calls the OneMap API, retrieves the raw JSON, and maps it to our simplified DTO.
-     *
-     * @param start The start location coordinates.
-     * @param end The end location coordinates.
-     * @return A Mono containing the simplified DirectionsResponseDTO.
-     */
     public Mono<DirectionsResponseDTO> getBusRoutes(String start, String end) {
-        String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
-        String currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        log.debug("getBusRoutes called with parameters:");
+        log.debug("start = '{}'", start);
+        log.debug("end = '{}'", end);
+        log.debug("date = '{}'", "08-01-2025");
+        log.debug("time = '{}'", "07:35:00");
+        log.debug("numItineraries = '{}'", "3");
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -49,26 +50,26 @@ public class DirectionService {
                         .queryParam("end", end)
                         .queryParam("routeType", "pt")
                         .queryParam("mode", "BUS")
-                        .queryParam("date", "08-01-2025") // Hardcoded for this example
-                        .queryParam("time", "07:35:00") // Hardcoded for this example
-                        .queryParam("numItineraries", "3") // Hardcoded for this example
+                        .queryParam("date", "08-01-2025")
+                        .queryParam("time", "07:35:00")
+                        .queryParam("numItineraries", "3")
                         .build())
                 .header(HttpHeaders.AUTHORIZATION, oneMapToken)
                 .retrieve()
                 .bodyToMono(String.class)
+                .doOnNext(response -> log.debug("Received raw routing response: {}", response))
+                .doOnError(e -> log.error("Error fetching routing data", e))
                 .map(this::parseAndMapResponse);
     }
 
-    /**
-     * Parses the raw OneMap JSON string and maps it to a DirectionsResponseDTO.
-     * This is where the core data extraction logic happens.
-     */
     private DirectionsResponseDTO parseAndMapResponse(String jsonResponse) {
+        log.debug("Parsing routing JSON response");
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
             JsonNode planNode = root.path("plan");
 
             if (planNode.isMissingNode() || planNode.isNull()) {
+                log.warn("No plan node found in routing response");
                 return new DirectionsResponseDTO("Origin", "Destination", List.of());
             }
 
@@ -123,12 +124,12 @@ public class DirectionService {
                 }
             }
 
+            log.debug("Parsed {} routes from routing response", routes.size());
             return new DirectionsResponseDTO(startLoc, endLoc, routes);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to parse routing JSON response", e);
             return new DirectionsResponseDTO("Origin", "Destination", List.of());
         }
     }
-
 }
