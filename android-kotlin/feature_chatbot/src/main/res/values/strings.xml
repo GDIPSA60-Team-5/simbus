@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">feature_chatbot</string>
+    <!-- Greeting messages -->
+    <string name="greeting_title">Good Morning, %1$s!</string>
+    <string name="greeting_subtitle">Where can I take you today?</string>
+
+    <!-- Location display -->
+    <string name="from_location">From: %1$s</string>
+    <string name="to_location">To: %1$s</string>
+    <string name="no_routes_found">No routes found.</string>
+
+    <!-- Transport duration formats -->
+    <string name="walk_duration">Walk %1$d min</string>
+    <string name="bus_duration">Bus %1$s %2$d min</string>
+    <string name="transport_duration">%1$s %2$d min</string>
+
+    <!-- Speech recognition -->
+    <string name="listening_partial">Listening: %1$s</string>
+    <string name="speech_error">Error: %1$s</string>
+
+    <!-- Permissions -->
+    <string name="microphone_permission_required">Microphone permission is required to use voice input.</string>
 </resources>

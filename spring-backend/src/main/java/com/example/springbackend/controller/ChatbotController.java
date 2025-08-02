@@ -4,7 +4,7 @@ import com.example.springbackend.dto.BotResponseDTO;
 import com.example.springbackend.dto.ErrorResponseDTO;
 import com.example.springbackend.dto.MessageResponseDTO;
 import com.example.springbackend.service.GeocodingService;
-import com.example.springbackend.service.OneMapService;
+import com.example.springbackend.service.DirectionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,10 +13,10 @@ import reactor.core.publisher.Mono;
 @RestController
 public class ChatbotController {
 
-    private final OneMapService oneMapService;
+    private final DirectionService oneMapService;
     private final GeocodingService geocodingService;
 
-    public ChatbotController(OneMapService oneMapService, GeocodingService geocodingService) {
+    public ChatbotController(DirectionService oneMapService, GeocodingService geocodingService) {
         this.oneMapService = oneMapService;
         this.geocodingService = geocodingService;
     }

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_margin="8dp"
-        android:background="@drawable/bg_user_message"
+        android:background="@drawable/bg_user_message_bubble"
         android:breakStrategy="balanced"
         android:ellipsize="none"
         android:hyphenationFrequency="full"

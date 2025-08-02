@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class OneMapService {
+public class DirectionService {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -26,8 +26,8 @@ public class OneMapService {
     @Value("${onemap.token}")
     private String oneMapToken;
 
-    public OneMapService(WebClient.Builder webClientBuilder,
-                         @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
+    public DirectionService(WebClient.Builder webClientBuilder,
+                            @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 

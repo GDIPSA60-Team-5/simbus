@@ -1,4 +1,3 @@
-// File: ChatController.kt
 package com.example.feature_chatbot.domain
 
 import com.example.feature_chatbot.api.ChatbotApi
@@ -14,40 +13,38 @@ import java.io.IOException
 class ChatController(
     private val adapter: ChatAdapter,
     private val api: ChatbotApi,
-    private val onNewBotMessage: (String) -> Unit
+    private val onNewBotMessage: (String) -> Unit // This callback can still be used for external logging/toasts
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun userSent(text: String) {
-        // Add the user's message and a temporary "Typing..." message
-        adapter.addMessage(ChatItem.Message(text, isUser = true))
-        val temporaryBotMessage = ChatItem.Message("Typing...", isUser = false)
-        adapter.addMessage(temporaryBotMessage)
+        // Add the user's message
+        adapter.addChatItem(ChatItem.UserMessage(text))
+
+        // Add a temporary "Typing..." message
+        val typingIndicator = ChatItem.TypingIndicator()
+        adapter.addChatItem(typingIndicator)
 
         scope.launch {
             try {
                 val botResponse = api.getResponseFor(text)
 
-                // Remove the "Typing..." message before displaying the new one
-                removeTyping(temporaryBotMessage)
+                // Replace the "Typing..." message with the actual bot response
+                adapter.replaceLastChatItem(ChatItem.BotMessage(botResponse))
 
-                // Get the displayable message from the bot response
-                val messageToDisplay = botResponse.toDisplayString()
-                onNewBotMessage(messageToDisplay)
+                onNewBotMessage(botResponse.toDisplayString())
 
             } catch (e: Exception) {
-                removeTyping(temporaryBotMessage)
-
-                // Log the full error for debugging purposes
-                e.printStackTrace()
-
+                // Replace the "Typing..." message with an error message
                 val userFacingMessage = getErrorMessage(e)
-                onNewBotMessage(userFacingMessage)
+                adapter.replaceLastChatItem(ChatItem.BotMessage(BotResponse.Error(userFacingMessage)))
+                onNewBotMessage(userFacingMessage) // Still notify if needed
+                e.printStackTrace() // Log the full error for debugging purposes
             }
         }
     }
 
-    // Moved the formatting logic into the sealed class itself
+    // Used for logging
     private fun BotResponse.toDisplayString(): String {
         return when (this) {
             is BotResponse.Directions -> {
@@ -61,16 +58,11 @@ class ChatController(
         }
     }
 
-    // Extracted the error message handling into a separate function
     private fun getErrorMessage(e: Exception): String {
         return when (e) {
             is JsonSyntaxException -> "Sorry, I had trouble understanding the data from the server. Please try again."
             is IOException -> "Sorry, I couldn't connect to the server. Please check your internet connection."
             else -> "An unexpected error occurred. Please try again later."
         }
-    }
-
-    private fun removeTyping(msg: ChatItem.Message) {
-        adapter.removeMessage(msg)
     }
 }
