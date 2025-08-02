@@ -13,7 +13,6 @@ class BotResponseTypeAdapter : JsonDeserializer<BotResponse> {
         val jsonObject = json.asJsonObject
         val type = jsonObject.get("type")?.asString
 
-        // Delegate to the appropriate deserializer based on the type
         return when (type) {
             "directions" -> context.deserialize(jsonObject, BotResponse.Directions::class.java)
             "message" -> context.deserialize(jsonObject, BotResponse.Message::class.java)

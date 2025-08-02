@@ -13,22 +13,97 @@ import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.Route
 import com.example.feature_chatbot.data.RouteStep
 import com.example.feature_chatbot.databinding.ItemChatBotDirectionsBinding
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.MapView
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 
 class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding) :
-    androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root) {
+    androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root), OnMapReadyCallback {
 
     companion object {
         private const val ARROW_SIZE_DP = 32
         private const val ARROW_PADDING_DP = 1
     }
+    private var mapView: MapView = binding.routeMapView
+    private var googleMap: GoogleMap? = null
+    private var currentPolylines: MutableList<Polyline> = mutableListOf()
 
+    init {
+        mapView.onCreate(null)
+        mapView.getMapAsync(this)
+    }
+    fun onResume() {
+        mapView.onResume()
+    }
+
+    fun onPause() {
+        mapView.onPause()
+    }
+
+    fun onDestroy() {
+        mapView.onDestroy()
+    }
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+        googleMap?.uiSettings?.isMapToolbarEnabled = false
+    }
     fun bind(directions: BotResponse.Directions) {
         bindLocationInfo(directions)
         bindRoutes(directions.suggestedRoutes)
+        if (googleMap != null) {
+            drawRoutesOnMap(directions.suggestedRoutes)
+        }
+    }
+    private fun drawRoutesOnMap(routes: List<Route>?) {
+        googleMap?.let { map ->
+            map.clear()
+            currentPolylines.clear()
+
+            if (routes.isNullOrEmpty()) return
+
+            routes.forEach { route ->
+                route.routeGeometry?.let { encodedPolyline ->
+                    val points = decodePolyline(encodedPolyline)
+                    if (points.isNotEmpty()) {
+                        val polyline = map.addPolyline(
+                            PolylineOptions()
+                                .addAll(points)
+                                .color(getColorForRoute(route))
+                                .width(8f)
+                        )
+                        currentPolylines.add(polyline)
+                    }
+                }
+            }
+
+            // Move camera to first pointof first route's geometry
+            val firstRoute = routes.firstOrNull()
+            val firstPoint = firstRoute?.routeGeometry?.let {
+                decodePolyline(it).firstOrNull()
+            }
+            firstPoint?.let {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 13f))
+            }
+        }
     }
 
+
+    private fun getColorForRoute(route: Route): Int {
+        // Simple example: color based on route summary hashcode
+        val colors = listOf(
+            Color.parseColor("#3F51B5"), // Indigo
+            Color.parseColor("#E91E63"), // Pink
+            Color.parseColor("#009688"), // Teal
+            Color.parseColor("#FF5722")  // Deep Orange
+        )
+        return colors[Math.abs(route.summary.hashCode()) % colors.size]
+    }
     private fun bindLocationInfo(directions: BotResponse.Directions) {
         binding.startLocationTextView.text = itemView.context.getString(R.string.from_location, directions.startLocation)
         binding.endLocationTextView.text = itemView.context.getString(R.string.to_location, directions.endLocation)
@@ -115,6 +190,40 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         }
 
         chip.chipIconTint = null
+    }
+
+    fun decodePolyline(encoded: String): List<LatLng> {
+        val poly = ArrayList<LatLng>()
+        var index = 0
+        val len = encoded.length
+        var lat = 0
+        var lng = 0
+
+        while (index < len) {
+            var b: Int
+            var shift = 0
+            var result = 0
+            do {
+                b = encoded[index++].code - 63
+                result = result or (b and 0x1f shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlat = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
+            lat += dlat
+
+            shift = 0
+            result = 0
+            do {
+                b = encoded[index++].code - 63
+                result = result or (b and 0x1f shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlng = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
+            lng += dlng
+
+            poly.add(LatLng(lat.toDouble() / 1E5, lng.toDouble() / 1E5))
+        }
+        return poly
     }
 
     private fun createArrowView(): ImageView {

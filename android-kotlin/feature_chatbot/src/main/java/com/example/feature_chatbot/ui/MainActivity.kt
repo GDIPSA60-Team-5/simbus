@@ -1,5 +1,6 @@
 package com.example.feature_chatbot.ui
 
+import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
@@ -7,24 +8,55 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.api.ApiClient
 import com.example.feature_chatbot.data.ChatAdapter
+import com.example.feature_chatbot.data.Coordinates
 import com.example.feature_chatbot.domain.ChatController
 import com.example.feature_chatbot.domain.SpeechManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import java.time.Instant
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val REQUEST_RECORD_AUDIO = 1
         private const val SCROLL_VISIBILITY_THRESHOLD = 2
         private const val SCROLL_ANIMATION_DELAY = 300L
     }
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var currentLocation: Coordinates? = null
+
+    // Permission launchers
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                getCurrentLocation()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Location permission is required to use this feature.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
+    private val audioPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                speechManager.startListening()
+            } else {
+                showPermissionDeniedMessage()
+            }
+        }
 
     // Managers
     private lateinit var speechManager: SpeechManager
@@ -50,6 +82,45 @@ class MainActivity : AppCompatActivity() {
 
         // Center greeting after layout is complete
         chatRecyclerView.post { centerGreeting() }
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        checkLocationPermission()
+    }
+
+    private fun checkLocationPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                getCurrentLocation()
+            }
+
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
+                // Optionally explain why, then request
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+
+            else -> {
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
+    private fun getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return
+
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: android.location.Location? ->
+                location?.let {
+                    this.currentLocation = Coordinates(it.latitude, it.longitude)
+                    Toast.makeText(this, "Location is ready!", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     private fun setupUI() {
@@ -83,7 +154,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         chatAdapter = ChatAdapter { scrollToBottom() }
-
         chatAdapter.replaceAll(emptyList())
 
         with(chatRecyclerView) {
@@ -98,15 +168,15 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 if (isAutoScrolling) return
-
                 updateScrollToBottomButtonVisibility()
             }
         }
     }
+
     private fun updateScrollToBottomButtonVisibility() {
         chatRecyclerView.post {
             val itemCount = chatAdapter.itemCount
-            val canScrollFurther = chatRecyclerView.canScrollVertically(1) // true if not at bottom
+            val canScrollFurther = chatRecyclerView.canScrollVertically(1)
             val shouldShow = canScrollFurther && itemCount > 1
             scrollToBottomButton.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
@@ -117,8 +187,7 @@ class MainActivity : AppCompatActivity() {
             adapter = chatAdapter,
             api = ApiClient.chatbotApi,
             onNewBotMessage = { botText ->
-                // Optional: Add any external notifications here
-                // For example: showBotMessageNotification(botText)
+                // e.g., show notification if needed
             }
         )
     }
@@ -160,10 +229,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleMicClick() {
-        if (hasAudioPermission()) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             speechManager.startListening()
         } else {
-            requestAudioPermission()
+            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 
@@ -172,7 +245,7 @@ class MainActivity : AppCompatActivity() {
 
         removeGreetingPaddingIfNeeded()
         scrollToBottomButton.visibility = ImageButton.GONE
-        chatController.userSent(message)
+        chatController.userSent(message, currentLocation)
     }
 
     private fun removeGreetingPaddingIfNeeded() {
@@ -187,19 +260,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun hasAudioPermission(): Boolean {
-        return checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) ==
-                PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestAudioPermission() {
-        requestPermissions(
-            arrayOf(android.Manifest.permission.RECORD_AUDIO),
-            REQUEST_RECORD_AUDIO
-        )
-    }
-
     private fun centerGreeting() {
         val layoutManager = chatRecyclerView.layoutManager as LinearLayoutManager
         val greetingPosition = 0
@@ -208,7 +268,6 @@ class MainActivity : AppCompatActivity() {
             val viewHolder = chatRecyclerView.findViewHolderForAdapterPosition(greetingPosition)
 
             if (viewHolder == null) {
-                // ViewHolder not ready, retry after next layout pass
                 chatRecyclerView.post { centerGreeting() }
                 return@post
             }
@@ -247,25 +306,6 @@ class MainActivity : AppCompatActivity() {
                     { isAutoScrolling = false },
                     SCROLL_ANIMATION_DELAY
                 )
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        when (requestCode) {
-            REQUEST_RECORD_AUDIO -> {
-                if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    speechManager.startListening()
-                } else {
-                    showPermissionDeniedMessage()
-                }
             }
         }
     }

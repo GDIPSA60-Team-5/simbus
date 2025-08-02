@@ -4,6 +4,8 @@ import com.example.feature_chatbot.api.ChatbotApi
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.ChatItem
+import com.example.feature_chatbot.data.ChatRequest
+import com.example.feature_chatbot.data.Coordinates // <-- Import Coordinates
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +20,7 @@ class ChatController(
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
-    fun userSent(text: String) {
+    fun userSent(text: String, currentLocation: Coordinates?) {
         // Add the user's message
         adapter.addChatItem(ChatItem.UserMessage(UUID.randomUUID().toString(), text))
 
@@ -27,7 +29,15 @@ class ChatController(
 
         scope.launch {
             try {
-                val botResponse = api.getResponseFor(text)
+                // 1. Create the request object
+                val chatRequest = ChatRequest(
+                    userInput = text,
+                    currentLocation = currentLocation,
+                    currentTimestamp = System.currentTimeMillis()
+                )
+
+                // 2. Pass the object to the API call
+                val botResponse = api.getResponseFor(chatRequest)
 
                 adapter.replaceLastChatItem(
                     ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
