@@ -19,11 +19,10 @@ import com.example.feature_chatbot.R
 import com.example.feature_chatbot.api.ApiClient
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.Coordinates
-import com.example.feature_chatbot.domain.ChatController
+import com.example.feature_chatbot.api.ChatController
 import com.example.feature_chatbot.domain.SpeechManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import java.time.Instant
 
 class MainActivity : AppCompatActivity() {
 
