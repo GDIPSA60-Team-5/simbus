@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
-public class ChatbotControllerV2 {
+public class ChatbotControllerV1 {
 
     private final DirectionService oneMapService;
     private final GeocodingService geocodingService;
 
-    public ChatbotControllerV2(DirectionService oneMapService, GeocodingService geocodingService) {
+    public ChatbotControllerV1(DirectionService oneMapService, GeocodingService geocodingService) {
         this.oneMapService = oneMapService;
         this.geocodingService = geocodingService;
     }
