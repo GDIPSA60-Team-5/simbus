@@ -9,52 +9,55 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.util.UUID
 
 class ChatController(
     private val adapter: ChatAdapter,
     private val api: ChatbotApi,
-    private val onNewBotMessage: (String) -> Unit // This callback can still be used for external logging/toasts
+    private val onNewBotMessage: (String) -> Unit
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
 
     fun userSent(text: String) {
         // Add the user's message
-        adapter.addChatItem(ChatItem.UserMessage(text))
+        adapter.addChatItem(ChatItem.UserMessage(UUID.randomUUID().toString(), text))
 
-        // Add a temporary "Typing..." message
-        val typingIndicator = ChatItem.TypingIndicator()
-        adapter.addChatItem(typingIndicator)
+        // Add temporary typing indicator
+        adapter.addChatItem(ChatItem.TypingIndicator())
 
         scope.launch {
             try {
                 val botResponse = api.getResponseFor(text)
 
-                // Replace the "Typing..." message with the actual bot response
-                adapter.replaceLastChatItem(ChatItem.BotMessage(botResponse))
-
+                adapter.replaceLastChatItem(
+                    ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
+                )
                 onNewBotMessage(botResponse.toDisplayString())
 
             } catch (e: Exception) {
-                // Replace the "Typing..." message with an error message
-                val userFacingMessage = getErrorMessage(e)
-                adapter.replaceLastChatItem(ChatItem.BotMessage(BotResponse.Error(userFacingMessage)))
-                onNewBotMessage(userFacingMessage) // Still notify if needed
-                e.printStackTrace() // Log the full error for debugging purposes
+                val errorMessage = getErrorMessage(e)
+
+                // Replace typing with error
+                adapter.replaceLastChatItem(
+                    ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))
+                )
+                onNewBotMessage(errorMessage)
+
+                e.printStackTrace()
             }
         }
     }
 
-    // Used for logging
     private fun BotResponse.toDisplayString(): String {
         return when (this) {
             is BotResponse.Directions -> {
-                val routesText = suggestedRoutes?.joinToString(separator = "\n") { route ->
+                val routesText = suggestedRoutes?.joinToString("\n") { route ->
                     "Summary: ${route.summary}\nDuration: ${route.durationInMinutes} minutes"
                 } ?: "No routes found."
                 "Directions from $startLocation to $endLocation:\n$routesText"
             }
-            is BotResponse.Message -> this.text
-            is BotResponse.Error -> this.message
+            is BotResponse.Message -> text
+            is BotResponse.Error -> message
         }
     }
 

@@ -2,6 +2,7 @@ package com.example.feature_chatbot.ui
 
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
@@ -83,6 +84,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         chatAdapter = ChatAdapter { scrollToBottom() }
 
+        chatAdapter.replaceAll(emptyList())
+
         with(chatRecyclerView) {
             adapter = chatAdapter
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -100,21 +103,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun updateScrollToBottomButtonVisibility() {
         chatRecyclerView.post {
-            val layoutManager = chatRecyclerView.layoutManager as LinearLayoutManager
             val itemCount = chatAdapter.itemCount
-            val lastVisible = layoutManager.findLastVisibleItemPosition()
-
-            val atBottom = lastVisible >= itemCount - 1 - SCROLL_VISIBILITY_THRESHOLD
-            val shouldShow = !atBottom && itemCount > 1
-
-            scrollToBottomButton.visibility = if (shouldShow) {
-                ImageButton.VISIBLE
-            } else {
-                ImageButton.GONE
-            }
+            val canScrollFurther = chatRecyclerView.canScrollVertically(1) // true if not at bottom
+            val shouldShow = canScrollFurther && itemCount > 1
+            scrollToBottomButton.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
     }
 
