@@ -63,7 +63,7 @@ class ChatAdapter(
 
     private fun bindBotMessage(holder: RecyclerView.ViewHolder, item: ChatItem.BotMessage) {
         when (val botResponse = item.botResponse) {
-            is BotResponse.Message -> (holder as BotTextMessageViewHolder).bind(botResponse.text)
+            is BotResponse.Message -> (holder as BotTextMessageViewHolder).bind(botResponse.message)
             is BotResponse.Directions -> (holder as BotDirectionsViewHolder).bind(botResponse)
             is BotResponse.Error -> (holder as BotErrorViewHolder).bind(botResponse.message)
         }

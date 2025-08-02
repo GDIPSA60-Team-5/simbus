@@ -66,23 +66,23 @@ def extract_json_from_response(text):
 
 
 def show_help():
-    typewriter_print("""
-🧭 Here's what I can help you with:
+    return """
+Here's what I can help you with:
 
-1. 🚍 Route Info (`route_info`)
+1. Route Info (`route_info`)
     - Ask me how to get from one place to another.
     - Example: "How do I get from downtown to the airport?"
 
-2. 🗓️ Schedule a Commute (`schedule_commute`)
+2. Schedule a Commute (`schedule_commute`)
     - Let me know when you need to arrive, and I’ll plan the timing.
     - Example: "I want to reach work by 9 AM. Notify me when to leave."
 
-3. 🚌 Next Bus Timing (`next_bus`)
+3. Next Bus Timing (`next_bus`)
     - Just give me the bus number and I’ll tell you when the next one arrives.
     - Example: "When is the next A2 bus?"
 
 Just ask a question and I’ll guide you step by step!
-""")
+"""
 
 
 def get_recent_history(conversation_history, MAX_HISTORY_LENGTH):

@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.api.ApiClient
+import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.Coordinates
 import com.example.feature_chatbot.domain.ChatController
@@ -186,11 +187,12 @@ class MainActivity : AppCompatActivity() {
         chatController = ChatController(
             adapter = chatAdapter,
             api = ApiClient.chatbotApi,
-            onNewBotMessage = { botText ->
-                // e.g., show notification if needed
+            onNewBotMessage = { botText ->  // <-- use botResponse here
+                chatInput.setText(botText)
             }
         )
     }
+
 
     private fun setupSpeechManager() {
         speechManager = SpeechManager(
