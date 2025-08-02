@@ -1,5 +1,6 @@
 package com.example.springbackend.service;
 
+import com.example.springbackend.dto.Coordinates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +30,6 @@ public class GeocodingService {
     @Value("${onemap.token}")
     private String oneMapToken;
 
-    public record Coordinates(String latitude, String longitude) {}
 
     public GeocodingService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper,
                             @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {

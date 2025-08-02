@@ -3,8 +3,10 @@ package com.example.springbackend.dto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-// This annotation tells Jackson (the JSON library) how to handle polymorphism.
-// It will add a "type" field to the JSON to distinguish between subclasses.
+/**
+ * A sealed interface for all bot responses, configured for polymorphic
+ * JSON serialization and deserialization with Jackson.
+ */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.EXISTING_PROPERTY,
@@ -16,6 +18,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = MessageResponseDTO.class, name = "message"),
         @JsonSubTypes.Type(value = ErrorResponseDTO.class, name = "error")
 })
-public abstract class BotResponseDTO {
-    public abstract String getType();
+public sealed interface BotResponseDTO permits DirectionsResponseDTO, ErrorResponseDTO, MessageResponseDTO {
+    String getType();
 }
