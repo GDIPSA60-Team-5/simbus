@@ -1,6 +1,7 @@
 package com.example.springbackend.model;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -12,109 +13,51 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 @Entity
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CommutePlan {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	
+
 	private String commutePlanName;
 	private LocalTime notifyAt;
 	private LocalTime arrivalTime;
 	private Integer reminderOffsetMin;
 	private Boolean recurrence;
-	
+
 	@ManyToOne
-    @JoinColumn(name = "userId")
-    private User user;
-	
-    @OneToMany(mappedBy = "commutePlan", cascade = CascadeType.ALL)
-    private List<CommuteHistory> commuteHistory;
-    
-    @OneToMany(mappedBy = "commutePlan", cascade = CascadeType.ALL)
-    private List<PreferredRoute> preferredRoutes;
-    
-    @OneToMany(mappedBy = "commutePlan", cascade = CascadeType.ALL)
-    private List<CommuteRecurrenceDay> commuteRecurrenceDays;
-	
-	public CommutePlan() { }
-	
-	public CommutePlan(String commutePlanName, LocalTime notifyAt, LocalTime arrivalTime, Integer reminderOffsetMin,
-			Boolean recurrence) {
-		this.commutePlanName = commutePlanName;
-		this.notifyAt = notifyAt;
-		this.arrivalTime = arrivalTime;
-		this.reminderOffsetMin = reminderOffsetMin;
-		this.recurrence = recurrence;
-	}
+	@JoinColumn(name = "userId")
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private User user;
 
-	public String getCommutePlanName() {
-		return commutePlanName;
-	}
+	@OneToMany(mappedBy = "commutePlan", cascade = CascadeType.ALL)
+	@Builder.Default
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<CommuteHistory> commuteHistory = new ArrayList<>();
 
-	public void setCommutePlanName(String commutePlanName) {
-		this.commutePlanName = commutePlanName;
-	}
+	@OneToMany(mappedBy = "commutePlan", cascade = CascadeType.ALL)
+	@Builder.Default
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<PreferredRoute> preferredRoutes = new ArrayList<>();
 
-	public LocalTime getNotifyAt() {
-		return notifyAt;
-	}
-
-	public void setNotifyAt(LocalTime notifyAt) {
-		this.notifyAt = notifyAt;
-	}
-
-	public LocalTime getArrivalTime() {
-		return arrivalTime;
-	}
-
-	public void setArrivalTime(LocalTime arrivalTime) {
-		this.arrivalTime = arrivalTime;
-	}
-
-	public Integer getReminderOffsetMin() {
-		return reminderOffsetMin;
-	}
-
-	public void setReminderOffsetMin(Integer reminderOffsetMin) {
-		this.reminderOffsetMin = reminderOffsetMin;
-	}
-
-	public Boolean getRecurrence() {
-		return recurrence;
-	}
-
-	public void setRecurrence(Boolean recurrence) {
-		this.recurrence = recurrence;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public List<CommuteHistory> getCommuteHistory() {
-		return commuteHistory;
-	}
-
-	public void setCommuteHistory(List<CommuteHistory> commuteHistory) {
-		this.commuteHistory = commuteHistory;
-	}
-
-	public List<PreferredRoute> getPreferredRoute() {
-		return preferredRoutes;
-	}
-
-	public void setPreferredRoute(List<PreferredRoute> preferredRoutes) {
-		this.preferredRoutes = preferredRoutes;
-	}
-	
+	@OneToMany(mappedBy = "commutePlan", cascade = CascadeType.ALL)
+	@Builder.Default
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<CommuteRecurrenceDay> commuteRecurrenceDays = new ArrayList<>();
 }

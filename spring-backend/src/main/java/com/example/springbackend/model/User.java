@@ -1,5 +1,6 @@
 package com.example.springbackend.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,74 +11,38 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 @Entity
 @Table(name = "Users")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-	
+
 	@Id
 	@GeneratedValue
 	private UUID id;
-	
+
 	private String userName;
 	private String userType;
 	private String passwordHash;
-	
+
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-	private List<Location> locations;
-	
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<CommutePlan> commutePlans;
-	
-	public User() { }
-	
-	public User(UUID id, String userName, String userType, String passwordHash) {
-		this.userName = userName;
-		this.userType = userType;
-		this.passwordHash = passwordHash;
-	}
+	@Builder.Default
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<Location> locations = new ArrayList<>();
 
-	public String getUserName() {
-		return userName;
-	}
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
-	public String getUserType() {
-		return userType;
-	}
-
-	public void setUserType(String userType) {
-		this.userType = userType;
-	}
-
-	public String getPasswordHash() {
-		return passwordHash;
-	}
-
-	public void setPasswordHash(String passwordHash) {
-		this.passwordHash = passwordHash;
-	}
-
-	public UUID getId() {
-		return id;
-	}
-
-	public List<Location> getLocations() {
-		return locations;
-	}
-
-	public void setLocations(List<Location> locations) {
-		this.locations = locations;
-	}
-
-	public List<CommutePlan> getCommutePlans() {
-		return commutePlans;
-	}
-
-	public void setCommutePlans(List<CommutePlan> commutePlans) {
-		this.commutePlans = commutePlans;
-	}
-
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@Builder.Default
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<CommutePlan> commutePlans = new ArrayList<>();
 }
