@@ -7,46 +7,33 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 @Entity
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PreferredRoute {
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-	
-    @ManyToOne
-    @JoinColumn(name = "commutePlanId")
-    private CommutePlan commutePlan;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "routeId")
-    private Route route;
-	
-	public PreferredRoute() { }
+	@ManyToOne
+	@JoinColumn(name = "commutePlanId")
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private CommutePlan commutePlan;
 
-	public PreferredRoute(CommutePlan commutePlan, Route route) {
-		this.commutePlan = commutePlan;
-		this.route = route;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public CommutePlan getCommutePlan() {
-		return commutePlan;
-	}
-
-	public void setCommutePlan(CommutePlan commutePlan) {
-		this.commutePlan = commutePlan;
-	}
-
-	public Route getRoute() {
-		return route;
-	}
-
-	public void setRoute(Route route) {
-		this.route = route;
-	}
-	
+	@ManyToOne
+	@JoinColumn(name = "routeId")
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private Route route;
 }

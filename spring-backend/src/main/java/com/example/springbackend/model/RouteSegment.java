@@ -7,63 +7,43 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 @Entity
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RouteSegment {
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-	
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
 	private Integer segmentOrder;
 	private String transportMode;
 	private Integer estimatedTimeMin;
-	
-    @ManyToOne
-    @JoinColumn(name = "routeId")
-    private Route route;
 
-    @ManyToOne
-    @JoinColumn(name = "fromLocationId")
-    private Location fromLocation;
+	@ManyToOne
+	@JoinColumn(name = "routeId")
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private Route route;
 
-    @ManyToOne
-    @JoinColumn(name = "toLocationId")
-    private Location toLocation;
-	
-	public RouteSegment() { }
-	
-	public RouteSegment(Integer segmentOrder, String transportMode, Integer estimatedTimeMin) {
-		this.segmentOrder = segmentOrder;
-		this.transportMode = transportMode;
-		this.estimatedTimeMin = estimatedTimeMin;
-	}
+	@ManyToOne
+	@JoinColumn(name = "fromLocationId")
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private Location fromLocation;
 
-	public Integer getSegmentOrder() {
-		return segmentOrder;
-	}
-
-	public void setSegmentOrder(Integer segmentOrder) {
-		this.segmentOrder = segmentOrder;
-	}
-
-	public String getTransportMode() {
-		return transportMode;
-	}
-
-	public void setTransportMode(String transportMode) {
-		this.transportMode = transportMode;
-	}
-
-	public Integer getEstimatedTimeMin() {
-		return estimatedTimeMin;
-	}
-
-	public void setEstimatedTimeMin(Integer estimatedTimeMin) {
-		this.estimatedTimeMin = estimatedTimeMin;
-	}
-
-	public Long getId() {
-		return id;
-	}
-	
+	@ManyToOne
+	@JoinColumn(name = "toLocationId")
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private Location toLocation;
 }
