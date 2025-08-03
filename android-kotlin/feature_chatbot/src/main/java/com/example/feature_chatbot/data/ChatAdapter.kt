@@ -1,112 +1,92 @@
 package com.example.feature_chatbot.data
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
+import com.example.feature_chatbot.databinding.*
+import com.example.feature_chatbot.domain.view_holders.*
+import com.example.feature_chatbot.util.ChatItemDiffCallback
 
 class ChatAdapter(
-    initialMessages: List<ChatItem.Message>,
-    private val onMessageAdded: (() -> Unit)? = null
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    onMessageAdded: (() -> Unit)? = null
+) : ListAdapter<ChatItem, RecyclerView.ViewHolder>(ChatItemDiffCallback()) {
 
-    companion object {
-        private const val TYPE_GREETING = 0
-        private const val TYPE_USER = 1
-        private const val TYPE_BOT = 2
-    }
+    private val items = mutableListOf<ChatItem>()
+    private val onMessageAddedCallback = onMessageAdded
 
-    private val items = mutableListOf<ChatItem>().apply {
-        add(ChatItem.Greeting) // always first
-        addAll(initialMessages)
-    }
+    private val viewHolderFactories = mapOf(
+        ChatViewType.GREETING to { parent: ViewGroup -> GreetingViewHolder(ItemGreetingBinding.inflate(LayoutInflater.from(parent.context), parent, false)) },
+        ChatViewType.USER_MESSAGE to { parent: ViewGroup -> UserMessageViewHolder(ItemChatUserBinding.inflate(LayoutInflater.from(parent.context), parent, false)) },
+        ChatViewType.BOT_MESSAGE_TEXT to { parent: ViewGroup -> BotTextMessageViewHolder(ItemChatBotBinding.inflate(LayoutInflater.from(parent.context), parent, false)) },
+        ChatViewType.BOT_MESSAGE_DIRECTIONS to { parent: ViewGroup -> BotDirectionsViewHolder(ItemChatBotDirectionsBinding.inflate(LayoutInflater.from(parent.context), parent, false)) },
+        ChatViewType.BOT_MESSAGE_ERROR to { parent: ViewGroup -> BotErrorViewHolder(ItemChatBotErrorBinding.inflate(LayoutInflater.from(parent.context), parent, false)) },
+        ChatViewType.TYPING_INDICATOR to { parent: ViewGroup -> TypingIndicatorViewHolder(ItemTypingIndicatorBinding.inflate(LayoutInflater.from(parent.context), parent, false)) }
+    )
 
-    inner class GreetingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val title: TextView = view.findViewById(R.id.greeting_title)
-        private val subtitle: TextView = view.findViewById(R.id.greeting_subtitle)
-        fun bind() {
-            title.text = "Good Morning, Aung!"
-            subtitle.text = "Where can I take you today?"
-        }
-    }
-
-    inner class UserViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val messageText: TextView = view.findViewById(R.id.messageText)
-    }
-
-    inner class BotViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val messageText: TextView = view.findViewById(R.id.messageText)
+    private enum class ChatViewType(val layoutRes: Int) {
+        GREETING(R.layout.item_greeting),
+        USER_MESSAGE(R.layout.item_chat_user),
+        BOT_MESSAGE_TEXT(R.layout.item_chat_bot),
+        BOT_MESSAGE_DIRECTIONS(R.layout.item_chat_bot_directions),
+        BOT_MESSAGE_ERROR(R.layout.item_chat_bot_error),
+        TYPING_INDICATOR(R.layout.item_typing_indicator)
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
-            is ChatItem.Greeting -> TYPE_GREETING
-            is ChatItem.Message -> if ((items[position] as ChatItem.Message).isUser) TYPE_USER else TYPE_BOT
-        }
+        return when (val item = getItem(position)) {
+            is ChatItem.Greeting -> ChatViewType.GREETING
+            is ChatItem.UserMessage -> ChatViewType.USER_MESSAGE
+            is ChatItem.TypingIndicator -> ChatViewType.TYPING_INDICATOR
+            is ChatItem.BotMessage -> when (item.botResponse) {
+                is BotResponse.Message -> ChatViewType.BOT_MESSAGE_TEXT
+                is BotResponse.Directions -> ChatViewType.BOT_MESSAGE_DIRECTIONS
+                is BotResponse.Error -> ChatViewType.BOT_MESSAGE_ERROR
+            }
+        }.ordinal
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        return when (viewType) {
-            TYPE_GREETING -> {
-                val v = inflater.inflate(R.layout.item_greeting, parent, false)
-                GreetingViewHolder(v)
-            }
-            TYPE_USER -> {
-                val v = inflater.inflate(R.layout.item_chat_user, parent, false)
-                UserViewHolder(v)
-            }
-            else -> {
-                val v = inflater.inflate(R.layout.item_chat_bot, parent, false)
-                BotViewHolder(v)
-            }
-        }
+        return viewHolderFactories[ChatViewType.entries[viewType]]?.invoke(parent)
+            ?: throw IllegalArgumentException("Unknown view type: $viewType")
     }
-
-    override fun getItemCount(): Int = items.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (val item = items[position]) {
+        when (val item = getItem(position)) {
             is ChatItem.Greeting -> (holder as GreetingViewHolder).bind()
-            is ChatItem.Message -> {
-                if (holder is UserViewHolder) {
-                    holder.messageText.text = item.text
-                } else if (holder is BotViewHolder) {
-                    holder.messageText.text = item.text
-                }
-            }
+            is ChatItem.UserMessage -> (holder as UserMessageViewHolder).bind(item.text)
+            is ChatItem.TypingIndicator -> (holder as TypingIndicatorViewHolder).bind(item.message)
+            is ChatItem.BotMessage -> bindBotMessage(holder, item)
         }
     }
 
-    fun addMessage(message: ChatItem.Message) {
-        items.add(message)
-        notifyItemInserted(items.size - 1)
-        onMessageAdded?.invoke()
-    }
-
-    fun removeMessage(message: ChatItem.Message) {
-        val index = items.indexOf(message)
-        if (index != -1) {
-            items.removeAt(index)
-            notifyItemRemoved(index)
+    private fun bindBotMessage(holder: RecyclerView.ViewHolder, item: ChatItem.BotMessage) {
+        when (val botResponse = item.botResponse) {
+            is BotResponse.Message -> (holder as BotTextMessageViewHolder).bind(botResponse.message)
+            is BotResponse.Directions -> (holder as BotDirectionsViewHolder).bind(botResponse)
+            is BotResponse.Error -> (holder as BotErrorViewHolder).bind(botResponse.message)
         }
     }
 
-    fun updateMessageAt(index: Int, newText: String) {
-        val oldMessage = items[index]
-        if (oldMessage is ChatItem.Message) {
-            items[index] = oldMessage.copy(text = newText)
-            notifyItemChanged(index)
-        }
+    fun addChatItem(item: ChatItem) {
+        items.add(item)
+        submitList(items.toList()) { onMessageAddedCallback?.invoke() }
     }
 
+    fun replaceLastChatItem(newItem: ChatItem) {
+        if (items.isNotEmpty()) {
+            items[items.lastIndex] = newItem
+        } else {
+            items.add(newItem)
+        }
+        submitList(items.toList()) { onMessageAddedCallback?.invoke() }
+    }
 
-    fun replaceAll(messages: List<ChatItem.Message>) {
+    fun replaceAll(newChatItems: List<ChatItem>) {
         items.clear()
         items.add(ChatItem.Greeting)
-        items.addAll(messages)
-        notifyDataSetChanged()
+        items.addAll(newChatItems)
+        submitList(items.toList())
     }
 }

@@ -1,10 +1,19 @@
+# IntelliJ / Android Studio
 *.iml
-.gradle
-/local.properties
-/.idea
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.idea/
+.gradle/
+
+# Build outputs
+/build/
+.cxx/
+.externalNativeBuild/
+captures/
+
+# Local config with secrets
 local.properties
+
+# macOS
+.DS_Store
+
+# (Optional extras you might want)
+*.log

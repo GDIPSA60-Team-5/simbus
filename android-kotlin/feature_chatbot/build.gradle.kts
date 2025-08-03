@@ -1,8 +1,9 @@
+val mapsApiKey: String = (project.findProperty("MAPS_API_KEY") as? String).orEmpty()
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
-
 android {
     namespace = "com.example.feature_chatbot"
     compileSdk = 35
@@ -15,8 +16,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
 
+        manifestPlaceholders["googleMapsKey"] = mapsApiKey
+    }
+    buildFeatures {
+        viewBinding = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -36,7 +41,12 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
+    implementation(libs.retrofit)
+    implementation(libs.logging.interceptor)
+    implementation(libs.converter.gson)
+    implementation(libs.gson)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

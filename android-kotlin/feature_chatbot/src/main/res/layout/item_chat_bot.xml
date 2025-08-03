@@ -6,11 +6,9 @@
 
     <TextView
         android:id="@+id/messageText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="start"
         android:layout_margin="8dp"
-        android:maxWidth="250dp"
         android:padding="12dp"
         android:textColor="#ffffff"
         android:textSize="16sp" />
