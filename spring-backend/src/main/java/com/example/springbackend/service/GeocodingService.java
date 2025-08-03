@@ -1,6 +1,6 @@
 package com.example.springbackend.service;
 
-import com.example.springbackend.dto.Coordinates;
+import com.example.springbackend.model.Coordinates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;

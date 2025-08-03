@@ -1,4 +1,4 @@
-package com.example.springbackend.dto;
+package com.example.springbackend.dto.llm;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

@@ -1,3 +1,3 @@
-package com.example.springbackend.dto;
+package com.example.springbackend.model;
 
 public record Coordinates(String latitude, String longitude) {}
