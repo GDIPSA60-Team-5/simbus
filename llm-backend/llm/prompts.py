@@ -1,5 +1,7 @@
 import json
 from llm.utils import current_datetime, serialize_for_json
+from typing import Dict, Any
+
 
 def build_extraction_prompt(intents, slots, history):
     system_prompt = f"""
@@ -11,27 +13,27 @@ Possible intents:
 Extract these slot fields if available:
 {json.dumps(slots, indent=2)}
 
-Special rules:
-- The current date and time is {current_datetime()}
-- If the user specifies a time (e.g., "at 9 AM" or "in the evening") but not a date, use today's date with the given time.
-- Format all date and time values as ISO 8601 strings (e.g., "2025-08-01T09:00:00").
-- If the user gives a date and time separately, combine them into a full datetime string.
+Rules for extracting datetime-related information:
+- Current datetime: {current_datetime()}
+- If only time is given, assume today.
+- Use ISO 8601 format (e.g. "2025-08-01T09:00:00")
 
-Return only a valid JSON object with fields intent and slots.
-Do not wrap the output in quotes or code blocks. Do not omit closing braces.
+Return a JSON with 'intent' and 'slots'. Do not generate anything else.
 """
     dialogue = "\n".join(
         f"{'User' if turn['role'] == 'user' else 'Assistant'}: {turn['content']}"
         for turn in history
     )
 
-    return f"{system_prompt}\n\nConversation:\n{dialogue}\n\nJSON:"
+    return f"{system_prompt}\nConversation:\n{dialogue}\n\nJSON:"
 
 
-def build_followup_prompt(intent, required_slots, current_slots, history):
-    missing_slots = [slot for slot in required_slots if not current_slots.get(slot)]
-
-    if missing_slots:
+def build_followup_prompt(intent, required_slots, current_slots, history, missing_slots):
+    if set(missing_slots) == {"boarding_bus_stop_name", "boarding_bus_stop_code"}:
+        status_message = (
+            "To proceed, please provide either the boarding bus stop name or the boarding bus stop code."
+        )
+    else:
         status_message = (
             f"""
             Some required information is still missing. Please ask a follow-up question to collect:
@@ -44,11 +46,6 @@ def build_followup_prompt(intent, required_slots, current_slots, history):
             - Format all date and time values as ISO 8601 strings (e.g., "2025-08-01T09:00:00").
             - If the user gives a date and time separately, combine them into a full datetime string.
             """
-        )
-    else:
-        status_message = (
-            "All required slot values have been provided. Please send a confirmation message to the user.\n"
-            "Do not ask for any extra information or question."
         )
 
     system_prompt = f"""
@@ -71,3 +68,20 @@ Do not include explanations or labels. Just write the next message from the assi
     )
 
     return f"{system_prompt}\n\nConversation:\n{dialogue}\n\nAssistant:"
+
+
+def build_final_response_prompt(intent: str, slots: Dict[str, Any], backend_result: str) -> str:
+    return f"""
+You are an assistant helping a user with the intent "{intent}".
+
+The backend system has successfully processed the user's request and returned this result:
+"{backend_result}"
+
+Here are the slot values that were used for this intent:
+{json.dumps(slots, indent=2)}
+
+Your task is to turn the backend result into a natural, helpful response to the user.
+Do not ask any further questions or include labels.
+
+Write the assistant's message below:
+Assistant:"""

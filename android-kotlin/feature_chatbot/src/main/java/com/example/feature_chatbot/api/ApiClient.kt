@@ -8,6 +8,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.BotResponseTypeAdapter
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -20,6 +21,9 @@ object ApiClient {
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
+        .connectTimeout(30, TimeUnit.SECONDS)   // Time to connect to server
+        .readTimeout(60, TimeUnit.SECONDS)      // Time to wait for server response
+        .writeTimeout(30, TimeUnit.SECONDS)     // Time to send request to server
         .build()
 
     val retrofit: Retrofit = Retrofit.Builder()

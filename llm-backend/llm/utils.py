@@ -4,7 +4,7 @@ import ast
 import sys
 import time as timing
 from datetime import datetime, date
-from llm.state import SLOT_TYPES
+from llm.state import SLOT_TYPES, REQUIRED_SLOTS
 
 def typewriter_print(text, delay=0.015):
     for char in text:
@@ -30,39 +30,35 @@ def merge_slots(current_slots, new_slots):
 
 def extract_json_from_response(text):
     try:
-        # Extract the first {...} JSON-looking substring (non-greedy)
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON object found in response.")
-        
-        json_str = match.group(0).strip().lstrip("\ufeff")
+        # Extract all JSON-like substrings and try parsing the first valid one
+        json_candidates = re.findall(r'\{.*?\}', text, re.DOTALL)
 
-        # Check if it ends correctly, otherwise try to fix
-        open_braces = json_str.count("{")
-        close_braces = json_str.count("}")
-        if open_braces > close_braces:
-            json_str += "}" * (open_braces - close_braces)
-
-        # Unescape if string-literal wrapped
-        if (json_str.startswith('"') and json_str.endswith('"')) or \
-            (json_str.startswith("'") and json_str.endswith("'")):
+        for candidate in json_candidates:
             try:
-                json_str = ast.literal_eval(json_str)
-            except Exception as e:
-                print(f"[ERROR evaluating string literal]: {e}")
-                print("LLM returned:\n", repr(json_str))
-                return None
+                cleaned = candidate.strip().lstrip("\ufeff")
 
-        return json.loads(json_str)
+                # Fix unbalanced braces
+                open_braces = cleaned.count("{")
+                close_braces = cleaned.count("}")
+                if open_braces > close_braces:
+                    cleaned += "}" * (open_braces - close_braces)
 
-    except json.JSONDecodeError as e:
-        print(f"[ERROR decoding JSON]: {e}")
-        print("LLM returned:\n", repr(text))
+                # Unescape if needed
+                if (cleaned.startswith('"') and cleaned.endswith('"')) or \
+                    (cleaned.startswith("'") and cleaned.endswith("'")):
+                    cleaned = ast.literal_eval(cleaned)
+
+                return json.loads(cleaned)
+
+            except json.JSONDecodeError:
+                continue  # Skip and try the next one
+
+        raise ValueError("No valid JSON object found.")
+
     except Exception as e:
         print(f"[ERROR extracting JSON]: {e}")
         print("LLM returned:\n", repr(text))
-
-    return None
+        return None
 
 
 def show_help():
@@ -150,3 +146,18 @@ def serialize_for_json(obj):
     elif isinstance(obj, datetime):
         return obj.isoformat()
     return obj
+
+
+def find_missing_slots(intent, current_slots):
+    required = REQUIRED_SLOTS.get(intent, [])
+    missing = []
+
+    for slot in required:
+        if isinstance(slot, list):
+            # slot group means at least one must be present
+            if not any(current_slots.get(s) for s in slot):
+                missing.extend(slot)  # all alternatives missing, so ask for all
+        else:
+            if not current_slots.get(slot):
+                missing.append(slot)
+    return missing

@@ -39,31 +39,31 @@ public class CommutePlanController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // UPDATE
-    @PutMapping("/{id}")
-    public ResponseEntity<CommutePlan> updateCommutePlan(
-            @PathVariable Long id,
-            @RequestBody CommutePlan updatedPlan) {
-
-        return commutePlanRepository.findById(id)
-                .map(existingPlan -> {
-                    // Update fields - example for main fields, add more if needed
-                    existingPlan.setCommutePlanName(updatedPlan.getCommutePlanName());
-                    existingPlan.setNotifyAt(updatedPlan.getNotifyAt());
-                    existingPlan.setArrivalTime(updatedPlan.getArrivalTime());
-                    existingPlan.setReminderOffsetMin(updatedPlan.getReminderOffsetMin());
-                    existingPlan.setRecurrence(updatedPlan.getRecurrence());
-                    existingPlan.setStartLocation(updatedPlan.getStartLocation());
-                    existingPlan.setEndLocation(updatedPlan.getEndLocation());
-                    existingPlan.setUser(updatedPlan.getUser());
-
-                    // For collections like commuteHistory, preferredRoutes, handle carefully (e.g. replace, merge, or ignore here)
-
-                    CommutePlan saved = commutePlanRepository.save(existingPlan);
-                    return ResponseEntity.ok(saved);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+//    // UPDATE
+//    @PutMapping("/{id}")
+//    public ResponseEntity<CommutePlan> updateCommutePlan(
+//            @PathVariable Long id,
+//            @RequestBody CommutePlan updatedPlan) {
+//
+//        return commutePlanRepository.findById(id)
+//                .map(existingPlan -> {
+//                    // Update fields - example for main fields, add more if needed
+//                    existingPlan.setCommutePlanName(updatedPlan.getCommutePlanName());
+//                    existingPlan.setNotifyAt(updatedPlan.getNotifyAt());
+//                    existingPlan.setArrivalTime(updatedPlan.getArrivalTime());
+//                    existingPlan.setReminderOffsetMin(updatedPlan.getReminderOffsetMin());
+//                    existingPlan.setRecurrence(updatedPlan.getRecurrence());
+//                    existingPlan.setStartLocation(updatedPlan.getStartLocation());
+//                    existingPlan.setEndLocation(updatedPlan.getEndLocation());
+//                    existingPlan.setUser(updatedPlan.getUser());
+//
+//                    // For collections like commuteHistory, preferredRoutes, handle carefully (e.g. replace, merge, or ignore here)
+//
+//                    CommutePlan saved = commutePlanRepository.save(existingPlan);
+//                    return ResponseEntity.ok(saved);
+//                })
+//                .orElseGet(() -> ResponseEntity.notFound().build());
+//    }
 
     // DELETE
     @DeleteMapping("/{id}")
