@@ -186,8 +186,7 @@ class MainActivity : AppCompatActivity() {
         chatController = ChatController(
             adapter = chatAdapter,
             api = ApiClient.chatbotApi,
-            onNewBotMessage = { botText ->  // <-- use botResponse here
-                chatInput.setText(botText)
+            onNewBotMessage = {
             }
         )
     }
