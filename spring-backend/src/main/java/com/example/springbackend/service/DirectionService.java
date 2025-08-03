@@ -35,6 +35,13 @@ public class DirectionService {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
+    /**
+     * Calls the OneMap API, retrieves the raw JSON, and maps it to our simplified DTO.
+     *
+     * @param start The start location coordinates.
+     * @param end The end location coordinates.
+     * @return A Mono containing the simplified DirectionsResponseDTO.
+     */
     public Mono<DirectionsResponseDTO> getBusRoutes(String start, String end) {
         log.debug("getBusRoutes called with parameters:");
         log.debug("start = '{}'", start);
@@ -42,6 +49,8 @@ public class DirectionService {
         log.debug("date = '{}'", "08-01-2025");
         log.debug("time = '{}'", "07:35:00");
         log.debug("numItineraries = '{}'", "3");
+        String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+        String currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -62,6 +71,10 @@ public class DirectionService {
                 .map(this::parseAndMapResponse);
     }
 
+    /**
+     * Parses the raw OneMap JSON string and maps it to a DirectionsResponseDTO.
+     * This is where the core data extraction logic happens.
+     */
     private DirectionsResponseDTO parseAndMapResponse(String jsonResponse) {
         log.debug("Parsing routing JSON response");
         try {
