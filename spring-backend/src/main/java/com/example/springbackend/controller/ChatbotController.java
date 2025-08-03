@@ -3,6 +3,7 @@ package com.example.springbackend.controller;
 import com.example.springbackend.dto.llm.BotResponseDTO;
 import com.example.springbackend.dto.request.ChatRequest;
 import com.example.springbackend.service.ChatbotService;
+import com.example.springbackend.service.implementation.LocalChatbotService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +17,7 @@ public class ChatbotController {
 
     private final ChatbotService chatbotService;
 
-    public ChatbotController(ChatbotService chatbotService) {
+    public ChatbotController(LocalChatbotService chatbotService) {
         this.chatbotService = chatbotService;
     }
 

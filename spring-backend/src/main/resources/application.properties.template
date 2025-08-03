@@ -1,4 +1,6 @@
 spring.application.name=spring-backend
+logging.level.reactor.netty.http.client.HttpClient=DEBUG
+logging.level.io.netty.handler.codec.http=DEBUG
 
 # MongoDB Configuration
 spring.data.mongodb.uri=mongodb://localhost:27017/simbus-mongo
