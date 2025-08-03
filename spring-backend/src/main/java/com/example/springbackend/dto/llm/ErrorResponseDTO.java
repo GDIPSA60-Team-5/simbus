@@ -1,4 +1,4 @@
-package com.example.springbackend.dto;
+package com.example.springbackend.dto.llm;
 
 /**
  * Represents an error message response from the bot.

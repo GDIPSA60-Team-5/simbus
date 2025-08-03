@@ -1,8 +1,6 @@
 package com.example.springbackend.service;
 
-import com.example.springbackend.dto.DirectionsResponseDTO;
-import com.example.springbackend.dto.LegDTO;
-import com.example.springbackend.dto.RouteDTO;
+import com.example.springbackend.dto.llm.DirectionsResponseDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
-public class DirectionService {
+public class OneMapService {
 
-    private static final Logger log = LoggerFactory.getLogger(DirectionService.class);
+    private static final Logger log = LoggerFactory.getLogger(OneMapService.class);
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -30,8 +28,8 @@ public class DirectionService {
     @Value("${onemap.token}")
     private String oneMapToken;
 
-    public DirectionService(WebClient.Builder webClientBuilder,
-                            @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
+    public OneMapService(WebClient.Builder webClientBuilder,
+                         @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
         this.webClient = webClientBuilder.baseUrl(baseUrl).build();
     }
 
@@ -90,7 +88,7 @@ public class DirectionService {
             String endLoc = planNode.path("to").path("name").asText("Destination");
 
             JsonNode itinerariesNode = planNode.path("itineraries");
-            List<RouteDTO> routes = new ArrayList<>();
+            List<DirectionsResponseDTO.RouteDTO> routes = new ArrayList<>();
 
             if (itinerariesNode.isArray()) {
                 for (int i = 0; i < itinerariesNode.size() && i < 3; i++) {
@@ -98,7 +96,7 @@ public class DirectionService {
 
                     int durationInMinutes = itineraryNode.path("duration").asInt(0) / 60;
                     JsonNode legsNode = itineraryNode.path("legs");
-                    List<LegDTO> legs = new ArrayList<>();
+                    List<DirectionsResponseDTO.LegDTO> legs = new ArrayList<>();
                     StringBuilder summaryBuilder = new StringBuilder();
                     StringBuilder routeGeometryBuilder = new StringBuilder();
 
@@ -115,9 +113,9 @@ public class DirectionService {
                                     legNode.path("to").path("name").asText("a location")
                             );
 
-                            legs.add(new LegDTO(type, legDuration, busServiceNumber, instruction));
+                            legs.add(new DirectionsResponseDTO.LegDTO(type, legDuration, busServiceNumber, instruction));
 
-                            if ("BUS".equals(type) && summaryBuilder.length() == 0) {
+                            if ("BUS".equals(type) && summaryBuilder.isEmpty()) {
                                 summaryBuilder.append("Bus Service ").append(busServiceNumber);
                             }
 
@@ -128,7 +126,7 @@ public class DirectionService {
                         }
                     }
 
-                    routes.add(new RouteDTO(
+                    routes.add(new DirectionsResponseDTO.RouteDTO(
                             durationInMinutes,
                             legs,
                             summaryBuilder.toString(),
