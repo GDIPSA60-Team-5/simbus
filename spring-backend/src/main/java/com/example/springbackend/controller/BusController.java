@@ -19,11 +19,18 @@ public class BusController {
     }
 
     @GetMapping("/arrivals")
-    public Flux<BusArrival> getArrivalsForFirstMatch(@RequestParam String query) {
-        return busService.searchBusStops(query)
-                .next()  // take the first matching bus stop only
-                .flatMapMany(busService::getArrivalsForStop);
+    public Flux<BusArrival> getArrivalsForStopAndService(
+            @RequestParam String busStopCode,
+            @RequestParam(required = false) String serviceNo) {
+
+        return busService.searchBusStops(busStopCode)
+                .filter(stop -> stop.code().equalsIgnoreCase(busStopCode))
+                .next() // take first exact match
+                .flatMapMany(busService::getArrivalsForStop)
+                .filter(arrival -> serviceNo == null || serviceNo.isBlank() ||
+                        arrival.serviceName().equalsIgnoreCase(serviceNo));
     }
+
 
     /**
      * Searches for bus stops across all available providers (LTA and NUS).
