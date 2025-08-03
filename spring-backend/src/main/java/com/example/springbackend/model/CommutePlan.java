@@ -36,6 +36,12 @@ public class CommutePlan {
 	private LocalTime arrivalTime;
 	private Integer reminderOffsetMin;
 	private Boolean recurrence;
+	@ManyToOne
+	@JoinColumn(name = "start_location_id")
+	private Location startLocation;
+	@ManyToOne
+	@JoinColumn(name = "end_location_id")
+	private Location endLocation;
 
 	@ManyToOne
 	@JoinColumn(name = "userId")
