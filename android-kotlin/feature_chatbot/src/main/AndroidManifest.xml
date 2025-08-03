@@ -16,7 +16,8 @@
         android:theme="@style/Theme.BusAppKotlin">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCLiFrxaQiSMwsqwz2Che2lPXRNVnXVyXQ"/>
+            android:value="${googleMapsKey}" />
+
 
         <activity
             android:name=".ui.MainActivity"
