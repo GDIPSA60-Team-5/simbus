@@ -15,4 +15,10 @@ spring.jpa.show-sql=true
 
 # onemap api
 onemap.base-url=https://www.onemap.gov.sg
-onemap.token=<one-map-token-here>
+onemap.token=<YOUR-Token>
+
+api.lta.baseurl=https://datamall2.mytransport.sg/ltaodataservice
+api.lta.key=<YOUR-Token>
+
+api.nus.baseurl=https://nnextbus.nus.edu.sg
+api.nus.auth=<YOUR-Token>
