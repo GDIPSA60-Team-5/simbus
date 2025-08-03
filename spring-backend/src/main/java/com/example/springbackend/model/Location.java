@@ -24,10 +24,10 @@ public class Location {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	private String locationName;
 
 	private Double latitude;
 	private Double longitude;
-	private String locationName;
 
 	@ManyToOne
 	@JoinColumn(name = "userId")
