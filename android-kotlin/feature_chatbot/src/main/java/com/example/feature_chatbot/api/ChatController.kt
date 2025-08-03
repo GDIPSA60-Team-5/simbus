@@ -1,6 +1,5 @@
-package com.example.feature_chatbot.domain
+package com.example.feature_chatbot.api
 
-import com.example.feature_chatbot.api.ChatbotApi
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.ChatItem

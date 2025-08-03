@@ -13,17 +13,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @RestController
-public class ChatbotController {
+public class ChatbotControllerV2 {
 
     private final WebClient llmClient;
 
-    public ChatbotController(WebClient.Builder webClientBuilder) {
+    public ChatbotControllerV2(WebClient.Builder webClientBuilder) {
         this.llmClient = webClientBuilder
                 .baseUrl("http://localhost:8000") // FastAPI host/port
                 .build();
     }
 
-    @PostMapping("/api/chatbot")
+    @PostMapping("/api/v2/chatbot")
     public Mono<BotResponseDTO> handleChatInput(
             @RequestBody ChatRequest request,
             @RequestHeader HttpHeaders incomingHeaders
