@@ -6,7 +6,7 @@ spring.data.mongodb.uri=mongodb://localhost:27017/simbus-mongo
 # PostgreSQL Configuration
 spring.datasource.url=jdbc:postgresql://localhost:5432/simbus-postgres
 spring.datasource.username=postgres
-spring.datasource.password=
+spring.datasource.password=root
 
 # JPA Configuration
 spring.jpa.hibernate.ddl-auto=update
@@ -15,7 +15,13 @@ spring.jpa.show-sql=true
 
 # OneMap Api Token (ask paul)
 onemap.base-url=https://www.onemap.gov.sg
-onemap.token=your_one_map_api_token
+onemap.token=<YOUR-Token>
+
+api.lta.baseurl=https://datamall2.mytransport.sg/ltaodataservice
+api.lta.key=<YOUR-Token>
+
+api.nus.baseurl=https://nnextbus.nus.edu.sg
+api.nus.auth=<YOUR-Token>
 
 # JWT Secret Token (any 256 based will do)
 jwt.secret=your_jwt_token
