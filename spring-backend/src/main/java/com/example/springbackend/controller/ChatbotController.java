@@ -17,7 +17,7 @@ public class ChatbotController {
 
     private final ChatbotService chatbotService;
 
-    public ChatbotController(ProxyChatbotService chatbotService) {
+    public ChatbotController(ChatbotService chatbotService) {
         this.chatbotService = chatbotService;
     }
 
