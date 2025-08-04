@@ -1,20 +1,10 @@
 package com.example.springbackend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
-@Entity
+@Document("preferred_routes")
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,18 +12,9 @@ import lombok.ToString;
 public class PreferredRoute {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private String id;
 
-	@ManyToOne
-	@JoinColumn(name = "commutePlanId")
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private CommutePlan commutePlan;
+	private String commutePlanId;  // reference to CommutePlan.id
 
-	@ManyToOne
-	@JoinColumn(name = "routeId")
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private Route route;
+	private String routeId;        // reference to Route.id
 }

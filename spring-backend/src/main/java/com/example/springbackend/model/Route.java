@@ -1,25 +1,12 @@
 package com.example.springbackend.model;
 
-import java.util.ArrayList;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
+
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
-@Entity
+@Document("routes")
 @Data
 @Builder
 @NoArgsConstructor
@@ -27,39 +14,16 @@ import lombok.ToString;
 public class Route {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private String id;
 
 	private String routeName;
 	private Integer estimatedTimeMin;
 
-	@ManyToOne
-	@JoinColumn(name = "startLocationId")
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private Location startLocation;
+	private String startLocationId;  // reference to Location.id
+	private String endLocationId;    // reference to Location.id
 
-	@ManyToOne
-	@JoinColumn(name = "endLocationId")
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private Location endLocation;
-
-	@OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
-	@Builder.Default
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private List<RouteSegment> routeSegments = new ArrayList<>();
-
-	@OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
-	@Builder.Default
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private List<CommuteHistory> commuteHistoryList = new ArrayList<>();
-
-	@OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
-	@Builder.Default
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private List<PreferredRoute> preferredRoutes = new ArrayList<>();
+	// Instead of @OneToMany lists, store only the IDs or load separately
+	private List<String> routeSegmentIds;     // IDs of RouteSegment documents
+	private List<String> commuteHistoryIds;   // IDs of CommuteHistory documents
+	private List<String> preferredRouteIds;   // IDs of PreferredRoute documents
 }

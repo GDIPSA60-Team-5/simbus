@@ -18,20 +18,23 @@ public class SpringBackendApplication {
 
     }
 
-
-    //input userName(user) and passwordHash(password) into database when run application
     @Bean
     CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            if (userRepository.findByUserName("user").isEmpty()) {
-                User user = new User();
-                user.setUserName("user");
-                user.setUserType("admin");
-                user.setPasswordHash(passwordEncoder.encode("password"));
-                userRepository.save(user);
-            }
+            userRepository.findByUserName("user")
+                    .switchIfEmpty(
+                            userRepository.save(
+                                    User.builder()
+                                            .userName("user")
+                                            .userType("admin")
+                                            .passwordHash(passwordEncoder.encode("password"))
+                                            .build()
+                            )
+                    )
+                    .block();
         };
     }
+
 
 
 }

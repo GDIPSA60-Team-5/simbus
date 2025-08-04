@@ -1,14 +1,9 @@
 package com.example.springbackend.repository;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import com.example.springbackend.model.User;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, UUID>{
-    Optional<User> findByUserName(String userName);
+public interface UserRepository extends ReactiveCrudRepository<User, String> {
+    Mono<User> findByUserName(String userName);
 }

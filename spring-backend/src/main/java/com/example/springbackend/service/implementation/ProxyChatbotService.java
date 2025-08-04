@@ -14,7 +14,6 @@ import org.springframework.http.HttpHeaders;
 
 
 @Service
-@ConditionalOnProperty(name = "chatbot.strategy", havingValue = "proxy")
 public class ProxyChatbotService implements ChatbotService {
     private final WebClient llmClient;
 

@@ -1,50 +1,54 @@
 package com.example.springbackend.services;
 
+import com.example.springbackend.security.UserDetailsAuthenticationManager;
 import com.example.springbackend.dto.*;
 import com.example.springbackend.model.User;
 import com.example.springbackend.repository.UserRepository;
 import com.example.springbackend.security.JwtTokenProvider;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final UserDetailsAuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public AuthResponse login(AuthRequest authRequest) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-
-        String token = jwtTokenProvider.generateToken(authRequest.getUsername());
-        return new AuthResponse(token);
+    public AuthService(@Qualifier("userDetailsAuthenticationManager") UserDetailsAuthenticationManager authenticationManager,
+                       JwtTokenProvider jwtTokenProvider,
+                       UserRepository userRepository,
+                       PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public String register(AuthRequest authRequest) {
-        // check if user already exist
-        if (userRepository.findByUserName(authRequest.getUsername()).isPresent()) {
-            return "username already in use";
-        }
-
-        // set new user and add passwordHash
-        User newUser = new User();
-        newUser.setUserName(authRequest.getUsername());
-        newUser.setPasswordHash(passwordEncoder.encode(authRequest.getPassword()));
-        userRepository.save(newUser);
-
-        return "registration successful";
+    public Mono<AuthResponse> login(AuthRequest authRequest) {
+        return authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()))
+                .map(auth -> {
+                    String token = jwtTokenProvider.generateToken(authRequest.username());
+                    return new AuthResponse(token);
+                });
     }
+
+    public Mono<String> register(AuthRequest authRequest) {
+        return userRepository.findByUserName(authRequest.username())
+                .flatMap(existingUser -> Mono.<String>error(new IllegalArgumentException("Username already in use")))
+                .switchIfEmpty(
+                        Mono.defer(() -> {
+                            User newUser = new User();
+                            newUser.setUserName(authRequest.username());
+                            newUser.setPasswordHash(passwordEncoder.encode(authRequest.password()));
+                            return userRepository.save(newUser).thenReturn("registration successful");
+                        })
+                );
+    }
+
 }

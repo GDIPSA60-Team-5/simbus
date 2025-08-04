@@ -1,20 +1,11 @@
 package com.example.springbackend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
-@Entity
+@Document("locations")
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,16 +13,12 @@ import lombok.ToString;
 public class Location {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
-	private String locationName;
+	private String id;
 
+	private String locationName;
 	private Double latitude;
 	private Double longitude;
 
-	@ManyToOne
-	@JoinColumn(name = "userId")
-	@ToString.Exclude          // avoid recursive toString
-	@EqualsAndHashCode.Exclude // avoid using association in equals/hashCode
-	private User user;
+	@Indexed // for lookups by userId
+	private String userId; // reference to User.id (no automatic relationship)
 }

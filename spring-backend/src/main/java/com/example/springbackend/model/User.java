@@ -1,48 +1,22 @@
 package com.example.springbackend.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import lombok.*;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
-@Entity
-@Table(name = "Users")
+@Document("users")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-
 	@Id
-	@GeneratedValue
-	private UUID id;
+	private String id;
 
 	private String userName;
 	private String userType;
 	private String passwordHash;
-
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-	@Builder.Default
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private List<Location> locations = new ArrayList<>();
-
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-	@Builder.Default
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private List<CommutePlan> commutePlans = new ArrayList<>();
+	// don't embed commutePlans/locations unless you want denormalized copies;
+	// keep them separate and reference by userId
 }
