@@ -1,7 +1,7 @@
 package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.*;
-import com.example.springbackend.services.AuthService;
+import com.example.springbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;

@@ -39,5 +39,4 @@ public class ProxyChatbotService implements ChatbotService {
                 .bodyToMono(BotResponseDTO.class)
                 .onErrorResume(e -> Mono.just(new ErrorResponseDTO("LLM service error: " + e.getMessage())));
     }
-
 }

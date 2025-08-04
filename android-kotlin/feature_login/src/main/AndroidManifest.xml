@@ -6,7 +6,6 @@
 
     <application
         android:networkSecurityConfig="@xml/network_security_config"
-        android:label="Login Feature Test"
         android:theme="@style/Theme.BusAppKotlin">
 
 <!--        <activity-->

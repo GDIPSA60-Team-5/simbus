@@ -1,4 +1,4 @@
-package com.example.springbackend.services;
+package com.example.springbackend.service;
 
 import com.example.springbackend.security.UserDetailsAuthenticationManager;
 import com.example.springbackend.dto.*;

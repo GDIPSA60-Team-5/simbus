@@ -1,5 +1,6 @@
 package iss.nus.edu.sg.appfiles.feature_login
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -50,10 +51,18 @@ class LoginActivity : AppCompatActivity() {
                     val token = response.body()?.token ?: ""
                     val secureStorage = SecureStorageManager(this@LoginActivity)
                     secureStorage.saveToken(token)
-                    secureStorage.saveUsername(username)
+
                     Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
+
+                    setResult(RESULT_OK)
+                    finish()
                 } else {
-                    Toast.makeText(this@LoginActivity, "Login failed: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    val errorMessage = when (response.code()) {
+                        401 -> "Invalid username or password"
+                        400 -> "Bad request"
+                        else -> "Login failed: ${response.code()}"
+                    }
+                    Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -62,6 +71,7 @@ class LoginActivity : AppCompatActivity() {
             }
         })
     }
+
 
     private fun register() {
         val username = usernameEditText.text.toString()

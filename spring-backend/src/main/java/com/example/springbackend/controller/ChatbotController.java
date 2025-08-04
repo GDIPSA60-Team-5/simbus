@@ -3,6 +3,7 @@ package com.example.springbackend.controller;
 import com.example.springbackend.dto.llm.BotResponseDTO;
 import com.example.springbackend.dto.request.ChatRequest;
 import com.example.springbackend.service.ChatbotService;
+import com.example.springbackend.service.implementation.LocalChatbotService;
 import com.example.springbackend.service.implementation.ProxyChatbotService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PostMapping;
