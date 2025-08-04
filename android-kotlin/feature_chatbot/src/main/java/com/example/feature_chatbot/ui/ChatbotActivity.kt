@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.api.ApiClient
-import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.Coordinates
 import com.example.feature_chatbot.api.ChatController
@@ -25,7 +24,7 @@ import com.example.feature_chatbot.domain.SpeechManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
-class MainActivity : AppCompatActivity() {
+class ChatbotActivity : AppCompatActivity() {
 
     companion object {
         private const val SCROLL_VISIBILITY_THRESHOLD = 2
@@ -158,7 +157,7 @@ class MainActivity : AppCompatActivity() {
 
         with(chatRecyclerView) {
             adapter = chatAdapter
-            layoutManager = LinearLayoutManager(this@MainActivity)
+            layoutManager = LinearLayoutManager(this@ChatbotActivity)
             addOnScrollListener(createScrollListener())
         }
     }
