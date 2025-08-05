@@ -1,5 +1,6 @@
 package com.example.springbackend.service;
 
+import com.example.springbackend.controller.GeocodeController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.StreamSupport;
 
 @Service
 public class ReverseGeocodeService {
@@ -34,32 +37,22 @@ public class ReverseGeocodeService {
     /**
      * Reverse geocode using SVY21 coordinates.
      *
-     * @param xCoord       X coordinate in SVY21 format (e.g., "24291.97788882387")
-     * @param yCoord       Y coordinate in SVY21 format (e.g., "31373.0117224489")
-     * @param buffer       Optional buffer radius in meters (0-500)
-     * @param addressType  Optional address type filter ("HDB" or "All")
-     * @param otherFeatures Optional flag for other features ("Y" or "N")
+     * @param x       X coordinate in SVY21 format (e.g., "24291.97788882387")
+     * @param y       Y coordinate in SVY21 format (e.g., "31373.0117224489")
      * @return Mono emitting a formatted address string, or empty if none found.
      */
-    public Mono<String> reverseGeocode(String xCoord, String yCoord,
-                                       String buffer, String addressType, String otherFeatures) {
-        if (xCoord == null || xCoord.isBlank() || yCoord == null || yCoord.isBlank()) {
-            return Mono.error(new IllegalArgumentException("X and Y coordinates must not be blank"));
-        }
-
-        if (oneMapToken == null || oneMapToken.isBlank()) {
-            log.warn("OneMap token is not configured");
-        }
+    public Mono<List<GeocodeController.ReverseGeocodeCandidate>> getCandidates(
+            String x, String y) {
 
         return webClient.get()
                 .uri(uriBuilder -> {
                     var builder = uriBuilder
                             .path("/api/public/revgeocodexy")
-                            .queryParam("location", xCoord + "," + yCoord);
+                            .queryParam("location", x + "," + y)
+                            .queryParam("buffer", "40")
+                            .queryParam("addressType", "All")
+                            .queryParam("otherFeatures", "N");
 
-                    if (buffer != null && !buffer.isBlank()) builder.queryParam("buffer", buffer);
-                    if (addressType != null && !addressType.isBlank()) builder.queryParam("addressType", addressType);
-                    if (otherFeatures != null && !otherFeatures.isBlank()) builder.queryParam("otherFeatures", otherFeatures);
 
                     return builder.build();
                 })
@@ -71,34 +64,35 @@ public class ReverseGeocodeService {
                         resp -> Mono.error(new RuntimeException("Reverse geocoding API server error: " + resp.statusCode())))
                 .bodyToMono(String.class)
                 .timeout(TIMEOUT)
-                .mapNotNull(this::parseResponse)
-                .doOnError(e -> log.warn("Error during reverse geocoding for coords {}, {}: {}", xCoord, yCoord, e.getMessage()))
-                .onErrorResume(e -> Mono.empty());
+                .map(this::parseReverseGeocodeCandidates)
+                .doOnError(e -> log.warn("Error during reverse geocoding for coords {}, {}: {}", x, y, e.getMessage()))
+                .onErrorResume(e -> Mono.just(List.of())); // empty list on error
     }
 
-    private String parseResponse(String jsonResponse) {
+    private List<GeocodeController.ReverseGeocodeCandidate> parseReverseGeocodeCandidates(String jsonResponse) {
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
             JsonNode geocodeInfo = root.path("GeocodeInfo");
             if (geocodeInfo.isArray() && !geocodeInfo.isEmpty()) {
-                JsonNode first = geocodeInfo.get(0);
-
-                String building = first.path("BUILDINGNAME").asText("");
-                String block = first.path("BLOCK").asText("");
-                String road = first.path("ROAD").asText("");
-                String postalCode = first.path("POSTALCODE").asText("");
-
-                StringBuilder address = new StringBuilder();
-                if (!building.isBlank()) address.append(building).append(", ");
-                if (!block.isBlank()) address.append("Block ").append(block).append(", ");
-                if (!road.isBlank()) address.append(road).append(", ");
-                if (!postalCode.isBlank()) address.append("Singapore ").append(postalCode);
-
-                return address.toString().replaceAll(", $", "");
+                return StreamSupport.stream(geocodeInfo.spliterator(), false)
+                        .map(node -> {
+                            String building = node.path("BUILDINGNAME").asText("");
+                            String block = node.path("BLOCK").asText("");
+                            String road = node.path("ROAD").asText("");
+                            String postalCode = node.path("POSTALCODE").asText("");
+                            StringBuilder address = new StringBuilder();
+                            if (!building.isBlank()) address.append(building).append(", ");
+                            if (!block.isBlank()) address.append("Block ").append(block).append(", ");
+                            if (!road.isBlank()) address.append(road).append(", ");
+                            if (!postalCode.isBlank()) address.append("Singapore ").append(postalCode);
+                            String formatted = address.toString().replaceAll(", $", "");
+                            return new GeocodeController.ReverseGeocodeCandidate(formatted);
+                        })
+                        .toList();
             }
         } catch (Exception e) {
-            log.error("Failed to parse reverse geocode response", e);
+            log.error("Failed to parse reverse geocode candidates", e);
         }
-        return null;
+        return List.of();
     }
 }

@@ -16,8 +16,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+
     }
 }
 
 rootProject.name = "BusAppKotlin"
-include(":feature_chatbot")
+include(":app", ":feature_login", ":feature_chatbot")
+include(":core")

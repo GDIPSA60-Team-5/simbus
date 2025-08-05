@@ -1,6 +1,7 @@
 package com.example.springbackend.service;
 
-import com.example.springbackend.dto.Coordinates;
+import com.example.springbackend.controller.GeocodeController;
+import com.example.springbackend.model.Coordinates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.StreamSupport;
 
 /**
  * Service to convert a location name (e.g., "Orchard") to
@@ -38,12 +41,9 @@ public class GeocodingService {
     }
 
     /**
-     * Finds the coordinates for a given location name.
-     *
-     * @param locationName The name of the location to search for.
-     * @return A Mono containing Coordinates if found, or empty if none / on failure.
+     * Returns a list of candidates for the location name (not just first result).
      */
-    public Mono<Coordinates> getCoordinates(String locationName) {
+    public Mono<List<GeocodeController.GeocodeCandidate>> getCandidates(String locationName) {
         if (locationName == null || locationName.isBlank()) {
             return Mono.error(new IllegalArgumentException("locationName must not be blank"));
         }
@@ -67,37 +67,31 @@ public class GeocodingService {
                         resp -> Mono.error(new RuntimeException("Geocoding API server error: " + resp.statusCode())))
                 .bodyToMono(String.class)
                 .timeout(TIMEOUT)
-                .map(this::parseGeocodingResponse)
-                .flatMap(coords -> {
-                    if (coords.latitude() != null && coords.longitude() != null) {
-                        return Mono.just(coords);
-                    } else {
-                        return Mono.empty();
-                    }
-                })
+                .map(this::parseGeocodeCandidates)
                 .doOnError(e -> log.warn("Error during geocoding for '{}': {}", locationName, e.getMessage()))
-                .onErrorResume(e -> Mono.empty());
+                .onErrorResume(e -> Mono.just(List.of())); // return empty list on error
     }
 
-    /**
-     * Parses the raw JSON response from the OneMap Search API
-     * and extracts the latitude and longitude of the first result.
-     */
-    private Coordinates parseGeocodingResponse(String jsonResponse) {
+    private List<GeocodeController.GeocodeCandidate> parseGeocodeCandidates(String jsonResponse) {
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
             JsonNode results = root.path("results");
             if (results.isArray() && !results.isEmpty()) {
-                JsonNode first = results.get(0);
-                String lat = first.path("LATITUDE").asText(null);
-                String lon = first.path("LONGITUDE").asText(null);
-                if (lat != null && lon != null && !lat.isBlank() && !lon.isBlank()) {
-                    return new Coordinates(lat, lon);
-                }
+                return StreamSupport.stream(results.spliterator(), false)
+                        .map(node -> new GeocodeController.GeocodeCandidate(
+                                node.path("LATITUDE").asText(""),
+                                node.path("LONGITUDE").asText(""),
+                                node.path("SEARCHVAL").asText(""),
+                                node.path("POSTAL").asText(""),
+                                node.path("BLK_NO").asText(""),
+                                node.path("ROAD_NAME").asText(""),
+                                node.path("BUILDING").asText("")
+                        ))
+                        .toList();
             }
         } catch (Exception e) {
-            log.error("Failed to parse geocoding response", e);
+            log.error("Failed to parse geocode candidates", e);
         }
-        return new Coordinates(null, null);
+        return List.of();
     }
 }
