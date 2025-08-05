@@ -63,7 +63,7 @@ def handle_next_bus(slots: Dict[str, Any]) -> str:
                     else:
                         msg = f"Bus {service_name} will arrive in {minutes} minute{'s' if minutes > 1 else ''}."
                     messages.append(msg)
-                except Exception as e:
+                except Exception:
                     messages.append(f"Could not parse arrival time for Bus {service_name}.")
                     # messages.append(f"Failed parsing: {eta_str} — {e}")
 

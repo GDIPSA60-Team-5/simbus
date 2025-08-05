@@ -1,6 +1,12 @@
 from datetime import datetime
 
-INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]
+INTENTS = {
+    "route_info": "Help users find directions from a start location to a destination.",
+    "schedule_commute": "Plan when to leave based on start, destination, arrival time, and notification timing.",
+    "next_bus": "Provide arrival time for the next bus given a bus service number and optionally boarding stop info.",
+    "help": "Provide guidance on how to use the assistant.",
+    "reset": "Clear the current conversation context to start fresh."
+}
 
 REQUIRED_SLOTS = {
     "route_info": ["start_location", "destination"],

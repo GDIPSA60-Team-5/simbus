@@ -67,19 +67,11 @@ def show_help():
     return """
 Here's what I can help you with:
 
-1. Route Info (`route_info`)
-    - Ask me how to get from one place to another.
-    - Example: "How do I get from downtown to the airport?"
+1. Find directions from one place to another (e.g., "How do I get to the airport?")
+2. Plan when to leave to reach your destination on time.
+3. Check when the next bus arrives.
 
-2. Schedule a Commute (`schedule_commute`)
-    - Let me know when you need to arrive, and I’ll plan the timing.
-    - Example: "I want to reach work by 9 AM. Notify me when to leave."
-
-3. Next Bus Timing (`next_bus`)
-    - Just give me the bus number and I’ll tell you when the next one arrives.
-    - Example: "When is the next A2 bus?"
-
-Just ask a question and I’ll guide you step by step!
+What would you like to do?
 """
 
 

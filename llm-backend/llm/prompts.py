@@ -1,5 +1,6 @@
 import json
 from llm.utils import current_datetime, serialize_for_json
+from llm.state import INTENTS
 from typing import Dict, Any
 
 
@@ -88,3 +89,21 @@ for user intent: "{intent}" is still under development. Do not offer suggestions
 
 Write the assistant's message below:
 Assistant:"""
+
+
+def build_help_prompt():
+    return f"""
+The user asked for help or gave no recognizable intent. Provide a short and friendly list of what you can help with, based on this list of intents:
+
+{json.dumps(INTENTS, indent=2)}
+
+Guidelines:
+- Use 2–3 items only if possible, or keep each item brief.
+- Include just one short example for each item.
+- Avoid technical labels like "intent".
+- Use a warm and casual tone.
+- Do NOT over-explain.
+- End with a short line like: "What would you like to do?"
+
+Reply in 80 words or less.
+"""

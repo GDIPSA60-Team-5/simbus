@@ -1,7 +1,7 @@
 from llm.model import get_model
-from llm.prompts import build_extraction_prompt, build_followup_prompt, build_final_response_prompt
+from llm.prompts import build_extraction_prompt, build_followup_prompt, build_final_response_prompt, build_help_prompt
 from llm.state import INTENTS, REQUIRED_SLOTS, SLOT_TYPES, MAX_HISTORY_LENGTH, reset_conversation_for_user, user_conversations
-from llm.utils import get_recent_history, merge_slots, extract_json_from_response, show_help, get_user_context, find_missing_slots
+from llm.utils import get_recent_history, merge_slots, extract_json_from_response, get_user_context, find_missing_slots
 from llm.intent_handler import handle_next_bus
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -67,10 +67,14 @@ def chat_endpoint(request: ChatRequest):
 
         # Handle special intents
         print(f"Context: {ctx}")
-        if ctx["state"]["intent"] == "help":
+        if ctx["state"]["intent"] in ["help", None]:
+            help_prompt = build_help_prompt()
+            print(f"Help Prompt: {help_prompt}")
+            help_response = model.generate(help_prompt, max_tokens=300)
+            print(f"Help Response: {help_response}")
             return BotResponseDTO(
                 type="message",
-                message=show_help()
+                message=help_response
             )
 
         if ctx["state"]["intent"] == "reset":
