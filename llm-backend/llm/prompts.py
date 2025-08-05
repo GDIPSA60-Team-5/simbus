@@ -78,10 +78,13 @@ The backend system has successfully processed the user's request and returned th
 "{backend_result}"
 
 Here are the slot values that were used for this intent:
-{json.dumps(slots, indent=2)}
+{json.dumps(serialize_for_json(slots), indent=2)}
 
 Your task is to turn the backend result into a natural, helpful response to the user.
 Do not ask any further questions or include labels.
+
+If the backend result indicates that the feature isn't implemented yet, clearly let the user know that this feature 
+for user intent: "{intent}" is still under development. Do not offer suggestions, predictions, or additional help.
 
 Write the assistant's message below:
 Assistant:"""
