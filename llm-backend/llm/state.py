@@ -5,7 +5,7 @@ INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]
 REQUIRED_SLOTS = {
     "route_info": ["start_location", "destination"],
     "schedule_commute": ["start_location", "destination", "notification_start_time", "arrival_time"],
-    "next_bus": ["bus_number", ["boarding_bus_stop_name", "boarding_bus_stop_code"]],
+    "next_bus": ["bus_service_number", ["boarding_bus_stop_name", "boarding_bus_stop_code"]],
     "help": [],
     "reset": []
 }
@@ -15,7 +15,7 @@ SLOT_TYPES = {
     "destination": str,
     "notification_start_time": datetime,
     "arrival_time": datetime,
-    "bus_number": str,
+    "bus_service_number": str,
     "boarding_bus_stop_name": str,
     "boarding_bus_stop_code": str
 }

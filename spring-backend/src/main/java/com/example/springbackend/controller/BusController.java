@@ -25,7 +25,6 @@ public class BusController {
             @RequestParam(required = false) String serviceNo) {
 
         return busService.searchBusStops(busStopCode)
-                .filter(stop -> stop.code().equalsIgnoreCase(busStopCode))
                 .next() // take first exact match
                 .flatMapMany(busService::getArrivalsForStop)
                 .filter(arrival -> serviceNo == null || serviceNo.isBlank() ||

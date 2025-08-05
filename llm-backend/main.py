@@ -88,6 +88,7 @@ def chat_endpoint(request: ChatRequest):
         if not missing_slots:
             # Call backend and build final prompt
             if intent == "next_bus":
+                print(f"Current slots before passing to handler: {current_slots}")
                 backend_result = handle_next_bus(current_slots)
             else:
                 backend_result = f"Intent '{intent}' is recognized, but no handler implemented."

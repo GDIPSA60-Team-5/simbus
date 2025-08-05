@@ -1,21 +1,21 @@
 import requests
-import pytz
 from typing import Dict, Any
-from datetime import datetime
+from llm.utils import current_datetime
 from dateutil import parser as date_parser  # pip install python-dateutil
+
 
 def handle_next_bus(slots: Dict[str, Any]) -> str:
     base_url = "http://localhost:8080/api/bus/arrivals"
     params = {}
 
     # Pick either bus stop code or name
-    if "boarding_bus_stop_code" in slots:
+    if slots.get("boarding_bus_stop_code"):
         params["busStopCode"] = slots["boarding_bus_stop_code"]
-    elif "boarding_bus_stop" in slots:
-        params["busStopName"] = slots["boarding_bus_stop"]
+    elif slots.get("boarding_bus_stop_name"):
+        params["busStopCode"] = slots["boarding_bus_stop_name"]
 
-    if "bus_number" in slots:
-        params["serviceNo"] = slots["bus_number"]
+    if slots.get("bus_service_number"):
+        params["serviceNo"] = slots["bus_service_number"]
 
     if not params.get("busStopCode") and not params.get("busStopName"):
         return "Please provide a bus stop code or name to check the next bus."
@@ -29,8 +29,7 @@ def handle_next_bus(slots: Dict[str, Any]) -> str:
         if not arrivals_data:
             return "No upcoming buses found for the given stop and service."
 
-        sgt = pytz.timezone("Asia/Singapore")
-        now = datetime.now(sgt)
+        now = current_datetime()
         messages = []
 
         # If bus_number specified, filter results to that service only

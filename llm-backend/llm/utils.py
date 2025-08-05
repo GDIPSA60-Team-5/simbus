@@ -3,8 +3,10 @@ import re
 import ast
 import sys
 import time as timing
+import pytz
 from datetime import datetime, date
 from llm.state import SLOT_TYPES, REQUIRED_SLOTS
+
 
 def typewriter_print(text, delay=0.015):
     for char in text:
@@ -135,7 +137,8 @@ def validate_future_datetime(dt_value):
 
 
 def current_datetime():
-    return datetime.now().isoformat(timespec='seconds')
+    sgt = pytz.timezone("Asia/Singapore")
+    return datetime.now(sgt).isoformat(timespec='seconds')
 
 
 def serialize_for_json(obj):
