@@ -3,8 +3,12 @@ val mapsApiKey: String = (project.findProperty("MAPS_API_KEY") as? String).orEmp
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    kotlin("kapt")
 }
-
+hilt {
+    enableAggregatingTask = false
+}
 android {
     namespace = "com.example.feature_chatbot"
     compileSdk = 35
@@ -42,11 +46,12 @@ android {
 }
 
 dependencies {
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
-    implementation(libs.converter.gson)
     implementation(libs.gson)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

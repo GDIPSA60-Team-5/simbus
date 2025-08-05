@@ -24,9 +24,9 @@ public class ChatbotController {
 
     @PostMapping("/api/v2/chatbot")
     public Mono<BotResponseDTO> handleChatInput(
-            @RequestBody ChatRequest request,
+            @RequestBody Mono<ChatRequest> requestMono,
             @RequestHeader HttpHeaders headers
     ) {
-        return chatbotService.handleChatInput(request, headers);
+        return requestMono.flatMap(request -> chatbotService.handleChatInput(request, headers));
     }
 }

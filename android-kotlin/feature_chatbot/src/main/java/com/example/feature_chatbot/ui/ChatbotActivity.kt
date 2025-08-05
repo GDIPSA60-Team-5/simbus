@@ -16,15 +16,20 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
-import com.example.feature_chatbot.api.ApiClient
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.Coordinates
 import com.example.feature_chatbot.api.ChatController
+import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.domain.SpeechManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import dagger.hilt.android.AndroidEntryPoint
+import java.util.UUID
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ChatbotActivity : AppCompatActivity() {
+
 
     companion object {
         private const val SCROLL_VISIBILITY_THRESHOLD = 2
@@ -59,7 +64,8 @@ class ChatbotActivity : AppCompatActivity() {
 
     // Managers
     private lateinit var speechManager: SpeechManager
-    private lateinit var chatController: ChatController
+    @Inject
+    lateinit var chatController: ChatController
 
     // UI Components
     private lateinit var micButton: ImageButton
@@ -147,7 +153,6 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun initializeComponents() {
         setupRecyclerView()
-        setupChatController()
         setupSpeechManager()
     }
 
@@ -180,16 +185,6 @@ class ChatbotActivity : AppCompatActivity() {
             scrollToBottomButton.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
     }
-
-    private fun setupChatController() {
-        chatController = ChatController(
-            adapter = chatAdapter,
-            api = ApiClient.chatbotApi,
-            onNewBotMessage = {
-            }
-        )
-    }
-
 
     private fun setupSpeechManager() {
         speechManager = SpeechManager(
@@ -240,11 +235,28 @@ class ChatbotActivity : AppCompatActivity() {
     }
 
     private fun handleUserMessage(message: String) {
-        if (!::chatController.isInitialized) return
+        if (message.isEmpty()) return
 
         removeGreetingPaddingIfNeeded()
         scrollToBottomButton.visibility = ImageButton.GONE
-        chatController.userSent(message, currentLocation)
+        val userChatItem = ChatItem.UserMessage(UUID.randomUUID().toString(), message)
+        val typingIndicator = ChatItem.TypingIndicator()
+        chatAdapter.addChatItem(userChatItem)
+        chatAdapter.addChatItem(typingIndicator)
+
+        chatController.sendMessage(
+            userInput = message,
+            currentLocation = currentLocation,
+            onResult = { botMessage ->
+                chatAdapter.replaceLastChatItem(botMessage)
+            },
+            onError = { errorMessage ->
+                chatAdapter.replaceLastChatItem(errorMessage)
+            },
+            onNewBotMessage = {
+                // Optional: show toast, log, or do nothing
+            }
+        )
     }
 
     private fun removeGreetingPaddingIfNeeded() {

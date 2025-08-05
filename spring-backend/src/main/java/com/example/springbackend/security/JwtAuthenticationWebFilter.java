@@ -36,8 +36,12 @@ public class JwtAuthenticationWebFilter implements WebFilter {
                             chain.filter(exchange)
                                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication))
                     )
-                    .switchIfEmpty(chain.filter(exchange));
+                    .onErrorResume(e -> {
+                        logger.warn("Authentication failed: {}", e.getMessage());
+                        return chain.filter(exchange);
+                    });
         }
+
         return chain.filter(exchange);
     }
 }

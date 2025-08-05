@@ -20,12 +20,11 @@ public class BusController {
 
     @GetMapping("/arrivals")
     public Flux<BusArrival> getArrivalsForStopAndService(
-            @RequestParam String busStopCode,
+            @RequestParam String busStopQuery,
             @RequestParam(required = false) String serviceNo) {
 
-        return busService.searchBusStops(busStopCode)
-                .filter(stop -> stop.code().equalsIgnoreCase(busStopCode))
-                .next() // take first exact match
+        return busService.searchBusStops(busStopQuery)
+                .next()
                 .flatMapMany(busService::getArrivalsForStop)
                 .filter(arrival -> serviceNo == null || serviceNo.isBlank() ||
                         arrival.serviceName().equalsIgnoreCase(serviceNo));

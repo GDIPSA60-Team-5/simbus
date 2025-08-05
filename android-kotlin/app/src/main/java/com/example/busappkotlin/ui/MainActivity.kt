@@ -3,14 +3,16 @@ package com.example.busappkotlin.ui
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.busappkotlin.R
 import com.example.feature_chatbot.ui.ChatbotActivity
-import iss.nus.edu.sg.appfiles.feature_login.LoginActivity
+import dagger.hilt.android.AndroidEntryPoint
+import iss.nus.edu.sg.appfiles.feature_login.ui.LoginActivity
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val loginLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -26,25 +28,20 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
+
         val secureStorage = SecureStorageManager(this)
         val token = secureStorage.getToken()
 
-        // Force login screen for testing
-        val intent = Intent(this, LoginActivity::class.java)
-        loginLauncher.launch(intent)
+//         Original check, now commented for testing
+                val intent = Intent(this, LoginActivity::class.java)
+                loginLauncher.launch(intent)
 
-        // Original check, now commented for testing
-        /*
-        val secureStorage = SecureStorageManager(this)
-        val token = secureStorage.getToken()
-
-        if (token.isNullOrEmpty()) {
-            val intent = Intent(this, LoginActivity::class.java)
-            loginLauncher.launch(intent)
-        } else {
-            setupUI()
-        }
-        */
+//        if (token.isNullOrEmpty()) {
+//            val intent = Intent(this, LoginActivity::class.java)
+//            loginLauncher.launch(intent)
+//        } else {
+//            setupUI()
+//        }
     }
 
     private fun setupUI() {
