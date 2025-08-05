@@ -28,3 +28,6 @@ api.nus.auth=<YOUR-Token>
 # JWT Secret Token (any 256 based will do)
 jwt.secret=your_jwt_token
 jwt.expiration-in-ms=3600000
+
+# local or proxy
+chatbot.strategy=proxy
