@@ -28,11 +28,13 @@ class BotResponseDTO(BaseModel):
 def chat_endpoint(request: ChatRequest):
     print("DEBUG - Raw Body:", request)
     user_input = request.userInput.strip()
+    current_location = request.currentLocation
     user_id = 1  # Can be replaced with session or actual user ID
     print(f"User_input: {user_input}")
-    
+
     ctx = get_user_context(user_id, user_conversations)
     print(f"Initial Context: {ctx}")
+    ctx["current_location"] = current_location
     ctx["history"].append({"role": "user", "content": user_input})
 
     with model.chat_session():

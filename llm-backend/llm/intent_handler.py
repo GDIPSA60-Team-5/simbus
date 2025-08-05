@@ -1,11 +1,16 @@
 import requests
+import os
 from typing import Dict, Any
 from llm.utils import current_datetime
-from dateutil import parser as date_parser  # pip install python-dateutil
+from dateutil import parser as date_parser
+from dotenv import load_dotenv
 
+
+load_dotenv()
+backend_url = os.getenv("BACKEND_URL")
 
 def handle_next_bus(slots: Dict[str, Any]) -> str:
-    base_url = "http://localhost:8080/api/bus/arrivals"
+    base_url = f"{backend_url}/api/bus/arrivals"
     params = {}
 
     # Pick either bus stop code or name
@@ -41,6 +46,7 @@ def handle_next_bus(slots: Dict[str, Any]) -> str:
                 continue  # skip if not matching serviceNo filter
 
             arrival_times = service_info.get("arrivals", [])
+            print(f"Arrival times: {arrival_times}")
             if not arrival_times:
                 messages.append(f"No arrival times available for bus {service_name}.")
                 continue
@@ -57,8 +63,9 @@ def handle_next_bus(slots: Dict[str, Any]) -> str:
                     else:
                         msg = f"Bus {service_name} will arrive in {minutes} minute{'s' if minutes > 1 else ''}."
                     messages.append(msg)
-                except Exception:
+                except Exception as e:
                     messages.append(f"Could not parse arrival time for Bus {service_name}.")
+                    # messages.append(f"Failed parsing: {eta_str} — {e}")
 
         if not messages:
             return "No matching bus service arrivals found."
@@ -67,4 +74,3 @@ def handle_next_bus(slots: Dict[str, Any]) -> str:
 
     except requests.RequestException as e:
         return f"Failed to fetch arrival data: {str(e)}"
-

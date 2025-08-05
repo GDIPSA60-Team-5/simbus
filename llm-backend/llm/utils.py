@@ -94,7 +94,8 @@ def get_user_context(user_id, user_conversations):
                 "intent": None,
                 "slots": {slot: None for slot in SLOT_TYPES}
             },
-            "history": []
+            "history": [],
+            "current_location": {}
         }
     return user_conversations[user_id]
 
@@ -138,7 +139,7 @@ def validate_future_datetime(dt_value):
 
 def current_datetime():
     sgt = pytz.timezone("Asia/Singapore")
-    return datetime.now(sgt).isoformat(timespec='seconds')
+    return datetime.now(sgt)    #.isoformat(timespec='seconds')
 
 
 def serialize_for_json(obj):
