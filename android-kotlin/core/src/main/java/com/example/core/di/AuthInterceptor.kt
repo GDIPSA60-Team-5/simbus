@@ -7,7 +7,7 @@ class AuthInterceptor(
     private val tokenProvider: () -> String?
 ) : Interceptor {
     companion object {
-        private val WHITELIST = listOf("/auth/login", "/auth/register")
+        private val WHITELIST = listOf("/api/auth/login", "/api/auth/register")
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {

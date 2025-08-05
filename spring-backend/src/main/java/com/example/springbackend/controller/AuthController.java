@@ -19,20 +19,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<?>> login(@RequestBody AuthRequest authRequest) {
+    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest authRequest) {
         return authService.login(authRequest)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .map(ResponseEntity::ok)
                 .onErrorResume(e -> {
                     if (e instanceof BadCredentialsException) {
                         return Mono.just(ResponseEntity
                                 .status(HttpStatus.UNAUTHORIZED)
-                                .body(new MessageResponse(e.getMessage())));
+                                .build());
                     }
                     return Mono.just(ResponseEntity
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(new MessageResponse("An unexpected error occurred")));
+                            .build());
                 });
     }
+
 
     @PostMapping("/register")
     public Mono<ResponseEntity<MessageResponse>> register(@RequestBody AuthRequest authRequest) {
