@@ -68,7 +68,7 @@ def chat_endpoint(request: ChatRequest):
         # Handle special intents
         print(f"Context: {ctx}")
         if ctx["state"]["intent"] in ["help", None]:
-            help_prompt = build_help_prompt()
+            help_prompt = build_help_prompt(ctx["history"])
             print(f"Help Prompt: {help_prompt}")
             help_response = model.generate(help_prompt, max_tokens=300)
             print(f"Help Response: {help_response}")
