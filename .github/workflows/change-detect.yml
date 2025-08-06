@@ -1,11 +1,8 @@
-name: Detect Changed Folders
-on: [workflow_call]
-
 jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      changed_folders: ${{ steps.filter.outputs.changed }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
 
@@ -17,3 +14,13 @@ jobs:
             spring-backend: spring-backend/**
             llm-backend: llm-backend/**
             next-frontend: next-frontend/**
+
+      - id: set-matrix
+        run: |
+          folders=()
+          if [[ "${{ steps.filter.outputs.android-kotlin }}" == "true" ]]; then folders+=("\"android-kotlin\""); fi
+          if [[ "${{ steps.filter.outputs.spring-backend }}" == "true" ]]; then folders+=("\"spring-backend\""); fi
+          if [[ "${{ steps.filter.outputs.llm-backend }}" == "true" ]]; then folders+=("\"llm-backend\""); fi
+          if [[ "${{ steps.filter.outputs.next-frontend }}" == "true" ]]; then folders+=("\"next-frontend\""); fi
+          matrix_json="{\"folder\": [$(IFS=,; echo "${folders[*]}")]}"
+          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
