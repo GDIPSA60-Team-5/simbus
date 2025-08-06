@@ -7,7 +7,7 @@ on:
       - staging
 jobs:
   detect-changed:
-    uses: ./.github/workflows/detect-changed-folders.yml
+    uses: ./.github/workflows/change-detect.yml
 
   build:
     needs: detect-changed
