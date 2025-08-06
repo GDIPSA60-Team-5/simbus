@@ -1,14 +1,46 @@
-name: Main Branch CI
+name: CI with selective build + CodeQL
 
 on:
   push:
     branches:
-      - "main"
-      - "dev"
-      - "staging"
+      - main
+      - dev
+      - staging
+  pull_request:
 
 jobs:
+  detect-changed:
+    uses: ./.github/workflows/detect-changed-folders.yml
+ 
+  build:
+    needs: detect-changed
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
+      fail-fast: false
+    uses: ./.github/workflows/build.yml
+    with:
+      folder: ${{ matrix.folder }}
+
+    codeql:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin, javascript, python
+          build-mode: none
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
   dockerize:
+    needs: [build, codeql]
     uses: ./.github/workflows/dockerize.yml
     with:
       image_tag: ${{ github.sha }}
