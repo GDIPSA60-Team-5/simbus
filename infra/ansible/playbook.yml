@@ -25,6 +25,10 @@
         owner: ubuntu
         mode: "0644"
 
+    - name: Prune unused Docker data
+      shell: docker system prune -af
+      ignore_errors: yes
+
     - name: Pull latest images
       shell: docker compose pull
       args:
