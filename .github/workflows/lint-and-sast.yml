@@ -26,9 +26,16 @@ jobs:
         if: env.FOLDER == 'next-frontend'
         uses: actions/setup-node@v3
         with:
-          cache: npm
-        env:
-          cache-dependency-path: ${{ env.FOLDER }}/package-lock.json
+          node-version: 20
+
+      - name: Cache Node dependencies
+        if: env.FOLDER == 'next-frontend'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.FOLDER }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.FOLDER)) }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Setup Java (Spring & Android)
         if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
