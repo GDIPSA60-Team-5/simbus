@@ -1,0 +1,7 @@
+requests
+python-dateutil
+pytz
+gpt4all
+uvicorn
+fastapi
+python-dotenv
