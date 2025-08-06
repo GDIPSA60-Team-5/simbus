@@ -1,6 +1,6 @@
 import json
 from llm.utils import current_datetime, serialize_for_json
-from llm.state import INTENTS
+from llm.state import INTENT_DESCRIPTIONS
 from typing import Dict, Any
 
 
@@ -19,20 +19,29 @@ Rules for extracting datetime-related information:
 - If only time is given, assume today.
 - Use ISO 8601 format (e.g. "2025-08-01T09:00:00")
 
+Important rules:
+- Always prioritize the most recent user message.
+- If the latest message is clear and provides sufficient information, base your response on that and ignore earlier context.
+
 Return a JSON with 'intent' and 'slots'. Do not generate anything else.
-"""
+""".strip()
+
     dialogue = "\n".join(
         f"{'User' if turn['role'] == 'user' else 'Assistant'}: {turn['content']}"
         for turn in history
     )
 
-    return f"{system_prompt}\nConversation:\n{dialogue}\n\nJSON:"
+    return f"{system_prompt}\n\nConversation:\n{dialogue}\n\nJSON:"
 
 
 def build_followup_prompt(intent, required_slots, current_slots, history, missing_slots):
     if set(missing_slots) == {"boarding_bus_stop_name", "boarding_bus_stop_code"}:
         status_message = (
             "To proceed, please provide either the boarding bus stop name or the boarding bus stop code."
+        )
+    elif set(missing_slots) == {"notification_start_time", "arrival_time"}:
+        status_message = (
+            "To proceed, please provide either the time you want to be notified or the arrival time at the destination."
         )
     else:
         status_message = (
@@ -98,9 +107,9 @@ def build_help_prompt(history):
     )
     
     return f"""
-The user asked for help or gave no recognizable intent. Provide a short and friendly list of what you can help with, based on this list of intents:
+The user asked for help or gave no recognizable intent. Provide a short and friendly list of what you can help with, based on this list of intent descrptions:
 
-{json.dumps(INTENTS, indent=2)}
+{json.dumps(INTENT_DESCRIPTIONS, indent=2)}
 
 Conversation history:
 {dialogue}
