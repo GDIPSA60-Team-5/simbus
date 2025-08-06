@@ -1,5 +1,11 @@
 name: Detect Changed Folders
-on: [workflow_call]
+
+on:
+  workflow_call:
+    outputs:
+      matrix:
+        description: "Matrix of changed folders"
+        value: ${{ jobs.detect.outputs.matrix }}
 
 jobs:
   detect:
