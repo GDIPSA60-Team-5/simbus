@@ -11,6 +11,7 @@ import com.example.feature_chatbot.ui.ChatbotActivity
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_login.ui.LoginActivity
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
+import iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -45,10 +46,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        val chatboxButton: Button = findViewById(R.id.chatboxButton)
-        chatboxButton.setOnClickListener {
-            val intent = Intent(this, ChatbotActivity::class.java)
+//        val chatboxButton: Button = findViewById(R.id.chatboxButton)
+//        chatboxButton.setOnClickListener {
+//            val intent = Intent(this, ChatbotActivity::class.java)
+//            startActivity(intent)
+//        }
+        val intent = Intent(this, NavigateActivity::class.java)
             startActivity(intent)
-        }
     }
 }

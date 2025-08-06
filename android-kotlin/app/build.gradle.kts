@@ -57,4 +57,5 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":feature_login"))
     implementation(project(":feature_chatbot"))
+    implementation(project(":feature_navigateBar"))
 }
