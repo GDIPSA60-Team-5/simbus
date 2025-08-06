@@ -38,5 +38,5 @@ jobs:
     if: ${{ !fromJson(needs.detect_changes.outputs.matrix).folder || fromJson(needs.detect_changes.outputs.matrix).folder.length == 0 }}
     runs-on: ubuntu-latest
     steps:
-      - name: No folders changed
-        run: echo "No relevant folders changed; skipping lint and SAST jobs."
+      - name: Print no changes message to step summary
+        run: echo "No relevant folders changed; skipping lint and SAST jobs." >> $GITHUB_STEP_SUMMARY
