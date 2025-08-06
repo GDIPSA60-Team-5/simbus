@@ -11,27 +11,14 @@ jobs:
   detect_changes:
     uses: ./.github/workflows/change-detect.yml
 
-  lint_and_sast:
+  lint:
     needs: detect_changes
-    if: fromJson(needs.detect_changes.outputs.matrix).folder && fromJson(needs.detect_changes.outputs.matrix).folder.length > 0
-    runs-on: ubuntu-latest
+    if: ${{ fromJson(needs.detect_changes.outputs.matrix).folder && fromJson(needs.detect_changes.outputs.matrix).folder.length > 0 }}
+    uses: ./.github/workflows/lint-and-sast.yml
+    with:
+      folder: ${{ matrix.folder }}
     strategy:
       matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Print detected matrix
-        run: echo "${{ toJson(matrix) }}"
-
-      - name: Run lint
-        run: |
-          echo "Lint on ${{ matrix.folder }}"
-          # lint command
-
-      - name: Run SAST
-        run: |
-          echo "SAST on ${{ matrix.folder }}"
-          # SAST command
 
   no_changes_notice:
     needs: detect_changes
