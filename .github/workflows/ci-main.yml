@@ -1,11 +1,7 @@
 name: Push CD Pipeline
-
 on:
   push:
-    branches:
-      - main
-      - dev
-      - staging
+    branches: [main, dev, staging, test/ci-deploy]
 
 jobs:
   dockerize:
