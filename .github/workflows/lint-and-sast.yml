@@ -28,7 +28,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           cache: npm
-        working-directory: ${{ env.FOLDER }}
 
       - name: Setup Java (Spring & Android)
         if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
@@ -37,7 +36,6 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: ${{ env.FOLDER == 'spring-backend' && 'maven' || 'gradle' }}
-        working-directory: ${{ env.FOLDER }}
 
       - name: Setup Python
         if: env.FOLDER == 'llm-backend'
@@ -45,7 +43,6 @@ jobs:
         with:
           python-version: 3.x
           cache: pip
-        working-directory: ${{ env.FOLDER }}
 
       # Next.js frontend lint
       - name: Install & Run ESLint
