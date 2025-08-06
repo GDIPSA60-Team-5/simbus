@@ -1,6 +1,12 @@
 from datetime import datetime
 
 
+MAX_HISTORY_LENGTH = 7
+
+# ---- INTENT DETECTION GUARD ----
+CONFIDENCE_THRESHOLD = 0.3
+MIN_WORDS_FOR_INTENT = 7
+
 INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]
 
 INTENT_DESCRIPTIONS = {
@@ -12,8 +18,8 @@ INTENT_DESCRIPTIONS = {
 }
 
 REQUIRED_SLOTS = {
-    "route_info": ["start_location", "destination"],
-    "schedule_commute": ["start_location", "destination", ["notification_start_time", "arrival_time"]],
+    "route_info": ["start_location", "end_location"],
+    "schedule_commute": ["start_location", "end_location", ["notification_start_time", "arrival_time"]],
     "next_bus": ["bus_service_number", ["boarding_bus_stop_name", "boarding_bus_stop_code"]],
     "help": [],
     "reset": []
@@ -21,7 +27,7 @@ REQUIRED_SLOTS = {
 
 SLOT_TYPES = {
     "start_location": str,
-    "destination": str,
+    "end_location": str,
     "notification_start_time": datetime,
     "arrival_time": datetime,
     "bus_service_number": str,
@@ -30,8 +36,6 @@ SLOT_TYPES = {
 }
 
 user_conversations = {}
-
-MAX_HISTORY_LENGTH = 7
 
 def reset_conversation_for_user(user_id):
     if user_id in user_conversations:
