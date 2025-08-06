@@ -1,19 +1,12 @@
+debug=true
 spring.application.name=spring-backend
 logging.level.reactor.netty.http.client.HttpClient=DEBUG
 logging.level.io.netty.handler.codec.http=DEBUG
 
+spring.application.name=spring-backend
+
 # MongoDB Configuration
-spring.data.mongodb.uri=mongodb://localhost:27017/simbus-mongo
-
-# PostgreSQL Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/simbus-postgres
-spring.datasource.username=postgres
-spring.datasource.password=
-
-# JPA Configuration
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.show-sql=true
+spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/simbus-mongo}
 
 # onemap api
 onemap.base-url=https://www.onemap.gov.sg
