@@ -25,5 +25,11 @@ jobs:
           if [[ "${{ steps.filter.outputs.spring-backend }}" == "true" ]]; then folders+=("\"spring-backend\""); fi
           if [[ "${{ steps.filter.outputs.llm-backend }}" == "true" ]]; then folders+=("\"llm-backend\""); fi
           if [[ "${{ steps.filter.outputs.next-frontend }}" == "true" ]]; then folders+=("\"next-frontend\""); fi
-          matrix_json="{\"folder\": [$(IFS=,; echo "${folders[*]}")]}"
+
+          if [ ${#folders[@]} -eq 0 ]; then
+            matrix_json="{\"folder\": []}"
+          else
+            matrix_json="{\"folder\": [$(IFS=,; echo "${folders[*]}")]}"
+          fi
+
           echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
