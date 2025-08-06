@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload ESLint report
         if: env.FOLDER == 'next-frontend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: eslint-report
           path: ${{ inputs.folder }}/eslint-report.json
@@ -68,21 +68,21 @@ jobs:
 
       - name: Upload SpotBugs report
         if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spotbugs-report
           path: ${{ inputs.folder }}/target/spotbugsXml.xml
 
       - name: Upload Checkstyle report
         if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: checkstyle-report
           path: ${{ inputs.folder }}/target/checkstyle-result.xml
 
       - name: Upload PMD report
         if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pmd-report
           path: ${{ inputs.folder }}/target/pmd.xml
@@ -96,7 +96,7 @@ jobs:
 
       - name: Upload ktlint report
         if: env.FOLDER == 'android-kotlin'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ktlint-report
           path: ${{ inputs.folder }}/build/reports/ktlint/ktlint.xml
@@ -109,7 +109,7 @@ jobs:
 
       - name: Upload detekt report
         if: env.FOLDER == 'android-kotlin'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: detekt-report
           path: ${{ inputs.folder }}/build/reports/detekt/detekt.xml
@@ -125,14 +125,14 @@ jobs:
 
       # - name: Upload Ruff report
       #   if: env.FOLDER == 'llm-backend'
-      #   uses: actions/upload-artifact@v3
+      #   uses: actions/upload-artifact@v4
       #   with:
       #     name: ruff-report
       #     path: ${{ inputs.folder }}/ruff-report.json
 
       # - name: Upload Bandit report
       #   if: env.FOLDER == 'llm-backend'
-      #   uses: actions/upload-artifact@v3
+      #   uses: actions/upload-artifact@v4
       #   with:
       #     name: bandit-report
       #     path: ${{ inputs.folder }}/bandit-report.json
