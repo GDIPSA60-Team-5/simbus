@@ -32,3 +32,11 @@ jobs:
         run: |
           echo "SAST on ${{ matrix.folder }}"
           # SAST command
+
+  no_changes_notice:
+    needs: detect_changes
+    if: ${{ !fromJson(needs.detect_changes.outputs.matrix).folder || fromJson(needs.detect_changes.outputs.matrix).folder.length == 0 }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: No folders changed
+        run: echo "No relevant folders changed; skipping lint and SAST jobs."
