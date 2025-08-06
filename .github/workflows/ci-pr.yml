@@ -1,0 +1,37 @@
+name: Pull Request CI pipeline
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+      - staging
+jobs:
+  detect-changed:
+    uses: ./.github/workflows/detect-changed-folders.yml
+
+  build:
+    needs: detect-changed
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
+      fail-fast: false
+    uses: ./.github/workflows/build.yml
+    with:
+      folder: ${{ matrix.folder }}
+
+  codeql:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin, javascript, python
+          build-mode: none
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
