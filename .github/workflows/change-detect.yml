@@ -35,25 +35,24 @@ jobs:
           folders=()
 
           if [[ "${{ steps.filter.outputs.android-kotlin }}" == "true" ]]; then
-            folders+=("\"android-kotlin\"")
+            folders+=("android-kotlin")
           fi
           if [[ "${{ steps.filter.outputs.spring-backend }}" == "true" ]]; then
-            folders+=("\"spring-backend\"")
+            folders+=("spring-backend")
           fi
           if [[ "${{ steps.filter.outputs.llm-backend }}" == "true" ]]; then
-            folders+=("\"llm-backend\"")
+            folders+=("llm-backend")
           fi
           if [[ "${{ steps.filter.outputs.next-frontend }}" == "true" ]]; then
-            folders+=("\"next-frontend\"")
+            folders+=("next-frontend")
           fi
 
           if [ ${#folders[@]} -eq 0 ]; then
-            matrix_json='{"folder":[]}'
-            has_changes=false
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+            echo "hasChanges=false" >> $GITHUB_OUTPUT
           else
-            matrix_json="{\"folder\":[${folders[*]}]}"
-            has_changes=true
+            # build a JSON array of objects: [{ "folder": "..." }, ...]
+            matrix_json=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s '[.[] | {folder: .}]')
+            echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+            echo "hasChanges=true" >> $GITHUB_OUTPUT
           fi
-
-          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
-          echo "hasChanges=$has_changes" >> $GITHUB_OUTPUT
