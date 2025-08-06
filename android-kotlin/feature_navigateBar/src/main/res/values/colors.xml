@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="selectedTextColor">#D17A4B</color> <!-- 橘色，可自定义 -->
+    <color name="unselectedTextColor">#FFFFFF</color> <!-- 原默认白色 -->
+    <color name="default_text">#FFFFFF</color> <!-- 未选中文字颜色 -->
+    <color name="selected_text">#D17A4B</color> <!-- 选中后的文字高亮颜色 -->
+
+</resources>
