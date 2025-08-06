@@ -122,7 +122,7 @@ jobs:
           name: detekt-report
           path: ${{ env.FOLDER }}/build/reports/detekt/detekt.xml
 
-      LLM backend python lint & security (commented out)
+      # LLM backend python lint & security (commented out)
       - name: Run Ruff and Bandit
         if: env.FOLDER == 'llm-backend'
         run: |
