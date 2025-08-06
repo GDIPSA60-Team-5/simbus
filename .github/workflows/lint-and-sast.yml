@@ -22,13 +22,13 @@ jobs:
             *) echo "Invalid folder: $FOLDER"; exit 1 ;;
           esac
 
-      # Setup and run lint/static analysis by folder type
       - name: Setup Node.js
         if: env.FOLDER == 'next-frontend'
         uses: actions/setup-node@v3
         with:
-          cache: "npm"
-        cache-dependency-path: ${{ env.FOLDER }}/package-lock.json
+          cache: npm
+        env:
+          cache-dependency-path: ${{ env.FOLDER }}/package-lock.json
 
       - name: Setup Java (Spring & Android)
         if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
