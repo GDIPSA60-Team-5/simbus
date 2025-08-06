@@ -28,6 +28,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           cache: npm
+        working-directory: ${{ env.FOLDER }}
 
       - name: Setup Java (Spring & Android)
         if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
@@ -36,6 +37,7 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: ${{ env.FOLDER == 'spring-backend' && 'maven' || 'gradle' }}
+        working-directory: ${{ env.FOLDER }}
 
       - name: Setup Python
         if: env.FOLDER == 'llm-backend'
@@ -43,12 +45,13 @@ jobs:
         with:
           python-version: 3.x
           cache: pip
+        working-directory: ${{ env.FOLDER }}
 
       # Next.js frontend lint
       - name: Install & Run ESLint
         if: env.FOLDER == 'next-frontend'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
           npm ci
           npx next lint --format=json --output-file=eslint-report.json
 
@@ -57,13 +60,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: eslint-report
-          path: ${{ inputs.folder }}/eslint-report.json
+          path: ${{ env.FOLDER }}/eslint-report.json
 
       # Spring backend analysis
       - name: Run Spring backend static analysis
         if: env.FOLDER == 'spring-backend'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
           ./mvnw clean verify spotbugs:check checkstyle:check pmd:check -DskipTests
 
       - name: Upload SpotBugs report
@@ -71,27 +74,27 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: spotbugs-report
-          path: ${{ inputs.folder }}/target/spotbugsXml.xml
+          path: ${{ env.FOLDER }}/target/spotbugsXml.xml
 
       - name: Upload Checkstyle report
         if: env.FOLDER == 'spring-backend'
         uses: actions/upload-artifact@v4
         with:
           name: checkstyle-report
-          path: ${{ inputs.folder }}/target/checkstyle-result.xml
+          path: ${{ env.FOLDER }}/target/checkstyle-result.xml
 
       - name: Upload PMD report
         if: env.FOLDER == 'spring-backend'
         uses: actions/upload-artifact@v4
         with:
           name: pmd-report
-          path: ${{ inputs.folder }}/target/pmd.xml
+          path: ${{ env.FOLDER }}/target/pmd.xml
 
       # Android Kotlin lint & security
       - name: Run ktlint
         if: env.FOLDER == 'android-kotlin'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
           ./gradlew ktlintCheck -PreportOutput=ktlint-report.xml || true
 
       - name: Upload ktlint report
@@ -99,12 +102,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ktlint-report
-          path: ${{ inputs.folder }}/build/reports/ktlint/ktlint.xml
+          path: ${{ env.FOLDER }}/build/reports/ktlint/ktlint.xml
 
       - name: Run detekt
         if: env.FOLDER == 'android-kotlin'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
           ./gradlew detekt
 
       - name: Upload detekt report
@@ -112,13 +115,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: detekt-report
-          path: ${{ inputs.folder }}/build/reports/detekt/detekt.xml
+          path: ${{ env.FOLDER }}/build/reports/detekt/detekt.xml
 
-      # # LLM backend python lint & security
+      # LLM backend python lint & security (commented out)
       # - name: Run Ruff and Bandit
       #   if: env.FOLDER == 'llm-backend'
       #   run: |
-      #     cd $FOLDER
+      #     cd "$FOLDER"
       #     pip install -r requirements.txt bandit ruff
       #     ruff check . --format json --output ruff-report.json
       #     bandit -r . -f json -o bandit-report.json || true
@@ -128,11 +131,11 @@ jobs:
       #   uses: actions/upload-artifact@v4
       #   with:
       #     name: ruff-report
-      #     path: ${{ inputs.folder }}/ruff-report.json
+      #     path: ${{ env.FOLDER }}/ruff-report.json
 
       # - name: Upload Bandit report
       #   if: env.FOLDER == 'llm-backend'
       #   uses: actions/upload-artifact@v4
       #   with:
       #     name: bandit-report
-      #     path: ${{ inputs.folder }}/bandit-report.json
+      #     path: ${{ env.FOLDER }}/bandit-report.json
