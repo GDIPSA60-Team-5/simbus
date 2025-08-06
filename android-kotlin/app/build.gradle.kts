@@ -2,12 +2,15 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
     kotlin("kapt")
-
 }
+
 hilt {
     enableAggregatingTask = false
 }
+
 android {
     namespace = "com.example.busappkotlin"
     compileSdk = 35
