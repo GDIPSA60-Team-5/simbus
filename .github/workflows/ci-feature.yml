@@ -11,18 +11,18 @@ jobs:
   detect_changes:
     uses: ./.github/workflows/change-detect.yml
 
-  lint:
+  lint_and_sast:
     needs: detect_changes
-    if: ${{ fromJson(needs.detect_changes.outputs.matrix).folder && fromJson(needs.detect_changes.outputs.matrix).folder.length > 0 }}
+    if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
+    strategy:
+      matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
     uses: ./.github/workflows/lint-and-sast.yml
     with:
       folder: ${{ matrix.folder }}
-    strategy:
-      matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
 
   no_changes_notice:
     needs: detect_changes
-    if: ${{ !fromJson(needs.detect_changes.outputs.matrix).folder || fromJson(needs.detect_changes.outputs.matrix).folder.length == 0 }}
+    if: ${{ needs.detect_changes.outputs.hasChanges == 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Print no changes message to step summary
