@@ -38,3 +38,11 @@
       shell: docker compose up -d
       args:
         chdir: /home/ubuntu
+
+    - name: Show running Docker containers
+      shell: docker ps
+      register: running_containers
+
+    - name: Display running containers
+      debug:
+        var: running_containers.stdout_lines
