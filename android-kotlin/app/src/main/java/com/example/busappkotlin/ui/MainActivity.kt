@@ -52,6 +52,6 @@ class MainActivity : AppCompatActivity() {
 //            startActivity(intent)
 //        }
         val intent = Intent(this, NavigateActivity::class.java)
-            startActivity(intent)
+        startActivity(intent)
     }
 }
