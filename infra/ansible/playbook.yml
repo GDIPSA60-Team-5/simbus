@@ -27,7 +27,7 @@
 
     - name: Copy nginx.conf to EC2 server
       copy:
-        src: ./nginx.conf
+        src: files/nginx.conf
         dest: /home/ubuntu/nginx.conf
         owner: ubuntu
         mode: "0644"
