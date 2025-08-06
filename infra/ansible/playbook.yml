@@ -18,12 +18,25 @@
         curl -SL https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
         chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
+    - name: Remove any old docker-compose.yml
+      file:
+        path: /home/ubuntu/docker-compose.yml
+        state: absent
+
     - name: Copy templated docker-compose.yml
       template:
         src: docker-compose.yml.j2
         dest: /home/ubuntu/docker-compose.yml
         owner: ubuntu
         mode: "0644"
+
+    - name: Show final docker-compose.yml content
+      shell: cat /home/ubuntu/docker-compose.yml
+      register: composed_file
+
+    - name: Display docker-compose.yml content
+      debug:
+        var: composed_file.stdout_lines
 
     - name: Copy nginx.conf to EC2 server
       copy:
