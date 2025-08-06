@@ -13,7 +13,7 @@ jobs:
 
   lint_and_sast:
     needs: detect_changes
-    if: needs.detect_changes.outputs.matrix != '{}'
+    if: fromJson(needs.detect_changes.outputs.matrix).folder && fromJson(needs.detect_changes.outputs.matrix).folder.length > 0
     runs-on: ubuntu-latest
     strategy:
       matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
