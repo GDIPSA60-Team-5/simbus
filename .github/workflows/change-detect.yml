@@ -18,6 +18,7 @@ jobs:
       - id: filter
         uses: dorny/paths-filter@v3
         with:
+          base: dev
           filters: |
             android-kotlin: android-kotlin/**
             spring-backend: spring-backend/**
