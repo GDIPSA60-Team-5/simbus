@@ -23,20 +23,19 @@
         path: /home/ubuntu/docker-compose.yml
         state: absent
 
+    - name: Write .env file from base64 secret
+      copy:
+        content: "{{ lookup('env', 'BACKEND_ENV_B64') | b64decode }}"
+        dest: /home/ubuntu/.env
+        owner: ubuntu
+        mode: "0600"
+
     - name: Copy templated docker-compose.yml
       template:
         src: docker-compose.yml.j2
         dest: /home/ubuntu/docker-compose.yml
         owner: ubuntu
         mode: "0644"
-
-    - name: Show final docker-compose.yml content
-      shell: cat /home/ubuntu/docker-compose.yml
-      register: composed_file
-
-    - name: Display docker-compose.yml content
-      debug:
-        var: composed_file.stdout_lines
 
     - name: Copy nginx.conf to EC2 server
       copy:

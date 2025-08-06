@@ -2,7 +2,7 @@ services:
   frontend:
     image: {{ docker_username }}/frontend:{{ image_tag }}
     expose:
-      - "3000"  
+      - "3000"
 
   backend:
     image: {{ docker_username }}/backend:{{ image_tag }}
@@ -10,8 +10,8 @@ services:
       - "8080"
     depends_on:
       - mongodb
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/simbus-mongo
+    env_file:
+      - .env
 
   mongodb:
     image: mongo:6.0

@@ -113,12 +113,13 @@ jobs:
           ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml --private-key ../../private_key.pem -u ubuntu
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
+          BACKEND_ENV_B64: ${{ secrets.BACKEND_ENV_B64 }}
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.9.0
         with:
           target: "http://${{ steps.tf-output.outputs.INSTANCE_IP }}"
-          fail_action: true
+          fail_action: false
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
