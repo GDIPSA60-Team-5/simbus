@@ -10,7 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       FOLDER: ${{ inputs.folder }}
 
     steps:
@@ -23,7 +22,6 @@ jobs:
           cd $FOLDER
           case "$FOLDER" in
             next-frontend)
-              # Node setup
               echo "Setting up Node.js"
               ;;
             spring-backend)
@@ -64,48 +62,28 @@ jobs:
           python-version: 3.x
           cache: pip
 
-      # Build and SonarQube scan per folder
-
-      - name: Build and SonarQube scan (next-frontend)
+      - name: Build (next-frontend)
         if: env.FOLDER == 'next-frontend'
         run: |
           cd $FOLDER
           npm ci
           npm run build
-          npx sonar-scanner \
-            -Dsonar.projectKey=your_project_key_next_frontend \
-            -Dsonar.organization=your_organization \
-            -Dsonar.sources=. \
-            -Dsonar.login=$SONAR_TOKEN
 
-      - name: Build and SonarQube scan (spring-backend)
+      - name: Build (spring-backend)
         if: env.FOLDER == 'spring-backend'
         run: |
           cd $FOLDER
           ./mvnw clean verify -DskipTests
-          ./mvnw sonar:sonar \
-            -Dsonar.projectKey=your_project_key_spring_backend \
-            -Dsonar.organization=your_organization \
-            -Dsonar.login=$SONAR_TOKEN
 
-      - name: Build and SonarQube scan (android-kotlin)
+      - name: Build (android-kotlin)
         if: env.FOLDER == 'android-kotlin'
         run: |
           cd $FOLDER
           ./gradlew assembleRelease
-          ./gradlew sonarqube \
-            -Dsonar.projectKey=your_project_key_android \
-            -Dsonar.organization=your_organization \
-            -Dsonar.login=$SONAR_TOKEN
 
-      - name: Build and SonarQube scan (llm-backend)
+      - name: Build (llm-backend)
         if: env.FOLDER == 'llm-backend'
         run: |
           cd $FOLDER
           pip install -r requirements.txt
           # Add build commands if needed
-          sonar-scanner \
-            -Dsonar.projectKey=your_project_key_llm \
-            -Dsonar.organization=your_organization \
-            -Dsonar.sources=. \
-            -Dsonar.login=$SONAR_TOKEN
