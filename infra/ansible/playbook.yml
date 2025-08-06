@@ -25,6 +25,13 @@
         owner: ubuntu
         mode: "0644"
 
+    - name: Copy nginx.conf to EC2 server
+      copy:
+        src: ./nginx.conf
+        dest: /home/ubuntu/nginx.conf
+        owner: ubuntu
+        mode: "0644"
+
     - name: Prune unused Docker data
       shell: docker system prune -af
       ignore_errors: yes
