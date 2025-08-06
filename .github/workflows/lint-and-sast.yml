@@ -122,25 +122,25 @@ jobs:
           name: detekt-report
           path: ${{ env.FOLDER }}/build/reports/detekt/detekt.xml
 
-      # LLM backend python lint & security (commented out)
-      # - name: Run Ruff and Bandit
-      #   if: env.FOLDER == 'llm-backend'
-      #   run: |
-      #     cd "$FOLDER"
-      #     pip install -r requirements.txt bandit ruff
-      #     ruff check . --format json --output ruff-report.json
-      #     bandit -r . -f json -o bandit-report.json || true
+      LLM backend python lint & security (commented out)
+      - name: Run Ruff and Bandit
+        if: env.FOLDER == 'llm-backend'
+        run: |
+          cd "$FOLDER"
+          pip install -r requirements.txt bandit ruff
+          ruff check . --format json --output ruff-report.json
+          bandit -r . -f json -o bandit-report.json || true
 
-      # - name: Upload Ruff report
-      #   if: env.FOLDER == 'llm-backend'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ruff-report
-      #     path: ${{ env.FOLDER }}/ruff-report.json
+      - name: Upload Ruff report
+        if: env.FOLDER == 'llm-backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruff-report
+          path: ${{ env.FOLDER }}/ruff-report.json
 
-      # - name: Upload Bandit report
-      #   if: env.FOLDER == 'llm-backend'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: bandit-report
-      #     path: ${{ env.FOLDER }}/bandit-report.json
+      - name: Upload Bandit report
+        if: env.FOLDER == 'llm-backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: ${{ env.FOLDER }}/bandit-report.json
