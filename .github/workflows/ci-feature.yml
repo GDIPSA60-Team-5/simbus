@@ -14,7 +14,6 @@ jobs:
   lint_and_sast:
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
