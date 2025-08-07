@@ -16,12 +16,12 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     // Get all notifications for a user
-    public Flux<UserNotification> getUserNotifications(Long userID) {
+    public Flux<UserNotification> getUserNotifications(String userID) {
         return notificationRepository.findByUserId(userID);
     }
 
     // Send/create a new notification
-    public Mono<UserNotification> sendNotification(Long userID, String type, String title, String message, LocalDateTime expiresAt) {
+    public Mono<UserNotification> sendNotification(String userID, String type, String title, String message, LocalDateTime expiresAt) {
         UserNotification notification = UserNotification.builder()
                 .userId(userID)
                 .type(type)

@@ -18,7 +18,7 @@ public class NotificationController {
 
     // Get all notifications for a user
     @GetMapping("/user/{userID}")
-    public Flux<UserNotification> getUserNotifications(@PathVariable Long userID) {
+    public Flux<UserNotification> getUserNotifications(@PathVariable String userID) {
         return notificationService.getUserNotifications(userID);
     }
 
