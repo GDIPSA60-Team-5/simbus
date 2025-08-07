@@ -110,10 +110,10 @@ jobs:
         run: |
           export IMAGE_TAG=${{ inputs.image_tag }}
           export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          export BACKEND_ENV_B64=${{ secrets.BACKEND_ENV_B64 }}
           ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml --private-key ../../private_key.pem -u ubuntu
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
-          BACKEND_ENV_B64: ${{ secrets.BACKEND_ENV_B64 }}
 
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.9.0
