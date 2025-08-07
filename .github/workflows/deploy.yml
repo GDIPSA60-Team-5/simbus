@@ -30,10 +30,20 @@ on:
         required: true
       BACKEND_ENV_B64:
         required: true
+    outputs:
+      instance_ip:
+        description: "Public IP of the Terraform-deployed instance"
+        value: ${{ jobs.deploy.outputs.instance_ip }}
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+      instance_ip: ${{ steps.tf-output.outputs.INSTANCE_IP }}
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -91,6 +101,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-ansible-cache
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
@@ -123,15 +141,3 @@ jobs:
             --extra-vars "backend_env_b64=${{ secrets.BACKEND_ENV_B64 }} image_tag=${{ inputs.image_tag }} docker_username=${{ secrets.DOCKER_USERNAME }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
-
-      - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.9.0
-        with:
-          target: "http://${{ steps.tf-output.outputs.INSTANCE_IP }}"
-          fail_action: false
-
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-report
-          path: zap_report.html

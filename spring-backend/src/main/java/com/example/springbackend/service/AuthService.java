@@ -42,13 +42,16 @@ public class AuthService {
         return userRepository.findByUserName(authRequest.username())
                 .flatMap(existingUser -> Mono.<String>error(new IllegalArgumentException("Username already in use")))
                 .switchIfEmpty(
-                        Mono.defer(() -> {
-                            User newUser = new User();
-                            newUser.setUserName(authRequest.username());
-                            newUser.setPasswordHash(passwordEncoder.encode(authRequest.password()));
-                            return userRepository.save(newUser).thenReturn("registration successful");
-                        })
+                        Mono.defer(() ->
+                                userRepository.save(
+                                        User.builder()
+                                                .userName(authRequest.username())
+                                                .passwordHash(passwordEncoder.encode(authRequest.password()))
+                                                .build()
+                                ).thenReturn("registration successful")
+                        )
                 );
     }
+
 
 }

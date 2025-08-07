@@ -6,18 +6,29 @@
     backend_env_b64: "{{ backend_env_b64 }}"
 
   tasks:
-    - name: Ensure Docker is installed
+    - name: Check if Docker is installed
+      command: docker --version
+      register: docker_installed
+      ignore_errors: yes
+
+    - name: Install Docker if not installed
       apt:
         name: docker.io
         state: present
         update_cache: yes
+      when: docker_installed.failed
 
-    - name: Install Docker Compose CLI plugin
-      become: yes
+    - name: Check if Docker Compose CLI plugin installed
+      stat:
+        path: /usr/local/lib/docker/cli-plugins/docker-compose
+      register: compose_plugin
+
+    - name: Install Docker Compose CLI plugin if missing
       shell: |
         mkdir -p /usr/local/lib/docker/cli-plugins
         curl -SL https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
         chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+      when: not compose_plugin.stat.exists
 
     - name: Remove any old docker-compose.yml
       file:
@@ -49,17 +60,14 @@
         owner: ubuntu
         mode: "0644"
 
-    - name: Prune unused Docker data
+    - name: Prune unused Docker data asynchronously
       shell: docker system prune -af
+      async: 300
+      poll: 0
       ignore_errors: yes
 
-    - name: Pull latest images
-      shell: docker compose pull
-      args:
-        chdir: /home/ubuntu
-
-    - name: Start services
-      shell: docker compose up -d
+    - name: Pull latest images and start containers
+      shell: docker compose up -d --pull missing
       args:
         chdir: /home/ubuntu
 

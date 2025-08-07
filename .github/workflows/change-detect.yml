@@ -46,12 +46,14 @@ jobs:
           # Convert bash array to JSON array string
           matrix=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s .)
 
-          # Set outputs for matrix and hasChanges
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          # Safely export the matrix output as JSON string
+          echo "matrix=$(jq -cn --argjson val "$matrix" '$val')" >> "$GITHUB_OUTPUT"
+
+          # Export hasChanges output
           if [ ${#folders[@]} -gt 0 ]; then
-            echo "hasChanges=true" >> $GITHUB_OUTPUT
+            echo "hasChanges=true" >> "$GITHUB_OUTPUT"
           else
-            echo "hasChanges=false" >> $GITHUB_OUTPUT
+            echo "hasChanges=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           FORCE_ALL: true
