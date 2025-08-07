@@ -96,6 +96,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-ansible-cache
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
