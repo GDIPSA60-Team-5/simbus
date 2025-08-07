@@ -113,7 +113,7 @@ jobs:
           echo "${{ steps.tf-output.outputs.INSTANCE_IP }}" >> ${{ inputs.inventory_file }}
 
       - name: Debug BACKEND_ENV_B64
-        run: echo ${{ secrets.BACKEND_ENV_B64 }} | head -c 50
+        run: echo "${{ secrets.BACKEND_ENV_B64 }}" | head -c 50
 
       - name: Run Ansible playbook to deploy containers
         working-directory: ${{ inputs.ansible_dir }}
