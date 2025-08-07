@@ -26,6 +26,21 @@ class MenuFragment : Fragment() {
             startActivity(intent)
         }
 
+        //aboutUsRow onClickListener
+        val aboutUsRow = view.findViewById<LinearLayout>(R.id.aboutUsRow)
+        aboutUsRow.setOnClickListener {
+            val intent = Intent(requireContext(), AboutUsActivity::class.java)
+            startActivity(intent)
+        }
+
+        //faqRow onClickListener
+        val faqRow = view.findViewById<LinearLayout>(R.id.faqRow)
+        faqRow.setOnClickListener {
+            val intent = Intent(requireContext(), FAQActivity::class.java)
+            startActivity(intent)
+        }
+
+        //changePasswordRow onClickListener
         val logoutRow = view.findViewById<LinearLayout>(R.id.logoutRow)
         logoutRow.setOnClickListener {
             val storageManager = SecureStorageManager(requireContext())
