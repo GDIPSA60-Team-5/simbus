@@ -6,7 +6,6 @@ import com.example.springbackend.model.BusStop;
 import com.example.springbackend.service.implementation.BusService;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/bus") // All endpoints in this controller will start with /api/bus
@@ -21,15 +20,16 @@ public class BusController {
 
     @GetMapping("/arrivals")
     public Flux<BusArrival> getArrivalsForStopAndService(
-            @RequestParam String busStopCode,
+            @RequestParam String busStopQuery,
             @RequestParam(required = false) String serviceNo) {
 
-        return busService.searchBusStops(busStopCode)
-                .next() // take first exact match
+        return busService.searchBusStops(busStopQuery)
+                .next()
                 .flatMapMany(busService::getArrivalsForStop)
                 .filter(arrival -> serviceNo == null || serviceNo.isBlank() ||
                         arrival.serviceName().equalsIgnoreCase(serviceNo));
     }
+
 
     /**
      * Searches for bus stops across all available providers (LTA and NUS).

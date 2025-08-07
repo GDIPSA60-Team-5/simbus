@@ -4,9 +4,8 @@ import com.example.springbackend.model.CommutePlan;
 import com.example.springbackend.repository.CommutePlanRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/commute-plans")
@@ -20,59 +19,59 @@ public class CommutePlanController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<CommutePlan> createCommutePlan(@RequestBody CommutePlan commutePlan) {
-        CommutePlan saved = commutePlanRepository.save(commutePlan);
-        return ResponseEntity.ok(saved);
+    public Mono<CommutePlan> createCommutePlan(@RequestBody CommutePlan commutePlan) {
+        return commutePlanRepository.save(commutePlan);
     }
 
     // READ ALL
     @GetMapping
-    public List<CommutePlan> getAllCommutePlans() {
+    public Flux<CommutePlan> getAllCommutePlans() {
         return commutePlanRepository.findAll();
     }
 
     // READ ONE
     @GetMapping("/{id}")
-    public ResponseEntity<CommutePlan> getCommutePlanById(@PathVariable Long id) {
-        Optional<CommutePlan> optionalPlan = commutePlanRepository.findById(id);
-        return optionalPlan.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public Mono<ResponseEntity<CommutePlan>> getCommutePlanById(@PathVariable String id) {
+        return commutePlanRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-//    // UPDATE
-//    @PutMapping("/{id}")
-//    public ResponseEntity<CommutePlan> updateCommutePlan(
-//            @PathVariable Long id,
-//            @RequestBody CommutePlan updatedPlan) {
-//
-//        return commutePlanRepository.findById(id)
-//                .map(existingPlan -> {
-//                    // Update fields - example for main fields, add more if needed
-//                    existingPlan.setCommutePlanName(updatedPlan.getCommutePlanName());
-//                    existingPlan.setNotifyAt(updatedPlan.getNotifyAt());
-//                    existingPlan.setArrivalTime(updatedPlan.getArrivalTime());
-//                    existingPlan.setReminderOffsetMin(updatedPlan.getReminderOffsetMin());
-//                    existingPlan.setRecurrence(updatedPlan.getRecurrence());
-//                    existingPlan.setStartLocation(updatedPlan.getStartLocation());
-//                    existingPlan.setEndLocation(updatedPlan.getEndLocation());
-//                    existingPlan.setUser(updatedPlan.getUser());
-//
-//                    // For collections like commuteHistory, preferredRoutes, handle carefully (e.g. replace, merge, or ignore here)
-//
-//                    CommutePlan saved = commutePlanRepository.save(existingPlan);
-//                    return ResponseEntity.ok(saved);
-//                })
-//                .orElseGet(() -> ResponseEntity.notFound().build());
-//    }
+    // UPDATE
+    @PutMapping("/{id}")
+    public Mono<ResponseEntity<CommutePlan>> updateCommutePlan(
+            @PathVariable String id,
+            @RequestBody CommutePlan updatedPlan) {
+
+        return commutePlanRepository.findById(id)
+                .flatMap(existingPlan -> {
+                    existingPlan.setCommutePlanName(updatedPlan.getCommutePlanName());
+                    existingPlan.setNotifyAt(updatedPlan.getNotifyAt());
+                    existingPlan.setArrivalTime(updatedPlan.getArrivalTime());
+                    existingPlan.setReminderOffsetMin(updatedPlan.getReminderOffsetMin());
+                    existingPlan.setRecurrence(updatedPlan.getRecurrence());
+                    existingPlan.setStartLocationId(updatedPlan.getStartLocationId());
+                    existingPlan.setEndLocationId(updatedPlan.getEndLocationId());
+                    existingPlan.setUserId(updatedPlan.getUserId());
+                    // handle collections carefully (ids or embedded docs)
+
+                    return commutePlanRepository.save(existingPlan);
+                })
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
     // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCommutePlan(@PathVariable Long id) {
-        if (commutePlanRepository.existsById(id)) {
-            commutePlanRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public Mono<ResponseEntity<Void>> deleteCommutePlan(@PathVariable String id) {
+        return commutePlanRepository.existsById(id)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return commutePlanRepository.deleteById(id)
+                                .then(Mono.just(ResponseEntity.noContent().build()));
+                    } else {
+                        return Mono.just(ResponseEntity.notFound().build());
+                    }
+                });
     }
 }

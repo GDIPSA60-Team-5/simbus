@@ -8,7 +8,7 @@ spring.data.mongodb.uri=mongodb://localhost:27017/simbus-mongo
 # PostgreSQL Configuration
 spring.datasource.url=jdbc:postgresql://localhost:5432/simbus-postgres
 spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.password=
 
 # JPA Configuration
 spring.jpa.hibernate.ddl-auto=update
@@ -25,5 +25,9 @@ api.lta.key=<YOUR-Token>
 api.nus.baseurl=https://nnextbus.nus.edu.sg
 api.nus.auth=<YOUR-Token>
 
-# give more time for fast api to respond
-spring.mvc.async.request-timeout=90s
+# JWT Secret Token (any 256 based will do)
+jwt.secret=your_jwt_token
+jwt.expiration-in-ms=3600000
+
+# local or proxy
+chatbot.strategy=proxy

@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - "feature/**"
+      - "fix/**"
+      - "test/**"
 
 jobs:
   detect_changes:
@@ -11,29 +13,17 @@ jobs:
 
   lint_and_sast:
     needs: detect_changes
-    runs-on: ubuntu-latest
+    if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
     strategy:
-      matrix:
-        folder: [android-kotlin, spring-backend, llm-backend, next-frontend]
+      matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
+    uses: ./.github/workflows/lint-and-sast.yml
+    with:
+      folder: ${{ matrix.folder }}
+
+  no_changes_notice:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.hasChanges == 'false' }}
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Skip unchanged folder
-        if: |
-          needs.detect_changes.outputs.changed_folders != '' &&
-          !contains(needs.detect_changes.outputs.changed_folders, matrix.folder)
-        run: |
-          echo "Skipping ${{ matrix.folder }}"
-          echo "SKIP_FOLDER=true" >> $GITHUB_ENV
-
-      - name: Run lint
-        if: env.SKIP_FOLDER != 'true'
-        run: |
-          echo "Lint on ${{ matrix.folder }}"
-          # run lint commands here
-
-      - name: Run SAST
-        if: env.SKIP_FOLDER != 'true'
-        run: |
-          echo "SAST on ${{ matrix.folder }}"
-          # run SAST commands here
+      - name: Print no changes message to step summary
+        run: echo "No relevant folders changed; skipping lint and SAST jobs." >> $GITHUB_STEP_SUMMARY

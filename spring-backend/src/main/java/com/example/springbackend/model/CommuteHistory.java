@@ -2,21 +2,12 @@ package com.example.springbackend.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
-@Entity
+@Document("commute_history")
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,22 +15,13 @@ import lombok.ToString;
 public class CommuteHistory {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private String id;
 
-	private String status; // consider replacing with an enum if values are bounded
+	private String status; // Consider enum conversion in application logic
+
 	private LocalDateTime startedAt;
 	private LocalDateTime endedAt;
 
-	@ManyToOne
-	@JoinColumn(name = "commutePlanId")
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private CommutePlan commutePlan;
-
-	@ManyToOne
-	@JoinColumn(name = "routeId")
-	@ToString.Exclude
-	@EqualsAndHashCode.Exclude
-	private Route route;
+	private String commutePlanId; // Reference to CommutePlan.id
+	private String routeId;       // Reference to Route.id
 }

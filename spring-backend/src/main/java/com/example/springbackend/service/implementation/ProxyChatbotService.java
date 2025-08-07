@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.http.HttpHeaders;
 
-
 @Service
 @ConditionalOnProperty(name = "chatbot.strategy", havingValue = "proxy")
 public class ProxyChatbotService implements ChatbotService {
@@ -40,5 +39,4 @@ public class ProxyChatbotService implements ChatbotService {
                 .bodyToMono(BotResponseDTO.class)
                 .onErrorResume(e -> Mono.just(new ErrorResponseDTO("LLM service error: " + e.getMessage())));
     }
-
 }

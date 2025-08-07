@@ -1,11 +1,5 @@
 package com.example.springbackend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -16,7 +10,12 @@ import lombok.NoArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-@Entity
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import lombok.*;
+
+@Document("commute_recurrence_days")
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,16 +23,11 @@ import lombok.ToString;
 public class CommuteRecurrenceDay {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private String id;
 
 	@Min(1)
 	@Max(7)
 	private Integer dayOfWeek; // 1 for Monday ... 7 for Sunday
 
-	@ManyToOne
-	@JoinColumn(name = "commutePlanId")
-	@ToString.Exclude          // avoid recursion if CommutePlan references back
-	@EqualsAndHashCode.Exclude // typically don’t include associations in equals/hashCode
-	private CommutePlan commutePlan;
+	private String commutePlanId; // reference to CommutePlan.id
 }

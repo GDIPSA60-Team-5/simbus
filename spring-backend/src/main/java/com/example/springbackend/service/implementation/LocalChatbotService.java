@@ -11,6 +11,7 @@ import com.example.springbackend.service.GeocodingService;
 import com.example.springbackend.service.OneMapService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -21,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@ConditionalOnProperty(name = "chatbot.strategy", havingValue = "local", matchIfMissing = true)
 public class LocalChatbotService implements ChatbotService {
 
     private static final Logger log = LoggerFactory.getLogger(LocalChatbotService.class);

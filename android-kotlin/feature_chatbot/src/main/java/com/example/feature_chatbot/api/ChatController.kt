@@ -1,7 +1,6 @@
 package com.example.feature_chatbot.api
-
+import javax.inject.Inject
 import com.example.feature_chatbot.data.BotResponse
-import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.data.ChatRequest
 import com.example.feature_chatbot.data.Coordinates // <-- Import Coordinates
@@ -11,70 +10,53 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Named
 
-class ChatController(
-    private val adapter: ChatAdapter,
-    private val api: ChatbotApi,
-    private val onNewBotMessage: (String) -> Unit
+class ChatController @Inject constructor(
+    @Named("chatbot") private val api: ChatbotApi
 ) {
-    private val scope = CoroutineScope(Dispatchers.Main)
-
-    fun userSent(text: String, currentLocation: Coordinates?) {
-        // Add the user's message
-        adapter.addChatItem(ChatItem.UserMessage(UUID.randomUUID().toString(), text))
-
-        // Add temporary typing indicator
-        adapter.addChatItem(ChatItem.TypingIndicator())
-
-        scope.launch {
+    fun sendMessage(
+        userInput: String,
+        currentLocation: Coordinates?,
+        onResult: (ChatItem) -> Unit,
+        onError: (ChatItem) -> Unit,
+        onNewBotMessage: (String) -> Unit
+    ) {
+        CoroutineScope(Dispatchers.Main).launch {
             try {
-                // 1. Create the request object
-                val chatRequest = ChatRequest(
-                    userInput = text,
+                val request = ChatRequest(
+                    userInput = userInput,
                     currentLocation = currentLocation,
                     currentTimestamp = System.currentTimeMillis()
                 )
-
-                // 2. Pass the object to the API call
-                val botResponse = api.getResponseFor(chatRequest)
-
-                adapter.replaceLastChatItem(
-                    ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
-                )
+                val botResponse = api.getResponseFor(request)
+                val botItem = ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
+                onResult(botItem)
                 onNewBotMessage(botResponse.toDisplayString())
-
             } catch (e: Exception) {
                 val errorMessage = getErrorMessage(e)
-
-                // Replace typing with error
-                adapter.replaceLastChatItem(
-                    ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))
-                )
+                val errorItem = ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))
+                onError(errorItem)
                 onNewBotMessage(errorMessage)
-
                 e.printStackTrace()
             }
         }
     }
 
-    private fun BotResponse.toDisplayString(): String {
-        return when (this) {
-            is BotResponse.Directions -> {
-                val routesText = suggestedRoutes?.joinToString("\n") { route ->
-                    "Summary: ${route.summary}\nDuration: ${route.durationInMinutes} minutes"
-                } ?: "No routes found."
-                "Directions from $startLocation to $endLocation:\n$routesText"
-            }
-            is BotResponse.Message -> message
-            is BotResponse.Error -> message
+    private fun BotResponse.toDisplayString(): String = when (this) {
+        is BotResponse.Directions -> {
+            val routes = suggestedRoutes?.joinToString("\n") {
+                "Summary: ${it.summary}\nDuration: ${it.durationInMinutes} minutes"
+            } ?: "No routes found."
+            "Directions from $startLocation to $endLocation:\n$routes"
         }
+        is BotResponse.Message -> message
+        is BotResponse.Error -> message
     }
 
-    private fun getErrorMessage(e: Exception): String {
-        return when (e) {
-            is JsonSyntaxException -> "Sorry, I had trouble understanding the data from the server. Please try again."
-            is IOException -> "Sorry, I couldn't connect to the server. Please check your internet connection."
-            else -> "An unexpected error occurred. Please try again later."
-        }
+    private fun getErrorMessage(e: Exception): String = when (e) {
+        is JsonSyntaxException -> "Sorry, I couldn't understand the response."
+        is IOException -> "Connection failed. Please check your network."
+        else -> "Unexpected error. Please try again."
     }
 }

@@ -1,19 +1,59 @@
 name: Detect Changed Folders
-on: [workflow_call]
+
+on:
+  workflow_call:
+    outputs:
+      matrix:
+        description: "Matrix of changed folders"
+        value: ${{ jobs.detect.outputs.matrix }}
+      hasChanges:
+        description: "Whether any relevant folder changed"
+        value: ${{ jobs.detect.outputs.hasChanges }}
 
 jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      changed_folders: ${{ steps.filter.outputs.changed }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      hasChanges: ${{ steps.set-matrix.outputs.hasChanges }}
+
     steps:
       - uses: actions/checkout@v4
 
       - id: filter
         uses: dorny/paths-filter@v3
         with:
+          base: dev
           filters: |
             android-kotlin: android-kotlin/**
             spring-backend: spring-backend/**
             llm-backend: llm-backend/**
             next-frontend: next-frontend/**
+
+      - id: set-matrix
+        run: |
+          folders=()
+
+          if [[ "${{ steps.filter.outputs.android-kotlin }}" == "true" ]]; then
+            folders+=("\"android-kotlin\"")
+          fi
+          if [[ "${{ steps.filter.outputs.spring-backend }}" == "true" ]]; then
+            folders+=("\"spring-backend\"")
+          fi
+          if [[ "${{ steps.filter.outputs.llm-backend }}" == "true" ]]; then
+            folders+=("\"llm-backend\"")
+          fi
+          if [[ "${{ steps.filter.outputs.next-frontend }}" == "true" ]]; then
+            folders+=("\"next-frontend\"")
+          fi
+
+          if [ ${#folders[@]} -eq 0 ]; then
+            matrix_json='{"folder":[]}'
+            has_changes=false
+          else
+            matrix_json="{\"folder\":[${folders[*]}]}"
+            has_changes=true
+          fi
+
+          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+          echo "hasChanges=$has_changes" >> $GITHUB_OUTPUT

@@ -55,7 +55,7 @@ public class OneMapService {
                 .queryParam("start", effectiveStart)
                 .queryParam("end", end)
                 .queryParam("routeType", "pt")
-                .queryParam("mode", "BUS")
+                .queryParam("mode", "BUS,WALK")
                 .queryParam("date", dateParam)
                 .queryParam("time", timeParam)
                 .queryParam("numItineraries", MAX_ITINERARIES)
