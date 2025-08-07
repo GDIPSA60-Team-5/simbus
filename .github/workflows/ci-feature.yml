@@ -14,11 +14,14 @@ jobs:
   lint_and_sast:
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
-    strategy:
-      matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
-    uses: ./.github/workflows/lint-and-sast.yml
-    with:
-      folder: ${{ matrix.folder }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug matrix output
+        run: echo "${{ needs.detect_changes.outputs.matrix }}"
+
+      - uses: ./.github/workflows/lint-and-sast.yml
+        with:
+          folder: spring-backend
 
   no_changes_notice:
     needs: detect_changes

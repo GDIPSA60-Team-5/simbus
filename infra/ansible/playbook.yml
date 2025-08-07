@@ -1,8 +1,9 @@
 - hosts: all
   become: yes
   vars:
-    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
-    docker_username: "{{ lookup('env', 'DOCKER_USERNAME') }}"
+    image_tag: "{{ image_tag }}"
+    docker_username: "{{ docker_username }}"
+    backend_env_b64: "{{ backend_env_b64 }}"
 
   tasks:
     - name: Ensure Docker is installed
@@ -25,7 +26,7 @@
 
     - name: Write .env file from base64 secret
       copy:
-        content: "{{ lookup('env', 'BACKEND_ENV_B64') | b64decode }}"
+        content: "{{ backend_env_b64 | b64decode }}"
         dest: /home/ubuntu/.env
         owner: ubuntu
         mode: "0600"
