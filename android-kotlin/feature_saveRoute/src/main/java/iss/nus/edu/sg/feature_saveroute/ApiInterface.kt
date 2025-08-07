@@ -10,24 +10,25 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface ApiInterface {
-    @GET("api/legacy/nusbus")
+
+    @GET("api/bus/legacy/nusbus")
     fun getNusArrivalInfo(
         @Query("busStopName") busStopName: String,
-        @Query("busService") serviceName: String
+        @Query("serviceName") serviceName: String
     ): Call<NusBusArrival>
 
-    @GET("api/legacy/sgbus")
+    @GET("api/bus/legacy/sgbus")
     fun getSgBusArrivalInfo(
         @Query("busStopCode") busStopCode: String,
         @Query("busNumber") serviceNo: String
-    ) : Call<SgBusArrival>
+    ): Call<SgBusArrival>
 
-    @GET("api/legacy/busServices")
+    @GET("api/bus/legacy/busServices")
     fun getSgBusServices(
         @Query("busStopCode") busStopCode: String
     ): Call<List<SgBusServiceAtStop>>
 
-    @GET("api/legacy/busServices")
+    @GET("api/bus/legacy/busServices")
     fun getNusBusServices(
         @Query("busStopCode") busStopName: String
     ): Call<List<NusBusServiceAtStop>>
@@ -36,10 +37,4 @@ interface ApiInterface {
     fun searchBusStops(
         @Query("query") query: String
     ): Call<List<UnifiedBusStop>>
-
-    @GET("api/bus/stops/search")
-    fun getSgBusStops(): Call<List<UnifiedBusStop>>
-
-    @GET("api/bus/stops/search")
-    fun getNusBusStops(): Call<List<UnifiedBusStop>>
 }
