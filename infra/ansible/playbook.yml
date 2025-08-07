@@ -67,7 +67,7 @@
       ignore_errors: yes
 
     - name: Pull latest images and start containers
-      shell: docker compose up -d --pull
+      shell: docker compose up -d --pull missing
       args:
         chdir: /home/ubuntu
 
