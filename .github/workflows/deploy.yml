@@ -30,6 +30,11 @@ on:
         required: true
       BACKEND_ENV_B64:
         required: true
+    outputs:
+      instance_ip:
+        description: "Public IP of the Terraform-deployed instance"
+        value: ${{ jobs.deploy.outputs.instance_ip }}
+
 permissions:
   contents: read
   issues: write
