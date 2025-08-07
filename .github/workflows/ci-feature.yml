@@ -14,8 +14,10 @@ jobs:
   lint_and_sast:
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
+    runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
+      matrix:
+        folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
     uses: ./.github/workflows/lint-and-sast.yml
     with:
       folder: ${{ matrix.folder }}
@@ -27,3 +29,4 @@ jobs:
     steps:
       - name: Print no changes message to step summary
         run: echo "No relevant folders changed; skipping lint and SAST jobs." >> $GITHUB_STEP_SUMMARY
+`

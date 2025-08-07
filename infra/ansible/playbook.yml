@@ -1,8 +1,9 @@
 - hosts: all
   become: yes
   vars:
-    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
-    docker_username: "{{ lookup('env', 'DOCKER_USERNAME') }}"
+    image_tag: "{{ image_tag }}"
+    docker_username: "{{ docker_username }}"
+    backend_env_b64: "{{ backend_env_b64 }}"
 
   tasks:
     - name: Ensure Docker is installed
@@ -18,10 +19,33 @@
         curl -SL https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
         chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
+    - name: Remove any old docker-compose.yml
+      file:
+        path: /home/ubuntu/docker-compose.yml
+        state: absent
+
+    - name: Debug backend_env_b64 (first 50 chars)
+      debug:
+        msg: "{{ backend_env_b64[:50] }}"
+
+    - name: Write .env file from base64 secret
+      copy:
+        content: "{{ backend_env_b64 | b64decode }}"
+        dest: /home/ubuntu/.env
+        owner: ubuntu
+        mode: "0600"
+
     - name: Copy templated docker-compose.yml
       template:
         src: docker-compose.yml.j2
         dest: /home/ubuntu/docker-compose.yml
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Copy nginx.conf to EC2 server
+      copy:
+        src: files/nginx.conf
+        dest: /home/ubuntu/nginx.conf
         owner: ubuntu
         mode: "0644"
 
@@ -38,3 +62,11 @@
       shell: docker compose up -d
       args:
         chdir: /home/ubuntu
+
+    - name: Show running Docker containers
+      shell: docker ps
+      register: running_containers
+
+    - name: Display running containers
+      debug:
+        var: running_containers.stdout_lines

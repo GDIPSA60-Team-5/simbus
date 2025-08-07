@@ -28,6 +28,8 @@ on:
         required: true
       DEPLOY_SSH_KEY:
         required: true
+      BACKEND_ENV_B64:
+        required: true
 
 jobs:
   deploy:
@@ -71,6 +73,11 @@ jobs:
         working-directory: ${{ inputs.terraform_dir }}
         run: terraform apply -auto-approve tfplan
 
+      - name: Terraform Refresh (only if no apply)
+        if: steps.tf-plan.outputs.changes == 'false'
+        working-directory: ${{ inputs.terraform_dir }}
+        run: terraform refresh
+
       - name: Get Terraform Output (Instance IP)
         id: tf-output
         working-directory: ${{ inputs.terraform_dir }}
@@ -105,11 +112,26 @@ jobs:
           echo "[all]" > ${{ inputs.inventory_file }}
           echo "${{ steps.tf-output.outputs.INSTANCE_IP }}" >> ${{ inputs.inventory_file }}
 
-      - name: Run Ansible playbook to deploy
+      - name: Debug BACKEND_ENV_B64
+        run: echo "${{ secrets.BACKEND_ENV_B64 }}" | head -c 50
+
+      - name: Run Ansible playbook to deploy containers
         working-directory: ${{ inputs.ansible_dir }}
         run: |
-          export IMAGE_TAG=${{ inputs.image_tag }}
-          export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml --private-key ../../private_key.pem -u ubuntu
+          ansible-playbook -i ${{ inputs.inventory_file }} playbook.yml \
+            --private-key ../../private_key.pem -u ubuntu \
+            --extra-vars "backend_env_b64=${{ secrets.BACKEND_ENV_B64 }} image_tag=${{ inputs.image_tag }} docker_username=${{ secrets.DOCKER_USERNAME }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.9.0
+        with:
+          target: "http://${{ steps.tf-output.outputs.INSTANCE_IP }}"
+          fail_action: false
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap_report.html

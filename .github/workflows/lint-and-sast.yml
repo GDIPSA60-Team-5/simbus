@@ -1,4 +1,5 @@
 name: Lint and SAST
+
 on:
   workflow_call:
     inputs:
@@ -22,12 +23,20 @@ jobs:
             *) echo "Invalid folder: $FOLDER"; exit 1 ;;
           esac
 
-      # Setup and run lint/static analysis by folder type
       - name: Setup Node.js
         if: env.FOLDER == 'next-frontend'
         uses: actions/setup-node@v3
         with:
-          cache: npm
+          node-version: 20
+
+      - name: Cache Node dependencies
+        if: env.FOLDER == 'next-frontend'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.FOLDER }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.FOLDER)) }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Setup Java (Spring & Android)
         if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
@@ -48,91 +57,94 @@ jobs:
       - name: Install & Run ESLint
         if: env.FOLDER == 'next-frontend'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
           npm ci
           npx next lint --format=json --output-file=eslint-report.json
 
       - name: Upload ESLint report
         if: env.FOLDER == 'next-frontend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: eslint-report
-          path: ${{ inputs.folder }}/eslint-report.json
+          path: ${{ env.FOLDER }}/eslint-report.json
 
       # Spring backend analysis
       - name: Run Spring backend static analysis
         if: env.FOLDER == 'spring-backend'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
+          chmod +x ./mvnw
           ./mvnw clean verify spotbugs:check checkstyle:check pmd:check -DskipTests
 
       - name: Upload SpotBugs report
         if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spotbugs-report
-          path: ${{ inputs.folder }}/target/spotbugsXml.xml
+          path: ${{ env.FOLDER }}/target/spotbugsXml.xml
 
       - name: Upload Checkstyle report
         if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: checkstyle-report
-          path: ${{ inputs.folder }}/target/checkstyle-result.xml
+          path: ${{ env.FOLDER }}/target/checkstyle-result.xml
 
       - name: Upload PMD report
         if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pmd-report
-          path: ${{ inputs.folder }}/target/pmd.xml
+          path: ${{ env.FOLDER }}/target/pmd.xml
 
       # Android Kotlin lint & security
       - name: Run ktlint
         if: env.FOLDER == 'android-kotlin'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
+          chmod +x ./gradlew
           ./gradlew ktlintCheck -PreportOutput=ktlint-report.xml || true
 
       - name: Upload ktlint report
         if: env.FOLDER == 'android-kotlin'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ktlint-report
-          path: ${{ inputs.folder }}/build/reports/ktlint/ktlint.xml
+          path: ${{ env.FOLDER }}/build/reports/ktlint/ktlint.xml
 
       - name: Run detekt
         if: env.FOLDER == 'android-kotlin'
         run: |
-          cd $FOLDER
+          cd "$FOLDER"
+          chmod +x ./gradlew
           ./gradlew detekt
 
       - name: Upload detekt report
         if: env.FOLDER == 'android-kotlin'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: detekt-report
-          path: ${{ inputs.folder }}/build/reports/detekt/detekt.xml
+          path: ${{ env.FOLDER }}/build/reports/detekt/detekt.xml
 
-      # # LLM backend python lint & security
-      # - name: Run Ruff and Bandit
-      #   if: env.FOLDER == 'llm-backend'
-      #   run: |
-      #     cd $FOLDER
-      #     pip install -r requirements.txt bandit ruff
-      #     ruff check . --format json --output ruff-report.json
-      #     bandit -r . -f json -o bandit-report.json || true
+      # LLM backend Python lint & security
+      - name: Run Ruff and Bandit
+        if: env.FOLDER == 'llm-backend'
+        run: |
+          cd "$FOLDER"
+          pip install -r requirements.txt bandit ruff
+          ruff check . --format json --output ruff-report.json
+          bandit -r . -f json -o bandit-report.json || true
 
-      # - name: Upload Ruff report
-      #   if: env.FOLDER == 'llm-backend'
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: ruff-report
-      #     path: ${{ inputs.folder }}/ruff-report.json
+      - name: Upload Ruff report
+        if: env.FOLDER == 'llm-backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruff-report
+          path: ${{ env.FOLDER }}/ruff-report.json
 
-      # - name: Upload Bandit report
-      #   if: env.FOLDER == 'llm-backend'
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: bandit-report
-      #     path: ${{ inputs.folder }}/bandit-report.json
+      - name: Upload Bandit report
+        if: env.FOLDER == 'llm-backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path:
