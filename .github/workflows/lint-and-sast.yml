@@ -144,7 +144,7 @@ jobs:
         run: |
           cd llm-backend
           pip install -r requirements.txt bandit ruff
-          ruff check . --format json --output ruff-report.json
+          ruff check . -- --format json --output ruff-report.json
           bandit -r . -f json -o bandit-report.json
 
       - name: 📤 Upload Ruff Report
