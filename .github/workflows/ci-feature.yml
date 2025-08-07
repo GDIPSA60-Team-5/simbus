@@ -29,4 +29,3 @@ jobs:
     steps:
       - name: Print no changes message to step summary
         run: echo "No relevant folders changed; skipping lint and SAST jobs." >> $GITHUB_STEP_SUMMARY
-`
