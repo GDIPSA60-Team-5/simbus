@@ -1,6 +1,6 @@
 package com.example.springbackend.controller;
 
-import com.example.springbackend.dto.NotificationRequest;
+import com.example.springbackend.dto.request.NotificationRequest;
 import com.example.springbackend.model.UserNotification;
 import com.example.springbackend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
