@@ -19,6 +19,7 @@ jobs:
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -31,14 +32,23 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and tag images with docker compose
-        run: docker compose build
+      - name: Build & Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./next-frontend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/frontend:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Push images to dockerhub
-        run: |
-          echo "::group::Docker Push"
-          docker compose push
-          echo "::endgroup::"
+      - name: Build & Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./spring-backend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/backend:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Show pushed image summary
         run: docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
