@@ -31,37 +31,37 @@ jobs:
             next-frontend: next-frontend/**
 
       - id: set-matrix
-    env:
-      FILTER_ANDROID_KOTLIN: ${{ steps.filter.outputs.android-kotlin }}
-      FILTER_SPRING_BACKEND: ${{ steps.filter.outputs.spring-backend }}
-      FILTER_LLM_BACKEND: ${{ steps.filter.outputs.llm-backend }}
-      FILTER_NEXT_FRONTEND: ${{ steps.filter.outputs.next-frontend }}
-      FORCE_ALL: true
-    run: |
-      folders=()
+        env:
+          FILTER_ANDROID_KOTLIN: ${{ steps.filter.outputs.android-kotlin }}
+          FILTER_SPRING_BACKEND: ${{ steps.filter.outputs.spring-backend }}
+          FILTER_LLM_BACKEND: ${{ steps.filter.outputs.llm-backend }}
+          FILTER_NEXT_FRONTEND: ${{ steps.filter.outputs.next-frontend }}
+          FORCE_ALL: true
+        run: |
+          folders=()
 
-      if [[ "$FORCE_ALL" == "true" ]]; then
-        folders+=("android-kotlin" "spring-backend" "llm-backend" "next-frontend")
-      else
-        declare -A envMap=(
-          ["android-kotlin"]="${FILTER_ANDROID_KOTLIN}"
-          ["spring-backend"]="${FILTER_SPRING_BACKEND}"
-          ["llm-backend"]="${FILTER_LLM_BACKEND}"
-          ["next-frontend"]="${FILTER_NEXT_FRONTEND}"
-        )
+          if [[ "$FORCE_ALL" == "true" ]]; then
+            folders+=("android-kotlin" "spring-backend" "llm-backend" "next-frontend")
+          else
+            declare -A envMap=(
+              ["android-kotlin"]="${FILTER_ANDROID_KOTLIN}"
+              ["spring-backend"]="${FILTER_SPRING_BACKEND}"
+              ["llm-backend"]="${FILTER_LLM_BACKEND}"
+              ["next-frontend"]="${FILTER_NEXT_FRONTEND}"
+            )
 
-        for folder in "${!envMap[@]}"; do
-          if [[ "${envMap[$folder]}" == "true" ]]; then
-            folders+=("$folder")
+            for folder in "${!envMap[@]}"; do
+              if [[ "${envMap[$folder]}" == "true" ]]; then
+                folders+=("$folder")
+              fi
+            done
           fi
-        done
-      fi
 
-      if [ ${#folders[@]} -eq 0 ]; then
-        echo "matrix=[]" >> "$GITHUB_OUTPUT"
-        echo "hasChanges=false" >> "$GITHUB_OUTPUT"
-      else
-        matrix_json=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s '.')
-        echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
-        echo "hasChanges=true" >> "$GITHUB_OUTPUT"
-      fi
+          if [ ${#folders[@]} -eq 0 ]; then
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            echo "hasChanges=false" >> "$GITHUB_OUTPUT"
+          else
+            matrix_json=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s '.')
+            echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+            echo "hasChanges=true" >> "$GITHUB_OUTPUT"
+          fi
