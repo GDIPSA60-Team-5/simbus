@@ -8,137 +8,153 @@ on:
         type: string
 
 jobs:
-  lint-and-sast:
+  validate:
     runs-on: ubuntu-latest
-    env:
-      FOLDER: ${{ inputs.folder }}
+    outputs:
+      folder: ${{ steps.validate.outputs.folder }}
+    steps:
+      - name: ✅ Validate Folder
+        id: validate
+        run: |
+          case "${{ inputs.folder }}" in
+            next-frontend|spring-backend|android-kotlin|llm-backend)
+              echo "folder=${{ inputs.folder }}" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Invalid folder: ${{ inputs.folder }}"
+              exit 1
+              ;;
+          esac
 
+  next-frontend:
+    if: needs.validate.outputs.folder == 'next-frontend'
+    needs: validate
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate folder input
-        run: |
-          case "$FOLDER" in
-            next-frontend|spring-backend|android-kotlin|llm-backend) ;;
-            *) echo "Invalid folder: $FOLDER"; exit 1 ;;
-          esac
-
-      - name: Setup Node.js
-        if: env.FOLDER == 'next-frontend'
+      - name: 📦 Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Cache Node dependencies
-        if: env.FOLDER == 'next-frontend'
+      - name: ♻️ Cache Node Modules
         uses: actions/cache@v4
         with:
-          path: ${{ env.FOLDER }}/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.FOLDER)) }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          path: next-frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('next-frontend/package-lock.json') }}
 
-      - name: Setup Java (Spring & Android)
-        if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
+      - name: 🧹 Run ESLint
+        run: |
+          cd next-frontend
+          npm ci
+          npx next lint --format=json --output-file=eslint-report.json
+
+      - name: 📤 Upload ESLint Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-report
+          path: next-frontend/eslint-report.json
+
+  spring-backend:
+    if: needs.validate.outputs.folder == 'spring-backend'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
-          cache: ${{ env.FOLDER == 'spring-backend' && 'maven' || 'gradle' }}
+          cache: maven
 
-      - name: Setup Python
-        if: env.FOLDER == 'llm-backend'
+      - name: 🛡️ Run SpotBugs & PMD
+        run: |
+          cd spring-backend
+          chmod +x ./mvnw
+          ./mvnw clean verify spotbugs:check pmd:check -DskipTests
+        continue-on-error: true
+
+      - name: 📤 Upload PMD Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmd-report
+          path: spring-backend/target/pmd.xml
+
+      - name: 📤 Upload SpotBugs Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: spring-backend/target/spotbugsXml.xml
+
+  android-kotlin:
+    if: needs.validate.outputs.folder == 'android-kotlin'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: 🧹 Run ktlint
+        run: |
+          cd android-kotlin
+          chmod +x ./gradlew
+          ./gradlew ktlintCheck -PreportOutput=ktlint-report.xml || true
+
+      - name: 📤 Upload ktlint Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-report
+          path: android-kotlin/build/reports/ktlint/ktlint.xml
+
+      - name: 🔍 Run detekt
+        run: |
+          cd android-kotlin
+          chmod +x ./gradlew
+          ./gradlew detekt || true
+
+      - name: 📤 Upload detekt Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt-report
+          path: android-kotlin/build/reports/detekt/detekt.xml
+
+  llm-backend:
+    if: needs.validate.outputs.folder == 'llm-backend'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.x
           cache: pip
 
-      # Next.js frontend lint
-      - name: Install & Run ESLint
-        if: env.FOLDER == 'next-frontend'
+      - name: 🧪 Run Ruff & Bandit
         run: |
-          cd "$FOLDER"
-          npm ci
-          npx next lint --format=json --output-file=eslint-report.json
-
-      - name: Upload ESLint report
-        if: env.FOLDER == 'next-frontend'
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-report
-          path: ${{ env.FOLDER }}/eslint-report.json
-
-      # Spring backend analysis
-      - name: Run Spring backend static analysis
-        if: env.FOLDER == 'spring-backend'
-        run: |
-          cd "$FOLDER"
-          chmod +x ./mvnw
-          ./mvnw clean verify spotbugs:check pmd:check -DskipTests
-        continue-on-error: true
-
-      - name: Upload PMD report
-        if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pmd-report
-          path: ${{ env.FOLDER }}/target/pmd.xml
-
-      - name: Upload SpotBugs report
-        if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v4
-        with:
-          name: spotbugs-report
-          path: ${{ env.FOLDER }}/target/spotbugsXml.xml
-
-      # Android Kotlin lint & security
-      - name: Run ktlint
-        if: env.FOLDER == 'android-kotlin'
-        run: |
-          cd "$FOLDER"
-          chmod +x ./gradlew
-          ./gradlew ktlintCheck -PreportOutput=ktlint-report.xml || true
-
-      - name: Upload ktlint report
-        if: env.FOLDER == 'android-kotlin'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ktlint-report
-          path: ${{ env.FOLDER }}/build/reports/ktlint/ktlint.xml
-
-      - name: Run detekt
-        if: env.FOLDER == 'android-kotlin'
-        run: |
-          cd "$FOLDER"
-          chmod +x ./gradlew
-          ./gradlew detekt || true
-
-      - name: Upload detekt report
-        if: env.FOLDER == 'android-kotlin'
-        uses: actions/upload-artifact@v4
-        with:
-          name: detekt-report
-          path: ${{ env.FOLDER }}/build/reports/detekt/detekt.xml
-
-      # LLM backend Python lint & security
-      - name: Run Ruff and Bandit
-        if: env.FOLDER == 'llm-backend'
-        run: |
-          cd "$FOLDER"
+          cd llm-backend
           pip install -r requirements.txt bandit ruff
           ruff check . --format json --output ruff-report.json
-          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -f json -o bandit-report.json
 
-      - name: Upload Ruff report
-        if: env.FOLDER == 'llm-backend'
+      - name: 📤 Upload Ruff Report
         uses: actions/upload-artifact@v4
         with:
           name: ruff-report
-          path: ${{ env.FOLDER }}/ruff-report.json
+          path: llm-backend/ruff-report.json
 
-      - name: Upload Bandit report
-        if: env.FOLDER == 'llm-backend'
+      - name: 📤 Upload Bandit Report
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report
-          path:
+          path: llm-backend/bandit-report.json
