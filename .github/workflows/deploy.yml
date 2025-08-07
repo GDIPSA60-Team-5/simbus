@@ -30,6 +30,9 @@ on:
         required: true
       BACKEND_ENV_B64:
         required: true
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   deploy:
@@ -128,6 +131,7 @@ jobs:
         uses: zaproxy/action-baseline@v0.9.0
         with:
           target: "http://${{ steps.tf-output.outputs.INSTANCE_IP }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
           fail_action: false
 
       - name: Upload ZAP Report
