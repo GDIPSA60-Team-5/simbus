@@ -11,17 +11,21 @@ jobs:
   detect_changes:
     uses: ./.github/workflows/change-detect.yml
 
-  lint_and_sast:
-    needs: detect_changes
-    if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug matrix output
-        run: echo "${{ needs.detect_changes.outputs.matrix }}"
+    lint_and_sast:
+      needs: detect_changes
+      if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
+      steps:
+        - name: Debug matrix output
+          run: echo "Running lint_and_sast for folder: ${{ matrix.folder }}"
 
-      - uses: ./.github/workflows/lint-and-sast.yml
-        with:
-          folder: spring-backend
+        - uses: ./.github/workflows/lint-and-sast.yml
+          with:
+            folder: ${{ matrix.folder }}
+
 
   no_changes_notice:
     needs: detect_changes

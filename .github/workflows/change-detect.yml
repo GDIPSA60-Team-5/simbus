@@ -1,73 +1,39 @@
-name: Detect Changed Folders
+- id: set-matrix
+  env:
+    FILTER_ANDROID_KOTLIN: ${{ steps.filter.outputs.android-kotlin }}
+    FILTER_SPRING_BACKEND: ${{ steps.filter.outputs.spring-backend }}
+    FILTER_LLM_BACKEND: ${{ steps.filter.outputs.llm-backend }}
+    FILTER_NEXT_FRONTEND: ${{ steps.filter.outputs.next-frontend }}
+    FORCE_ALL: true
+  run: |
+    folders=()
 
-on:
-  workflow_call:
-    outputs:
-      matrix:
-        description: "Matrix of changed folders"
-        value: ${{ jobs.detect.outputs.matrix }}
-      hasChanges:
-        description: "Whether any relevant folder changed"
-        value: ${{ jobs.detect.outputs.hasChanges }}
+    if [[ "$FORCE_ALL" == "true" ]]; then
+      folders+=("next-frontend")
+      folders+=("spring-backend")
+      folders+=("android-kotlin")
+      folders+=("llm-backend")
+    else
+      declare -A envMap=(
+        ["android-kotlin"]=$FILTER_ANDROID_KOTLIN
+        ["spring-backend"]=$FILTER_SPRING_BACKEND
+        ["llm-backend"]=$FILTER_LLM_BACKEND
+        ["next-frontend"]=$FILTER_NEXT_FRONTEND
+      )
 
-jobs:
-  detect:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      hasChanges: ${{ steps.set-matrix.outputs.hasChanges }}
+      for folder in "${!envMap[@]}"; do
+        if [[ "${envMap[$folder]}" == "true" ]]; then
+          folders+=("$folder")
+        fi
+      done
+    fi
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          base: dev
-          filters: |
-            android-kotlin: android-kotlin/**
-            spring-backend: spring-backend/**
-            llm-backend: llm-backend/**
-            next-frontend: next-frontend/**
-
-      - id: set-matrix
-        env:
-          FILTER_ANDROID_KOTLIN: ${{ steps.filter.outputs.android-kotlin }}
-          FILTER_SPRING_BACKEND: ${{ steps.filter.outputs.spring-backend }}
-          FILTER_LLM_BACKEND: ${{ steps.filter.outputs.llm-backend }}
-          FILTER_NEXT_FRONTEND: ${{ steps.filter.outputs.next-frontend }}
-          FORCE_ALL: true
-        run: |
-          folders=()
-
-          if [[ "$FORCE_ALL" == "true" ]]; then
-            folders+=("next-frontend")
-            folders+=("spring-backend")
-            folders+=("android-kotlin")
-            folders+=("llm-backend")
-          else
-            declare -A envMap=(
-              ["android-kotlin"]=$FILTER_ANDROID_KOTLIN
-              ["spring-backend"]=$FILTER_SPRING_BACKEND
-              ["llm-backend"]=$FILTER_LLM_BACKEND
-              ["next-frontend"]=$FILTER_NEXT_FRONTEND
-            )
-
-            for folder in "${!envMap[@]}"; do
-              if [[ "${envMap[$folder]}" == "true" ]]; then
-                folders+=("$folder")
-              fi
-            done
-          fi
-
-          if [ ${#folders[@]} -eq 0 ]; then
-            echo "matrix=[]" >> $GITHUB_OUTPUT
-            echo "hasChanges=false" >> $GITHUB_OUTPUT
-          else
-            matrix_json=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s '[.[] | {folder: .}]')
-            echo "matrix<<EOF" >> $GITHUB_OUTPUT
-            echo "$matrix_json" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-
-            echo "hasChanges=true" >> $GITHUB_OUTPUT
-          fi
+    if [ ${#folders[@]} -eq 0 ]; then
+      echo "matrix=[]" >> $GITHUB_OUTPUT
+      echo "hasChanges=false" >> $GITHUB_OUTPUT
+    else
+      # Output simple string array, e.g. ["android-kotlin", "spring-backend"]
+      matrix_json=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s '.')
+      echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
+      echo "hasChanges=true" >> $GITHUB_OUTPUT
+    fi
