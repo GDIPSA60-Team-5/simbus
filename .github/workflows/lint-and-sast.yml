@@ -74,7 +74,7 @@ jobs:
         run: |
           cd "$FOLDER"
           chmod +x ./mvnw
-          ./mvnw clean verify spotbugs:check pmd:pmd -DskipTests
+          ./mvnw clean verify spotbugs:check pmd:check -DskipTests
         continue-on-error: true
 
       - name: Upload PMD report
@@ -84,25 +84,12 @@ jobs:
           name: pmd-report
           path: ${{ env.FOLDER }}/target/pmd.xml
 
-      - name: Check PMD violations
-        if: env.FOLDER == 'spring-backend'
-        run: |
-          cd "$FOLDER"
-          ./mvnw pmd:check -DskipTests || true
-
       - name: Upload SpotBugs report
         if: env.FOLDER == 'spring-backend'
         uses: actions/upload-artifact@v4
         with:
           name: spotbugs-report
           path: ${{ env.FOLDER }}/target/spotbugsXml.xml
-
-      - name: Upload PMD report
-        if: env.FOLDER == 'spring-backend'
-        uses: actions/upload-artifact@v4
-        with:
-          name: pmd-report
-          path: ${{ env.FOLDER }}/target/pmd.xml
 
       # Android Kotlin lint & security
       - name: Run ktlint

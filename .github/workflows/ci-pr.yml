@@ -15,7 +15,8 @@ jobs:
     needs: detect-changed
     if: ${{ needs.detect-changed.outputs.hasChanges == 'true' }}
     strategy:
-      matrix: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
+      matrix:
+        folder: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
       fail-fast: false
     uses: ./.github/workflows/build.yml
     with:
@@ -24,10 +25,11 @@ jobs:
   codeql:
     needs: build
     if: ${{ needs.detect-changed.outputs.hasChanges == 'true' }}
-    runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
+      matrix:
+        folder: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
       fail-fast: false
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
