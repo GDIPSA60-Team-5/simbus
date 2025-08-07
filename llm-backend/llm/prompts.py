@@ -4,36 +4,26 @@ from llm.state import INTENT_DESCRIPTIONS, REQUIRED_SLOTS
 from typing import Dict, Any
 
 
-def build_extraction_prompt(predicted_intent, missing_slots, history, current_location):
+def build_extraction_prompt(predicted_intent, required_slots, history, current_location):
+    general_rules = """
+Rules:
+- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "current location").
+- Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
+- Do not include a slot in the output if its value cannot be extracted.
+""".strip()
+
     system_prompt = f"""
 You are a helpful assistant extracting information ("slots") from a multi-turn conversation.
 
 Current intent: "{predicted_intent}"
 
 Extract these slots if available:
-{json.dumps(missing_slots, indent=2)}
+{json.dumps(required_slots, indent=2)}
 
 Context:
-- Current datetime: {current_datetime()}
+- Today's date: {current_datetime()}
 
-Rules:
-- If only time is mentioned, assume today.
-- If user refers to current location, use this location: {current_location}.
-- Locations can be expressed as names (e.g., "Orchard MRT") or coordinates (latitude and longitude).
-- You are allowed to infer known place names (e.g., "NUS-ISS") as location strings even if they are not standard addresses.
-- Always choose the most likely interpretation based on recent user input — be decisive, do not ask questions.
-- Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
-
-Example:
-
-User: How can I get to NUS-ISS from Bukit Panjang MRT?  
-Slots:  
-{{  
-    "start_location": "Bukit Panjang MRT",  
-    "end_location": "NUS-ISS"  
-}}
-
-Always prioritize the most recent user message.
+{general_rules}
 
 Respond with a JSON object containing only a "slots" field.
 """.strip()
@@ -63,17 +53,13 @@ Context:
 - Current location: {current_location}
 
 Rules:
-- If only time is mentioned, assume today.
-- If user refers to current location, use this location: {current_location}.
-- Locations can be expressed as names (e.g., "Orchard MRT") or coordinates (latitude and longitude).
+- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "current location").
 - Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
-            """.strip()
+- Do not include a slot in the output if its value cannot be extracted.
+    """.strip()
 
     system_prompt = f"""
 You are an assistant helping with the intent "{intent}".
-
-Expected slots:
-{json.dumps(REQUIRED_SLOTS, indent=2)}
 
 Current values:
 {json.dumps(serialize_for_json(current_slots), indent=2)}

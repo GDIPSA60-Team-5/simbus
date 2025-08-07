@@ -5,7 +5,7 @@ import sys
 import time as timing
 import pytz
 from datetime import datetime, date
-from llm.state import SLOT_TYPES, REQUIRED_SLOTS
+from llm.state import SLOT_TYPES, REQUIRED_SLOTS, user_conversations
 
 
 def typewriter_print(text, delay=0.015):
@@ -63,13 +63,14 @@ def extract_json_from_response(text):
         return None
 
 
-def show_help():
-    return """
-Here's what I can help you with:
+def show_help(user_name):
+    return f"""
+Hi {user_name}, here’s what I can help you with:
 
-1. Find directions from one place to another (e.g., "How do I get to the airport?")
-2. Plan when to leave to reach your destination on time.
-3. Check when the next bus arrives.
+1. Get directions (e.g., “How do I get from Clementi Mall to Changi Airport?”)
+2. Plan your trip to arrive on time (e.g., “Notify me when I should leave to get to YIH by 10 AM.”)
+3. Check bus arrival times (e.g., “When is bus D1 arriving at University Town?”)
+4. Restart the conversation if needed (e.g., “Reset.”)
 
 What would you like to do?
 """
@@ -79,9 +80,9 @@ def get_recent_history(conversation_history, MAX_HISTORY_LENGTH):
     return conversation_history[-MAX_HISTORY_LENGTH:]
 
 
-def get_user_context(user_id, user_conversations):
-    if user_id not in user_conversations:
-        user_conversations[user_id] = {
+def get_user_context(user_name):
+    if user_name not in user_conversations:
+        user_conversations[user_name] = {
             "state": {
                 "intent": None,
                 "slots": {slot: None for slot in SLOT_TYPES}
@@ -89,7 +90,16 @@ def get_user_context(user_id, user_conversations):
             "history": [],
             "current_location": {}
         }
-    return user_conversations[user_id]
+    return user_conversations[user_name]
+
+
+def reset_conversation_for_user(user_name):
+    if user_name in user_conversations:
+        user_conversations[user_name]["state"] = {
+            "intent": None,
+            "slots": {slot: None for slot in SLOT_TYPES}
+        }
+        user_conversations[user_name]["history"] = []
 
 
 def convert_slot_value(slot, value):
@@ -157,3 +167,13 @@ def find_missing_slots(intent, current_slots):
             if not current_slots.get(slot):
                 missing.append(slot)
     return missing
+
+
+def flatten_slots(required_slots):
+    flat = []
+    for slot in required_slots:
+        if isinstance(slot, list):
+            flat.extend(slot)
+        else:
+            flat.append(slot)
+    return flat

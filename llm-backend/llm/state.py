@@ -1,10 +1,10 @@
 from datetime import datetime
 
 
-MAX_HISTORY_LENGTH = 7
+MAX_HISTORY_LENGTH = 1
 
 # ---- INTENT DETECTION GUARD ----
-CONFIDENCE_THRESHOLD = 0.3
+CONFIDENCE_THRESHOLD = 0.4
 MIN_WORDS_FOR_INTENT = 7
 
 INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]
@@ -36,11 +36,3 @@ SLOT_TYPES = {
 }
 
 user_conversations = {}
-
-def reset_conversation_for_user(user_id):
-    if user_id in user_conversations:
-        user_conversations[user_id]["state"] = {
-            "intent": None,
-            "slots": {slot: None for slot in SLOT_TYPES}
-        }
-        user_conversations[user_id]["history"] = []
