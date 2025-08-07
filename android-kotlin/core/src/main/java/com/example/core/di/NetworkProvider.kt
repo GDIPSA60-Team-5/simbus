@@ -18,6 +18,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 import com.example.core.BuildConfig
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
+import java.util.concurrent.TimeUnit
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -31,6 +32,9 @@ object NetworkProvider {
     @Singleton
     fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
         OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
