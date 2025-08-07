@@ -41,4 +41,3 @@ jobs:
           target: "http://${{ needs.deploy.outputs.instance_ip }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           fail_action: false
-          artifact_name: zap-report

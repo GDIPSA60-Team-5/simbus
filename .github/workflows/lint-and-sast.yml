@@ -74,7 +74,20 @@ jobs:
         run: |
           cd "$FOLDER"
           chmod +x ./mvnw
-          ./mvnw clean verify spotbugs:check checkstyle:check pmd:check -DskipTests
+          ./mvnw clean verify spotbugs:check pmd:pmd -DskipTests
+
+      - name: Upload PMD report
+        if: env.FOLDER == 'spring-backend'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmd-report
+          path: ${{ env.FOLDER }}/target/pmd.xml
+
+      - name: Check PMD violations
+        if: env.FOLDER == 'spring-backend'
+        run: |
+          cd "$FOLDER"
+          ./mvnw pmd:check -DskipTests
 
       - name: Upload SpotBugs report
         if: env.FOLDER == 'spring-backend'
