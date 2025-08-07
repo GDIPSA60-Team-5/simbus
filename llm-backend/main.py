@@ -19,7 +19,11 @@ from llm.utils import (
     flatten_slots
 )
 from llm.intent_handler import handle_next_bus
-from fastapi import FastAPI
+from fastapi import (
+    FastAPI, 
+    Header, 
+    HTTPException
+)
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 
@@ -41,7 +45,15 @@ class BotResponseDTO(BaseModel):
 
 
 @app.post("/chat", response_model=BotResponseDTO)
-def chat_endpoint(request: ChatRequest):
+def chat_endpoint(
+    request: ChatRequest,
+    authorization: str = Header(None)
+):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+    
+    jwt_token = authorization
+    print(f"Incoming JWT_Token: {jwt_token}")
     user_input = request.userInput.strip()
     current_location = request.currentLocation
     user_name = "Aung"  # Replace with session or actual user ID
@@ -58,7 +70,7 @@ def chat_endpoint(request: ChatRequest):
         ctx["history"] = get_recent_history(ctx["history"], MAX_HISTORY_LENGTH)
         if predicted_intent and predicted_intent != ctx["state"]["intent"]:
             ctx["state"]["intent"] = predicted_intent
-            ctx["history"].clear
+            ctx["history"].clear()
             
         active_intent = ctx["state"]["intent"]
         ctx["history"].append({"role": "user", "content": user_input})
@@ -104,7 +116,8 @@ def chat_endpoint(request: ChatRequest):
 
             if not missing_slots:
                 if active_intent == "next_bus":
-                    backend_result = handle_next_bus(current_slots)
+                    backend_result = handle_next_bus(current_slots, jwt_token)
+                    print(f"Next bus result: {backend_result}")
 
                     # Handle both dict or string response
                     if isinstance(backend_result, dict):

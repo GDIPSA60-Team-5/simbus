@@ -9,16 +9,16 @@ from dotenv import load_dotenv
 load_dotenv()
 backend_url = os.getenv("BACKEND_URL")
 
-def handle_next_bus(slots: Dict[str, Any]) -> Dict[str, Any]:
+def handle_next_bus(slots: Dict[str, Any], jwt_token: str) -> Dict[str, Any]:
     base_url = f"{backend_url}/api/bus/arrivals"
     params = {}
 
     # Pick either bus stop code or name
     if slots.get("boarding_bus_stop_code"):
-        params["busStopCode"] = slots["boarding_bus_stop_code"]
+        params["busStopQuery"] = slots["boarding_bus_stop_code"]
         stop_name = slots.get("boarding_bus_stop_code")
     elif slots.get("boarding_bus_stop_name"):
-        params["busStopCode"] = slots["boarding_bus_stop_name"]
+        params["busStopQuery"] = slots["boarding_bus_stop_name"]
         stop_name = slots.get("boarding_bus_stop_name")
     else:
         return {
@@ -28,9 +28,14 @@ def handle_next_bus(slots: Dict[str, Any]) -> Dict[str, Any]:
 
     if slots.get("bus_service_number"):
         params["serviceNo"] = slots["bus_service_number"]
+        
+    headers = {}
+    if jwt_token:
+        headers["Authorization"] = jwt_token
+        print(f"JWT token: {jwt_token}")
 
     try:
-        response = requests.get(base_url, params=params, timeout=5)
+        response = requests.get(base_url, params=params, headers=headers, timeout=5)
         response.raise_for_status()
 
         arrivals_data = response.json()  # List of bus service dicts
