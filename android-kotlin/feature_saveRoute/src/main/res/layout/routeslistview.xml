@@ -1,0 +1,59 @@
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/routeNumber"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Route _"
+            />
+        <TextView
+            android:id="@+id/FromText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="From:"
+            />
+        <TextView
+            android:id="@+id/DestinationText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="To:"
+            />
+        <TextView
+            android:id="@+id/BusStop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bus Stop: "
+            />
+        <TextView
+            android:id="@+id/BusService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bus Service:"
+            />
+
+        <TextView
+            android:id="@+id/StartTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start at:"
+            />
+        <TextView
+            android:id="@+id/ArrivalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            />
+        <TextView
+            android:id="@+id/frequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            />
+
+
+    </LinearLayout>
+

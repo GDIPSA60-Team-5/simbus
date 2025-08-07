@@ -18,23 +18,23 @@ public class SpringBackendApplication {
 
     }
 
-    @Bean
-    CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        return args -> {
-            userRepository.findByUserName("user")
-                    .switchIfEmpty(
-                            userRepository.save(
-                                    User.builder()
-                                            .userName("user")
-                                            .userType("admin")
-                                            .passwordHash(passwordEncoder.encode("password"))
-                                            .build()
-                            )
-                    )
-                    .block();
-        };
-    }
-
-
-
+//    @Bean
+//    CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+//        return args -> {
+//            userRepository.findByUserName("user")
+//                    .switchIfEmpty(
+//                            userRepository.save(
+//                                    User.builder()
+//                                            .userName("user")
+//                                            .userType("admin")
+//                                            .passwordHash(passwordEncoder.encode("password"))
+//                                            .build()
+//                            )
+//                    )
+//                    .block();
+//        };
+//    }
+//
+//
+//
 }
