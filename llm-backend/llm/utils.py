@@ -3,8 +3,10 @@ import re
 import ast
 import sys
 import time as timing
+import pytz
 from datetime import datetime, date
-from llm.state import SLOT_TYPES
+from llm.state import SLOT_TYPES, REQUIRED_SLOTS, user_conversations
+
 
 def typewriter_print(text, delay=0.015):
     for char in text:
@@ -30,58 +32,47 @@ def merge_slots(current_slots, new_slots):
 
 def extract_json_from_response(text):
     try:
-        # Extract the first {...} JSON-looking substring (non-greedy)
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON object found in response.")
-        
-        json_str = match.group(0).strip().lstrip("\ufeff")
+        # Extract all JSON-like substrings and try parsing the first valid one
+        json_candidates = re.findall(r'\{.*?\}', text, re.DOTALL)
 
-        # Check if it ends correctly, otherwise try to fix
-        open_braces = json_str.count("{")
-        close_braces = json_str.count("}")
-        if open_braces > close_braces:
-            json_str += "}" * (open_braces - close_braces)
-
-        # Unescape if string-literal wrapped
-        if (json_str.startswith('"') and json_str.endswith('"')) or \
-            (json_str.startswith("'") and json_str.endswith("'")):
+        for candidate in json_candidates:
             try:
-                json_str = ast.literal_eval(json_str)
-            except Exception as e:
-                print(f"[ERROR evaluating string literal]: {e}")
-                print("LLM returned:\n", repr(json_str))
-                return None
+                cleaned = candidate.strip().lstrip("\ufeff")
 
-        return json.loads(json_str)
+                # Fix unbalanced braces
+                open_braces = cleaned.count("{")
+                close_braces = cleaned.count("}")
+                if open_braces > close_braces:
+                    cleaned += "}" * (open_braces - close_braces)
 
-    except json.JSONDecodeError as e:
-        print(f"[ERROR decoding JSON]: {e}")
-        print("LLM returned:\n", repr(text))
+                # Unescape if needed
+                if (cleaned.startswith('"') and cleaned.endswith('"')) or \
+                    (cleaned.startswith("'") and cleaned.endswith("'")):
+                    cleaned = ast.literal_eval(cleaned)
+
+                return json.loads(cleaned)
+
+            except json.JSONDecodeError:
+                continue  # Skip and try the next one
+
+        raise ValueError("No valid JSON object found.")
+
     except Exception as e:
         print(f"[ERROR extracting JSON]: {e}")
         print("LLM returned:\n", repr(text))
+        return None
 
-    return None
 
+def show_help(user_name):
+    return f"""
+Hi {user_name}, here’s what I can help you with:
 
-def show_help():
-    return """
-Here's what I can help you with:
+1. Get directions (e.g., “How do I get from Clementi Mall to Changi Airport?”)
+2. Plan your trip to arrive on time (e.g., “Notify me when I should leave to get to YIH by 10 AM tomorrow.”)
+3. Check bus arrival times (e.g., “When is bus D1 arriving at University Town?”)
+4. Restart the conversation if needed (e.g., “Reset.”)
 
-1. Route Info (`route_info`)
-    - Ask me how to get from one place to another.
-    - Example: "How do I get from downtown to the airport?"
-
-2. Schedule a Commute (`schedule_commute`)
-    - Let me know when you need to arrive, and I’ll plan the timing.
-    - Example: "I want to reach work by 9 AM. Notify me when to leave."
-
-3. Next Bus Timing (`next_bus`)
-    - Just give me the bus number and I’ll tell you when the next one arrives.
-    - Example: "When is the next A2 bus?"
-
-Just ask a question and I’ll guide you step by step!
+What would you like to do?
 """
 
 
@@ -89,16 +80,26 @@ def get_recent_history(conversation_history, MAX_HISTORY_LENGTH):
     return conversation_history[-MAX_HISTORY_LENGTH:]
 
 
-def get_user_context(user_id, user_conversations):
-    if user_id not in user_conversations:
-        user_conversations[user_id] = {
+def get_user_context(user_name):
+    if user_name not in user_conversations:
+        user_conversations[user_name] = {
             "state": {
                 "intent": None,
                 "slots": {slot: None for slot in SLOT_TYPES}
             },
-            "history": []
+            "history": [],
+            "current_location": {}
         }
-    return user_conversations[user_id]
+    return user_conversations[user_name]
+
+
+def reset_conversation_for_user(user_name):
+    if user_name in user_conversations:
+        user_conversations[user_name]["state"] = {
+            "intent": None,
+            "slots": {slot: None for slot in SLOT_TYPES}
+        }
+        user_conversations[user_name]["history"] = []
 
 
 def convert_slot_value(slot, value):
@@ -139,7 +140,8 @@ def validate_future_datetime(dt_value):
 
 
 def current_datetime():
-    return datetime.now().isoformat(timespec='seconds')
+    sgt = pytz.timezone("Asia/Singapore")
+    return datetime.now(sgt)    #.isoformat(timespec='seconds')
 
 
 def serialize_for_json(obj):
@@ -150,3 +152,28 @@ def serialize_for_json(obj):
     elif isinstance(obj, datetime):
         return obj.isoformat()
     return obj
+
+
+def find_missing_slots(intent, current_slots):
+    required = REQUIRED_SLOTS.get(intent, [])
+    missing = []
+
+    for slot in required:
+        if isinstance(slot, list):
+            # slot group means at least one must be present
+            if not any(current_slots.get(s) for s in slot):
+                missing.extend(slot)  # all alternatives missing, so ask for all
+        else:
+            if not current_slots.get(slot):
+                missing.append(slot)
+    return missing
+
+
+def flatten_slots(required_slots):
+    flat = []
+    for slot in required_slots:
+        if isinstance(slot, list):
+            flat.extend(slot)
+        else:
+            flat.append(slot)
+    return flat
