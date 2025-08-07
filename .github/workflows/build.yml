@@ -9,26 +9,81 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FOLDER: ${{ inputs.folder }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Build ${{ inputs.folder }}
+      - name: Set up environment and build $FOLDER
         run: |
-          cd ${{ inputs.folder }}
-          case "${{ inputs.folder }}" in
+          cd $FOLDER
+          case "$FOLDER" in
             next-frontend)
-              npm ci
-              npm run build
+              echo "Setting up Node.js"
               ;;
             spring-backend)
-              ./mvnw package
+              echo "Setting up Java"
               ;;
             android-kotlin)
-              ./gradlew assembleRelease
+              echo "Setting up Java for Android"
               ;;
             llm-backend)
-              pip install -r requirements.txt
-              # Add build commands here if needed
+              echo "Setting up Python"
+              ;;
+            *)
+              echo "Unknown folder $FOLDER"
+              exit 1
               ;;
           esac
+
+      # Setup environments per folder
+
+      - name: Setup Node.js (next-frontend)
+        if: env.FOLDER == 'next-frontend'
+        uses: actions/setup-node@v3
+        with:
+          cache: npm
+
+      - name: Setup Java (spring-backend & android-kotlin)
+        if: env.FOLDER == 'spring-backend' || env.FOLDER == 'android-kotlin'
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Setup Python (llm-backend)
+        if: env.FOLDER == 'llm-backend'
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+          cache: pip
+
+      - name: Build (next-frontend)
+        if: env.FOLDER == 'next-frontend'
+        run: |
+          cd $FOLDER
+          npm ci
+          npm run build
+
+      - name: Build (spring-backend)
+        if: env.FOLDER == 'spring-backend'
+        run: |
+          cd $FOLDER
+          ./mvnw clean verify -DskipTests
+
+      - name: Build (android-kotlin)
+        if: env.FOLDER == 'android-kotlin'
+        run: |
+          cd $FOLDER
+          ./gradlew assembleRelease
+
+      - name: Build (llm-backend)
+        if: env.FOLDER == 'llm-backend'
+        run: |
+          cd $FOLDER
+          pip install -r requirements.txt
+          # Add build commands if needed

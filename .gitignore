@@ -3,6 +3,5 @@
 **/.classpath
 **/.project
 **/.settings/
-/spring-backend/src/main/resources/application.properties
 /llm-backend/llm/__pycache__/
 .vscode

@@ -20,7 +20,8 @@ playServicesMaps = "19.2.0"
 retrofit = "2.9.0"
 securityCrypto = "1.1.0"
 kotlinGradlePlugin = "2.0.21"
-
+ktlint = "11.6.1"
+detekt = "1.23.1"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
@@ -45,6 +46,8 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlinGradlePlugin" }
 
 [plugins]
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

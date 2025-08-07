@@ -1,11 +1,7 @@
-name: Main Branch CI
-
+name: Push CD Pipeline
 on:
   push:
-    branches:
-      - "main"
-      - "dev"
-      - "staging"
+    branches: [main, dev, staging, test/ci-deploy]
 
 jobs:
   dockerize:
@@ -29,3 +25,4 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      BACKEND_ENV_B64: ${{ secrets.BACKEND_ENV_B64 }}

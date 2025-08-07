@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <sonar.organization>gdipsa60-team-5</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
     <dependencies>
         <dependency>
@@ -68,32 +70,6 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- Spring Boot JPA -->
-	    <dependency>
-	        <groupId>org.springframework.boot</groupId>
-	        <artifactId>spring-boot-starter-data-jpa</artifactId>
-	    </dependency>
-	    
-	    <!-- PostgreSQL Driver -->
-	    <dependency>
-	        <groupId>org.postgresql</groupId>
-	        <artifactId>postgresql</artifactId>
-	        <scope>runtime</scope>
-	    </dependency>
-	    
-        <!-- JPA API -->
-	    <dependency>
-	        <groupId>jakarta.persistence</groupId>
-	        <artifactId>jakarta.persistence-api</artifactId>
-	    </dependency>
-	    
-        <!-- Optional: Hibernate implementation -->
-	    <dependency>
-	        <groupId>org.hibernate.orm</groupId>
-	        <artifactId>hibernate-core</artifactId>
-        </dependency>
-        
-		<!-- Entity validation -->
 		<dependency>
 		    <groupId>org.springframework.boot</groupId>
 		    <artifactId>spring-boot-starter-validation</artifactId>
@@ -110,7 +86,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
+            <version>1.18.28</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -124,6 +100,62 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.9.3.2</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>spotbugs</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <xmlOutput>true</xmlOutput>
+                    <outputDirectory>${project.build.directory}/spotbugs-reports</outputDirectory>
+                    <failOnError>true</failOnError>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation>
+                    <failOnViolation>true</failOnViolation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.17.0</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnViolation>true</failOnViolation>
+                    <rulesets>
+                        <ruleset>rulesets/java/basic.xml</ruleset>
+                        <ruleset>rulesets/java/braces.xml</ruleset>
+                    </rulesets>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
