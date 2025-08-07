@@ -11,21 +11,20 @@ jobs:
   detect_changes:
     uses: ./.github/workflows/change-detect.yml
 
-    lint_and_sast:
-      needs: detect_changes
-      if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
-      runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
-      steps:
-        - name: Debug matrix output
-          run: echo "Running lint_and_sast for folder: ${{ matrix.folder }}"
+  lint_and_sast:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.hasChanges == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
+    steps:
+      - name: Debug matrix output
+        run: echo "Running lint_and_sast for folder: ${{ matrix.folder }}"
 
-        - uses: ./.github/workflows/lint-and-sast.yml
-          with:
-            folder: ${{ matrix.folder }}
-
+      - uses: ./.github/workflows/lint-and-sast.yml
+        with:
+          folder: ${{ matrix.folder }}
 
   no_changes_notice:
     needs: detect_changes
@@ -34,3 +33,4 @@ jobs:
     steps:
       - name: Print no changes message to step summary
         run: echo "No relevant folders changed; skipping lint and SAST jobs." >> $GITHUB_STEP_SUMMARY
+`
