@@ -19,9 +19,6 @@ jobs:
       matrix:
         folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
     steps:
-      - name: Debug matrix output
-        run: echo "Running lint_and_sast for folder: ${{ matrix.folder }}"
-
       - uses: ./.github/workflows/lint-and-sast.yml
         with:
           folder: ${{ matrix.folder }}
