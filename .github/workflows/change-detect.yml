@@ -33,27 +33,25 @@ jobs:
       - id: set-matrix
         run: |
           folders=()
+          if [ "${{ steps.filter.outputs.android-kotlin }}" = "true" ]; then folders+=("android-kotlin"); fi
+          if [ "${{ steps.filter.outputs.spring-backend }}" = "true" ]; then folders+=("spring-backend"); fi
+          if [ "${{ steps.filter.outputs.llm-backend }}" = "true" ]; then folders+=("llm-backend"); fi
+          if [ "${{ steps.filter.outputs.next-frontend }}" = "true" ]; then folders+=("next-frontend"); fi
 
-          if [[ "${{ steps.filter.outputs.android-kotlin }}" == "true" ]]; then
-            folders+=("\"android-kotlin\"")
-          fi
-          if [[ "${{ steps.filter.outputs.spring-backend }}" == "true" ]]; then
-            folders+=("\"spring-backend\"")
-          fi
-          if [[ "${{ steps.filter.outputs.llm-backend }}" == "true" ]]; then
-            folders+=("\"llm-backend\"")
-          fi
-          if [[ "${{ steps.filter.outputs.next-frontend }}" == "true" ]]; then
-            folders+=("\"next-frontend\"")
+          # If FORCE_ALL is true and no folders found, include all folders
+          if [ "${FORCE_ALL}" = "true" ] && [ ${#folders[@]} -eq 0 ]; then
+            folders=("android-kotlin" "spring-backend" "llm-backend" "next-frontend")
           fi
 
-          if [ ${#folders[@]} -eq 0 ]; then
-            matrix_json='{"folder":[]}'
-            has_changes=false
+          # Convert bash array to JSON array string
+          matrix=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s .)
+
+          # Set outputs for matrix and hasChanges
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          if [ ${#folders[@]} -gt 0 ]; then
+            echo "hasChanges=true" >> $GITHUB_OUTPUT
           else
-            matrix_json="{\"folder\":[${folders[*]}]}"
-            has_changes=true
+            echo "hasChanges=false" >> $GITHUB_OUTPUT
           fi
-
-          echo "matrix=$matrix_json" >> $GITHUB_OUTPUT
-          echo "hasChanges=$has_changes" >> $GITHUB_OUTPUT
+        env:
+          FORCE_ALL: true

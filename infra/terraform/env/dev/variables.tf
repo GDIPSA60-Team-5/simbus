@@ -19,5 +19,5 @@ variable "ami_id" {
 variable "key_name" {
   description = "AWS key pair name to allow SSH"
   type        = string
-  default     = "deployment-key"
+  default     = "deployment-key2"
 }
