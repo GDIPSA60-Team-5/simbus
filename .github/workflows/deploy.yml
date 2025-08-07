@@ -71,6 +71,11 @@ jobs:
         working-directory: ${{ inputs.terraform_dir }}
         run: terraform apply -auto-approve tfplan
 
+      - name: Terraform Refresh (only if no apply)
+        if: steps.tf-plan.outputs.changes == 'false'
+        working-directory: ${{ inputs.terraform_dir }}
+        run: terraform refresh
+
       - name: Get Terraform Output (Instance IP)
         id: tf-output
         working-directory: ${{ inputs.terraform_dir }}
