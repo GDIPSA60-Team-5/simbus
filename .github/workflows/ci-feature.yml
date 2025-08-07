@@ -18,10 +18,9 @@ jobs:
     strategy:
       matrix:
         folder: ${{ fromJson(needs.detect_changes.outputs.matrix) }}
-    steps:
-      - uses: ./.github/workflows/lint-and-sast.yml
-        with:
-          folder: ${{ matrix.folder }}
+    uses: ./.github/workflows/lint-and-sast.yml
+    with:
+      folder: ${{ matrix.folder }}
 
   no_changes_notice:
     needs: detect_changes
