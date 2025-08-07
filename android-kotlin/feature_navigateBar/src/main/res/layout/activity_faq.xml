@@ -15,7 +15,7 @@
         android:contentDescription="back"
         android:clickable="true"
         android:focusable="true"
-        app:tint="@color/black"
+        android:tint="@color/black"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

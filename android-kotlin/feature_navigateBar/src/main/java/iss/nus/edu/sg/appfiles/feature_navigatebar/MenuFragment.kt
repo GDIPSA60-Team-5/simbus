@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import iss.nus.edu.sg.appfiles.feature_login.ui.LoginActivity
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
@@ -18,6 +19,10 @@ class MenuFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val view = inflater.inflate(R.layout.fragment_menu_content, container, false)
+
+        val username = view.findViewById<TextView>(R.id.username)
+        val storageManager = SecureStorageManager(requireContext())
+        username.text = storageManager.getUsername()
 
         //changePasswordRow onClickListener
         val changePasswordRow = view.findViewById<LinearLayout>(R.id.changePasswordRow)
@@ -43,7 +48,6 @@ class MenuFragment : Fragment() {
         //changePasswordRow onClickListener
         val logoutRow = view.findViewById<LinearLayout>(R.id.logoutRow)
         logoutRow.setOnClickListener {
-            val storageManager = SecureStorageManager(requireContext())
             storageManager.clearAll()
             val intent = Intent(requireContext(), LoginActivity::class.java)
             startActivity(intent)
