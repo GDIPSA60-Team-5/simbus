@@ -28,6 +28,8 @@ on:
         required: true
       DEPLOY_SSH_KEY:
         required: true
+      BACKEND_ENV_B64:
+        required: true
 
 jobs:
   deploy:
@@ -36,7 +38,6 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_IN_AUTOMATION: true
-      BACKEND_ENV_B64: ${{ secrets.BACKEND_ENV_B64 }}
 
     steps:
       - name: Checkout code
@@ -110,9 +111,6 @@ jobs:
         run: |
           echo "[all]" > ${{ inputs.inventory_file }}
           echo "${{ steps.tf-output.outputs.INSTANCE_IP }}" >> ${{ inputs.inventory_file }}
-
-      - name: Debug BACKEND_ENV_B64
-        run: echo "$BACKEND_ENV_B64" | head -c 50
 
       - name: Run Ansible playbook to deploy containers
         working-directory: ${{ inputs.ansible_dir }}
