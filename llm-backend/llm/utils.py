@@ -68,7 +68,7 @@ def show_help(user_name):
 Hi {user_name}, here’s what I can help you with:
 
 1. Get directions (e.g., “How do I get from Clementi Mall to Changi Airport?”)
-2. Plan your trip to arrive on time (e.g., “Notify me when I should leave to get to YIH by 10 AM.”)
+2. Plan your trip to arrive on time (e.g., “Notify me when I should leave to get to YIH by 10 AM tomorrow.”)
 3. Check bus arrival times (e.g., “When is bus D1 arriving at University Town?”)
 4. Restart the conversation if needed (e.g., “Reset.”)
 
