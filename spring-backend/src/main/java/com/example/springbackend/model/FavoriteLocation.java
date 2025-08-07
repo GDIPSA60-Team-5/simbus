@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Location {
+public class FavoriteLocation {
 
 	@Id
 	private String id;

@@ -1,7 +1,8 @@
 package com.example.springbackend.service;
 
+import com.example.springbackend.dto.request.AuthRequest;
+import com.example.springbackend.dto.response.AuthResponse;
 import com.example.springbackend.security.UserDetailsAuthenticationManager;
-import com.example.springbackend.dto.*;
 import com.example.springbackend.model.User;
 import com.example.springbackend.repository.UserRepository;
 import com.example.springbackend.security.JwtTokenProvider;
@@ -52,6 +53,4 @@ public class AuthService {
                         )
                 );
     }
-
-
 }

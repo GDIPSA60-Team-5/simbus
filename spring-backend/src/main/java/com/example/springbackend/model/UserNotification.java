@@ -15,12 +15,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Notification {
+public class UserNotification {
 
 	@Id
 	private String id;
 
-	private Long userID;
+	private String userId;
 	private String type;
 	private String title;
 	private String message;

@@ -1,4 +1,4 @@
-package com.example.springbackend.dto;
+package com.example.springbackend.dto.response;
 
 public class AuthResponse {
     private String token;
