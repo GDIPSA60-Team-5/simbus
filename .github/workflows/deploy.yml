@@ -37,6 +37,8 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+      instance_ip: ${{ steps.tf-output.outputs.INSTANCE_IP }}
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -126,11 +128,3 @@ jobs:
             --extra-vars "backend_env_b64=${{ secrets.BACKEND_ENV_B64 }} image_tag=${{ inputs.image_tag }} docker_username=${{ secrets.DOCKER_USERNAME }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
-
-      - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.9.0
-        with:
-          target: "http://${{ steps.tf-output.outputs.INSTANCE_IP }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fail_action: false
-          artifact_name: zap-report
