@@ -24,6 +24,10 @@
         path: /home/ubuntu/docker-compose.yml
         state: absent
 
+    - name: Debug backend_env_b64 (first 50 chars)
+      debug:
+        msg: "{{ backend_env_b64[:50] }}"
+
     - name: Write .env file from base64 secret
       copy:
         content: "{{ backend_env_b64 | b64decode }}"
