@@ -31,4 +31,4 @@ print(f"Mean accuracy: {np.mean(scores):.2f}")
 clf.fit(X_embeddings, df["intent"])
 
 # ----- Save model and embedder -----
-joblib.dump((embedder, clf), "intent_classifier.joblib")
+joblib.dump((embedder, clf), "intent_classifier_embedding.joblib")

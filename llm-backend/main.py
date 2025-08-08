@@ -2,7 +2,6 @@ from llm.model import get_model, predict_intent
 from llm.prompts import (
     build_extraction_prompt,
     build_followup_prompt,
-    build_final_response_prompt,
 )
 from llm.state import (
     MAX_HISTORY_LENGTH,

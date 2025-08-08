@@ -74,12 +74,32 @@ def handle_next_bus(slots: Dict[str, Any], jwt_token: str) -> Dict[str, Any]:
 
             if minutes_list:
                 arrivals_by_bus[service_name] = minutes_list
-                # Build message
-                times_str = " and again in ".join([
-                    "arriving now" if m == 0 else f"{m} minute{'s' if m > 1 else ''}"
-                    for m in minutes_list
-                ])
-                messages.append(f"Bus {service_name} will arrive at {stop_name} in {times_str}.")
+                first_eta = minutes_list[0]
+
+                if first_eta == 0:
+                    # First bus is arriving now
+                    if len(minutes_list) == 1:
+                        message = f"Bus {service_name} is arriving now at {stop_name}."
+                    else:
+                        message = (
+                            f"Bus {service_name} is arriving now at {stop_name}. "
+                            f"The next one will arrive in {minutes_list[1]} minute{'s' if minutes_list[1] > 1 else ''}."
+                        )
+                else:
+                    # First bus is in the future
+                    if len(minutes_list) == 1:
+                        message = (
+                            f"Bus {service_name} will arrive at {stop_name} "
+                            f"in {first_eta} minute{'s' if first_eta > 1 else ''}."
+                        )
+                    else:
+                        message = (
+                            f"Bus {service_name} will arrive at {stop_name} "
+                            f"in {first_eta} minute{'s' if first_eta > 1 else ''} "
+                            f"and again in {minutes_list[1]} minute{'s' if minutes_list[1] > 1 else ''}."
+                        )
+
+                messages.append(message)
 
         if not messages:
             return {
