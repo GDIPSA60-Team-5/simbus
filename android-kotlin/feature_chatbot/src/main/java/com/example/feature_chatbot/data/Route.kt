@@ -3,6 +3,13 @@ package com.example.feature_chatbot.data
 data class Route(
     val summary: String,
     val durationInMinutes: Int,
-    val routeGeometry: String?,
-    val legs: List<RouteStep>
+    val legs: List<RouteLeg>
+)
+
+data class RouteLeg(
+    val type: String,
+    val instruction: String,
+    val busServiceNumber: String?,
+    val durationInMinutes: Int,
+    val legGeometry: String
 )

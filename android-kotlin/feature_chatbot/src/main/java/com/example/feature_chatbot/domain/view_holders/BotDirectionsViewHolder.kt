@@ -11,7 +11,7 @@ import androidx.core.graphics.toColorInt
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.Route
-import com.example.feature_chatbot.data.RouteStep
+import com.example.feature_chatbot.data.RouteLeg
 import com.example.feature_chatbot.databinding.ItemChatBotDirectionsBinding
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -22,6 +22,8 @@ import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import android.util.Log
+import com.google.android.gms.maps.model.LatLngBounds
 
 class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding) :
     androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root), OnMapReadyCallback {
@@ -33,6 +35,8 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
     private var mapView: MapView = binding.routeMapView
     private var googleMap: GoogleMap? = null
     private var currentPolylines: MutableList<Polyline> = mutableListOf()
+    private var selectedRouteIndex: Int = -1
+    private var allRoutes: List<Route> = emptyList()
 
     init {
         mapView.onCreate(null)
@@ -56,42 +60,55 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
     fun bind(directions: BotResponse.Directions) {
         bindLocationInfo(directions)
         bindRoutes(directions.suggestedRoutes)
-        if (googleMap != null) {
-            drawRoutesOnMap(directions.suggestedRoutes)
+
+        allRoutes = directions.suggestedRoutes ?: emptyList()
+
+        // Optionally select the first route by default
+        if (selectedRouteIndex == -1 && allRoutes.isNotEmpty()) {
+            selectedRouteIndex = 0
+            drawSelectedRoute()
         }
     }
-    private fun drawRoutesOnMap(routes: List<Route>?) {
+    private fun drawSelectedRoute() {
         googleMap?.let { map ->
             map.clear()
             currentPolylines.clear()
 
-            if (routes.isNullOrEmpty()) return
+            if (selectedRouteIndex in allRoutes.indices) {
+                val selectedRoute = allRoutes[selectedRouteIndex]
 
-            routes.forEach { route ->
-                route.routeGeometry?.let { encodedPolyline ->
-                    val points = decodePolyline(encodedPolyline)
-                    if (points.isNotEmpty()) {
-                        val polyline = map.addPolyline(
-                            PolylineOptions()
-                                .addAll(points)
-                                .color(getColorForRoute(route))
-                                .width(8f)
-                        )
-                        currentPolylines.add(polyline)
+                // For collecting all LatLng points for camera bounds calculation
+                val allPoints = mutableListOf<LatLng>()
+
+                // Iterate over legs and draw each leg's geometry
+                selectedRoute.legs.forEach { leg ->
+                    leg.legGeometry?.let { encodedPolyline ->
+                        val points = decodePolyline(encodedPolyline)
+                        if (points.isNotEmpty()) {
+                            val polyline = map.addPolyline(
+                                PolylineOptions()
+                                    .addAll(points)
+                                    .color(getColorForRoute(selectedRoute))
+                                    .width(10f)
+                            )
+                            currentPolylines.add(polyline)
+                            allPoints.addAll(points)
+                        }
                     }
                 }
-            }
 
-            // Move camera to first pointof first route's geometry
-            val firstRoute = routes.firstOrNull()
-            val firstPoint = firstRoute?.routeGeometry?.let {
-                decodePolyline(it).firstOrNull()
-            }
-            firstPoint?.let {
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 13f))
+                // If there are points, move the camera to show the entire route
+                if (allPoints.isNotEmpty()) {
+                    val builder = LatLngBounds.Builder()
+                    allPoints.forEach { builder.include(it) }
+                    val bounds = builder.build()
+                    val padding = 100 // padding around edges in pixels
+                    map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding))
+                }
             }
         }
     }
+
 
 
     private fun getColorForRoute(route: Route): Int {
@@ -115,9 +132,10 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         if (routes.isNullOrEmpty()) {
             addNoRoutesMessage()
         } else {
-            routes.forEach { route -> addRouteView(route) }
+            routes.forEachIndexed { i, route -> addRouteView(route, i) }
         }
     }
+
 
     private fun addNoRoutesMessage() {
         val noRoutesTv = android.widget.TextView(itemView.context).apply {
@@ -126,17 +144,23 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         binding.routesContainer.addView(noRoutesTv)
     }
 
-    private fun addRouteView(route: Route) {
+    private fun addRouteView(route: Route, index: Int) {
         val inflater = LayoutInflater.from(itemView.context)
         val routeViewBinding = com.example.feature_chatbot.databinding.ItemRouteSuggestionBinding.inflate(inflater, binding.routesContainer, false)
 
         routeViewBinding.routeTotalDurationTextView.text = route.durationInMinutes.toString()
         populateRouteLegs(routeViewBinding.routeLegsChipGroup, route.legs)
 
+        routeViewBinding.root.setOnClickListener {
+            selectedRouteIndex = index
+            drawSelectedRoute()
+        }
+
         binding.routesContainer.addView(routeViewBinding.root)
     }
 
-    private fun populateRouteLegs(chipGroup: ChipGroup, legs: List<RouteStep>) {
+
+    private fun populateRouteLegs(chipGroup: ChipGroup, legs: List<RouteLeg>) {
         chipGroup.removeAllViews()
         val context = chipGroup.context
 
@@ -151,7 +175,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         }
     }
 
-    private fun createLegChip(context: Context, leg: RouteStep): Chip {
+    private fun createLegChip(context: Context, leg: RouteLeg): Chip {
         return (LayoutInflater.from(context)
             .inflate(R.layout.route_leg_chip, null, false) as Chip).apply {
 
@@ -164,7 +188,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         }
     }
 
-    private fun configureChipForLegType(chip: Chip, leg: RouteStep) {
+    private fun configureChipForLegType(chip: Chip, leg: RouteLeg) {
         when (leg.type.uppercase()) {
             "WALK" -> {
                 chip.text = leg.durationInMinutes.toString()
@@ -205,7 +229,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
             var result = 0
             do {
                 b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
+                result = result or ((b and 0x1f) shl shift)  // <-- Parentheses fixed here
                 shift += 5
             } while (b >= 0x20)
             val dlat = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
@@ -215,7 +239,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
             result = 0
             do {
                 b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
+                result = result or ((b and 0x1f) shl shift)  // <-- And here
                 shift += 5
             } while (b >= 0x20)
             val dlng = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
@@ -225,6 +249,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         }
         return poly
     }
+
 
     private fun createArrowView(): ImageView {
         val context = itemView.context
@@ -252,4 +277,5 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
             context.resources.displayMetrics
         ).toInt()
     }
+
 }

@@ -16,14 +16,14 @@ public record DirectionsResponseDTO(
     public record RouteDTO(
             int durationInMinutes,
             List<LegDTO> legs,
-            String summary,
-            String routeGeometry
+            String summary
     ) {}
 
     public record LegDTO(
             String type,
             int durationInMinutes,
             String busServiceNumber,
-            String instruction
+            String instruction,
+            String legGeometry
     ) {}
 }
