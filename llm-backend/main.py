@@ -1,13 +1,11 @@
+from typing import Union
+from fastapi import FastAPI, Header, HTTPException
 from llm.model import get_model, predict_intent
 from llm.prompts import (
     build_extraction_prompt,
     build_followup_prompt,
-    build_final_response_prompt,
 )
-from llm.state import (
-    MAX_HISTORY_LENGTH,
-    REQUIRED_SLOTS
-)
+from llm.state import MAX_HISTORY_LENGTH, REQUIRED_SLOTS
 from llm.utils import (
     get_recent_history,
     merge_slots,
@@ -16,42 +14,23 @@ from llm.utils import (
     reset_conversation_for_user,
     find_missing_slots,
     show_help,
-    flatten_slots
+    flatten_slots,
 )
-from llm.intent_handler import handle_next_bus
-from fastapi import (
-    FastAPI, 
-    Header, 
-    HTTPException
-)
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from llm.intent_handler import handle_next_bus, handle_routing
+from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ChatRequest
 
 
 app = FastAPI()
 model = get_model()
 
-class ChatRequest(BaseModel):
-    userInput: str
-    currentLocation: Optional[Dict[str, float]] = None
-    currentTimestamp: Optional[int] = None
 
-
-class BotResponseDTO(BaseModel):
-    type: str
-    message: str
-    intent: Optional[str] = None
-    slots: Optional[Dict[str, Any]] = None
-
-
-@app.post("/chat", response_model=BotResponseDTO)
-def chat_endpoint(
-    request: ChatRequest,
-    authorization: str = Header(None)
-):
+@app.post("/chat", response_model=Union[MessageResponseDTO, DirectionsResponseDTO])
+def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
-    
+        raise HTTPException(
+            status_code=401, detail="Missing or invalid Authorization header"
+        )
+
     jwt_token = authorization
     print(f"Incoming JWT_Token: {jwt_token}")
     user_input = request.userInput.strip()
@@ -71,20 +50,20 @@ def chat_endpoint(
         if predicted_intent and predicted_intent != ctx["state"]["intent"]:
             ctx["state"]["intent"] = predicted_intent
             ctx["history"].clear()
-            
+
         active_intent = ctx["state"]["intent"]
         ctx["history"].append({"role": "user", "content": user_input})
-            
+
         # --- Reset conversation ---
         if active_intent == "reset":
             reset_conversation_for_user(user_name)
-            return BotResponseDTO(
-                type="message", message="Starting fresh. What would you like to do?"
+            return MessageResponseDTO(
+                message="Starting fresh. What would you like to do?"
             )
 
         # --- Help and Fallback ---
         elif active_intent in ["help", None]:
-            return BotResponseDTO(type="message", message=show_help(user_name))
+            return MessageResponseDTO(message=show_help(user_name))
 
         # Only update intent if it changed and is confident
         else:
@@ -93,15 +72,15 @@ def chat_endpoint(
             required_slots = flatten_slots(REQUIRED_SLOTS.get(active_intent, []))
 
             extraction_prompt = build_extraction_prompt(
-                active_intent, required_slots, recent_history, ctx["current_location"]
+                active_intent, required_slots, recent_history
             )
             print(f"Slot extraction prompt: {extraction_prompt}")
             response = model.generate(extraction_prompt, max_tokens=100)
             extracted = extract_json_from_response(response)
 
             if not extracted:
-                return BotResponseDTO(
-                    type="message", message="Sorry, I couldn't identify your intent."
+                return MessageResponseDTO(
+                    message="Sorry, I couldn't identify your intent."
                 )
 
             # --- Merge extracted intent/slots ---
@@ -127,20 +106,41 @@ def chat_endpoint(
 
                     ctx["history"].append({"role": "assistant", "content": reply})
 
-                    return BotResponseDTO(
-                        type="message",
+                    return MessageResponseDTO(
                         message=reply,
                         intent=active_intent,
                         slots=current_slots,
                     )
 
+                elif active_intent == "route_info":
+                    backend_result = handle_routing(current_slots, jwt_token, user_name)
+                    reply = "\n".join(backend_result.get("messages", []))
+
+                    # If routing failed, always send MessageResponseDTO
+                    if not backend_result.get("suggestedRoutes"):
+                        ctx["history"].append({"role": "assistant", "content": reply})
+                        return MessageResponseDTO(
+                            message=reply,
+                            intent=active_intent,
+                            slots=current_slots
+                        )
+
+                    # Otherwise return normal DirectionsResponseDTO
+                    ctx["history"].append({"role": "assistant", "content": reply})
+                    return DirectionsResponseDTO(
+                        startLocation=backend_result["startLocation"],
+                        endLocation=backend_result["endLocation"],
+                        suggestedRoutes=backend_result["suggestedRoutes"]
+                    )
+
                 else:
                     # Default to LLM if no direct handler exists
                     backend_result = f"Intent '{active_intent}' is recognized, but no handler implemented."
-                    ctx["history"].append({"role": "assistant", "content": backend_result})
+                    ctx["history"].append(
+                        {"role": "assistant", "content": backend_result}
+                    )
 
-                    return BotResponseDTO(
-                        type="message",
+                    return MessageResponseDTO(
                         message=backend_result,
                         intent=active_intent,
                         slots=current_slots,
@@ -148,12 +148,12 @@ def chat_endpoint(
 
             # --- Follow-up prompt if there are missing slots ---
             followup_prompt = build_followup_prompt(
-                active_intent, current_slots, recent_history, missing_slots, ctx["current_location"]
+                active_intent, current_slots, recent_history, missing_slots
             )
             print(f"Followup-prompt: {followup_prompt}")
             reply = model.generate(followup_prompt, max_tokens=300)
             # ctx["history"].append({"role": "assistant", "content": reply})
 
-            return BotResponseDTO(
-                type="message", message=reply, intent=active_intent, slots=current_slots
+            return MessageResponseDTO(
+                message=reply, intent=active_intent, slots=current_slots
             )

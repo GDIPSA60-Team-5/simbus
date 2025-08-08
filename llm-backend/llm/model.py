@@ -10,10 +10,13 @@ from typing import Optional
 model = GPT4All("Meta-Llama-3.1-8B-Instruct-128k-Q4_0.gguf", device="cpu")
 
 # Load embedder and classifier as a tuple
-embedder, intent_classifier = joblib.load("intent-classifier/intent_classifier_embedding.joblib")
+embedder, intent_classifier = joblib.load(
+    "intent-classifier/intent_classifier_embedding.joblib"
+)
 
 # Load the TF-IDF model
 # vectorizer, intent_classifier = joblib.load("intent-classifier/intent_classifier_tfidf.joblib")
+
 
 def get_model():
     return model

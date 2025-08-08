@@ -12,10 +12,12 @@ with open("intent_training_data.json", "r", encoding="utf-8") as f:
 
 df = pd.DataFrame(raw_data)
 
-assert "text" in df.columns and "intent" in df.columns, "Missing 'text' or 'intent' in training data."
+assert "text" in df.columns and "intent" in df.columns, (
+    "Missing 'text' or 'intent' in training data."
+)
 
 # ----- Load pretrained sentence transformer model -----
-embedder = SentenceTransformer('all-MiniLM-L6-v2')  # Small and fast model
+embedder = SentenceTransformer("all-MiniLM-L6-v2")  # Small and fast model
 
 # ----- Create embeddings for all text data -----
 X_embeddings = embedder.encode(df["text"].tolist(), show_progress_bar=True)
@@ -31,4 +33,4 @@ print(f"Mean accuracy: {np.mean(scores):.2f}")
 clf.fit(X_embeddings, df["intent"])
 
 # ----- Save model and embedder -----
-joblib.dump((embedder, clf), "intent_classifier.joblib")
+joblib.dump((embedder, clf), "intent_classifier_embedding.joblib")
