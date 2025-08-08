@@ -1,4 +1,9 @@
-val mapsApiKey: String = (project.findProperty("MAPS_API_KEY") as? String).orEmpty()
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") ?: error("MAPS_API_KEY is missing in local.properties!")
 
 plugins {
     alias(libs.plugins.android.library)

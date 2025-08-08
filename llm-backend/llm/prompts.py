@@ -1,10 +1,12 @@
 import json
 from llm.utils import current_datetime, serialize_for_json
-from llm.state import INTENT_DESCRIPTIONS, REQUIRED_SLOTS
+from llm.state import INTENT_DESCRIPTIONS
 from typing import Dict, Any
 
 
-def build_extraction_prompt(predicted_intent, required_slots, history, current_location):
+def build_extraction_prompt(
+    predicted_intent, required_slots, history, current_location
+):
     general_rules = """
 Rules:
 - Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "current location").

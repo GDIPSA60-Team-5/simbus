@@ -15,7 +15,7 @@ def typewriter_print(text, delay=0.015):
         timing.sleep(delay)
     print()
 
-            
+
 def merge_slots(current_slots, new_slots):
     for key, value in new_slots.items():
         if value is not None:
@@ -23,17 +23,19 @@ def merge_slots(current_slots, new_slots):
             if converted_value is not None:
                 if key in ["notification_start_time", "arrival_time"]:
                     if not validate_future_datetime(converted_value):
-                        current_slots[key] = None  # invalidate slot to trigger re-prompt
+                        current_slots[key] = (
+                            None  # invalidate slot to trigger re-prompt
+                        )
                         continue
                 current_slots[key] = converted_value
             else:
-                current_slots[key] = None   # also invalidate
+                current_slots[key] = None  # also invalidate
 
 
 def extract_json_from_response(text):
     try:
         # Extract all JSON-like substrings and try parsing the first valid one
-        json_candidates = re.findall(r'\{.*?\}', text, re.DOTALL)
+        json_candidates = re.findall(r"\{.*?\}", text, re.DOTALL)
 
         for candidate in json_candidates:
             try:
@@ -46,8 +48,9 @@ def extract_json_from_response(text):
                     cleaned += "}" * (open_braces - close_braces)
 
                 # Unescape if needed
-                if (cleaned.startswith('"') and cleaned.endswith('"')) or \
-                    (cleaned.startswith("'") and cleaned.endswith("'")):
+                if (cleaned.startswith('"') and cleaned.endswith('"')) or (
+                    cleaned.startswith("'") and cleaned.endswith("'")
+                ):
                     cleaned = ast.literal_eval(cleaned)
 
                 return json.loads(cleaned)
@@ -83,12 +86,9 @@ def get_recent_history(conversation_history, MAX_HISTORY_LENGTH):
 def get_user_context(user_name):
     if user_name not in user_conversations:
         user_conversations[user_name] = {
-            "state": {
-                "intent": None,
-                "slots": {slot: None for slot in SLOT_TYPES}
-            },
+            "state": {"intent": None, "slots": {slot: None for slot in SLOT_TYPES}},
             "history": [],
-            "current_location": {}
+            "current_location": {},
         }
     return user_conversations[user_name]
 
@@ -97,7 +97,7 @@ def reset_conversation_for_user(user_name):
     if user_name in user_conversations:
         user_conversations[user_name]["state"] = {
             "intent": None,
-            "slots": {slot: None for slot in SLOT_TYPES}
+            "slots": {slot: None for slot in SLOT_TYPES},
         }
         user_conversations[user_name]["history"] = []
 
@@ -141,7 +141,7 @@ def validate_future_datetime(dt_value):
 
 def current_datetime():
     sgt = pytz.timezone("Asia/Singapore")
-    return datetime.now(sgt)    #.isoformat(timespec='seconds')
+    return datetime.now(sgt)  # .isoformat(timespec='seconds')
 
 
 def serialize_for_json(obj):
