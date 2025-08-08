@@ -107,7 +107,10 @@ class MenuFragment : Fragment() {
 
     private fun handleLogout(storageManager : SecureStorageManager) {
         storageManager.clearAll()
-        startActivity(Intent(requireContext(), LoginActivity::class.java))
+        val intent = Intent()
+        intent.setClassName(requireContext().packageName, "com.example.busappkotlin.ui.MainActivity")
+        requireContext().startActivity(intent)
+//        startActivity(Intent(requireContext(), LoginActivity::class.java))
     }
     private fun loadSavedAvatar() {
         val prefs = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
