@@ -1,15 +1,14 @@
 import json
 from llm.utils import current_datetime, serialize_for_json
-from llm.state import INTENT_DESCRIPTIONS
 from typing import Dict, Any
 
 
 def build_extraction_prompt(
-    predicted_intent, required_slots, history, current_location
+    predicted_intent, required_slots, history
 ):
     general_rules = """
 Rules:
-- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "current location").
+- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "Current Location").
 - Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
 - Do not include a slot in the output if its value cannot be extracted.
 """.strip()
@@ -39,7 +38,7 @@ Respond with a JSON object containing only a "slots" field.
 
 
 def build_followup_prompt(
-    intent, current_slots, history, missing_slots, current_location
+    intent, current_slots, history, missing_slots
 ):
     if set(missing_slots) == {"boarding_bus_stop_name", "boarding_bus_stop_code"}:
         status_message = "Ask the user for either the boarding bus stop name or code."
@@ -52,10 +51,9 @@ Ask the user for the missing slot(s):
 
 Context:
 - Current datetime: {current_datetime()}
-- Current location: {current_location}
 
 Rules:
-- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "current location").
+- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "Current Location").
 - Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
 - Do not include a slot in the output if its value cannot be extracted.
     """.strip()
@@ -102,29 +100,3 @@ for user intent: "{intent}" is still under development. Do not offer suggestions
 
 Write the assistant's message below:
 Assistant:"""
-
-
-def build_help_prompt(history):
-    dialogue = "\n".join(
-        f"{'User' if turn['role'] == 'user' else 'Assistant'}: {turn['content']}"
-        for turn in history
-    )
-
-    return f"""
-The user asked for help or gave no recognizable intent. Provide a short and friendly list of what you can help with, based on this list of intent descrptions:
-
-{json.dumps(INTENT_DESCRIPTIONS, indent=2)}
-
-Conversation history:
-{dialogue}
-
-Guidelines:
-- Use 2–3 items only if possible, or keep each item brief.
-- Include just one short example for each item.
-- Avoid technical labels like "intent".
-- Use a warm and casual tone.
-- Do NOT over-explain.
-- End with a short line like: "What would you like to do?"
-
-Reply in 80 words or less.
-"""

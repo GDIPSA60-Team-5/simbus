@@ -1,6 +1,6 @@
 import requests
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from llm.utils import current_datetime
 from dateutil import parser as date_parser
 from dotenv import load_dotenv
@@ -13,42 +13,53 @@ backend_url = os.getenv("BACKEND_URL")
 
 def get_coordinates(
     location_name: str, jwt_token: Optional[str] = None
-) -> Optional[str]:
-    """Call Geocode API and return 'latitude,longitude' of first result or None."""
+) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Call Geocode API and return (coordinates, error_message).
+    Coordinates: 'latitude,longitude' if successful, else None.
+    Error_message: None if successful, else user-friendly error.
+    Technical details are logged to terminal for debugging.
+    """
     geocode_url = f"{backend_url}/api/geocode"
     params = {"locationName": location_name}
     headers = {}
     if jwt_token:
         headers["Authorization"] = jwt_token
-        
-    print(f"\nparams: {params}, headers: {headers}")  # <-- DEBUG
 
     try:
         resp = requests.get(geocode_url, params=params, headers=headers, timeout=5)
-        resp.raise_for_status()
-        
-        print(f"Geocode raw response ({location_name}):", resp.text)  # <-- DEBUG
-        
-        data = resp.json()
-
-        results = data.get("results", [])
-        if not results:
-            print("No 'results' found in geocode response.")  # <-- DEBUG
-            return None
-
-        first = results[0]
-        lat = first.get("latitude")
-        lon = first.get("longitude")
-
-        if lat is None or lon is None:
-            print("Missing latitude/longitude in first result.")  # <-- DEBUG
-            return None
-
-        return f"{lat},{lon}"
-
+    except requests.Timeout:
+        print(f"[DEBUG] Geocode request for '{location_name}' timed out.")
+        return None, f"Unable to reach the location service in time for '{location_name}'. Please try again."
     except requests.RequestException as e:
-        print(f"Geocode request failed for {location_name}: {e}")  # <-- DEBUG
-        return None
+        print(f"[DEBUG] Geocode request error for '{location_name}': {e}")
+        return None, f"Unable to contact the location service for '{location_name}'."
+
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as e:
+        print(f"[DEBUG] Geocode request failed with HTTP {resp.status_code} for '{location_name}': {e}")
+        return None, f"Location service returned an error for '{location_name}'. Please try again."
+
+    try:
+        data = resp.json()
+    except ValueError:
+        print(f"[DEBUG] Invalid JSON response while geocoding '{location_name}'. Raw: {resp.text[:200]}")
+        return None, f"Received an unexpected response when searching for '{location_name}'."
+
+    results = data.get("results", [])
+    if not results:
+        print(f"[DEBUG] No results found in geocode response for '{location_name}'. Response: {data}")
+        return None, f"No matching location found for '{location_name}'."
+
+    first = results[0]
+    lat = first.get("latitude")
+    lon = first.get("longitude")
+    if lat is None or lon is None:
+        print(f"[DEBUG] Missing latitude/longitude in geocode result for '{location_name}': {first}")
+        return None, f"Could not determine coordinates for '{location_name}'."
+
+    return f"{lat},{lon}", None
 
 
 def handle_next_bus(slots: Dict[str, Any], jwt_token: str) -> Dict[str, Any]:
@@ -165,18 +176,15 @@ def handle_routing(
         "current_location"
     )  # e.g. {"latitude": "...", "longitude": "..."}
 
-    def resolve_location(loc_name: str) -> Optional[str]:
+    def resolve_location(loc_name: str) -> Tuple[Optional[str], Optional[str]]:
         if loc_name and loc_name.lower() == "current location":
-            if (
-                current_location
-                and "latitude" in current_location
-                and "longitude" in current_location
-            ):
-                return f"{current_location['latitude']},{current_location['longitude']}"
+            if current_location and "latitude" in current_location and "longitude" in current_location:
+                return f"{current_location['latitude']},{current_location['longitude']}", None
             else:
-                return None
+                return None, "Current location not available."
         else:
             return get_coordinates(loc_name, jwt_token)
+
 
     start_name = slots.get("start_location")
     end_name = slots.get("end_location")
@@ -187,12 +195,12 @@ def handle_routing(
             "routes": [],
         }
 
-    start_coords = resolve_location(start_name)
-    end_coords = resolve_location(end_name)
+    start_coords, start_err = resolve_location(start_name)
+    end_coords, end_err = resolve_location(end_name)
 
-    if not start_coords or not end_coords:
+    if start_err or end_err:
         return {
-            "messages": ["Failed to find coordinates for start or end location."],
+            "messages": [msg for msg in [start_err, end_err] if msg],
             "routes": [],
         }
 

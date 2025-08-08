@@ -1,3 +1,5 @@
+from typing import Union
+from fastapi import FastAPI, Header, HTTPException
 from llm.model import get_model, predict_intent
 from llm.prompts import (
     build_extraction_prompt,
@@ -15,9 +17,7 @@ from llm.utils import (
     flatten_slots,
 )
 from llm.intent_handler import handle_next_bus, handle_routing
-from fastapi import FastAPI, Header, HTTPException
 from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ChatRequest
-from typing import Union
 
 
 app = FastAPI()
@@ -72,7 +72,7 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
             required_slots = flatten_slots(REQUIRED_SLOTS.get(active_intent, []))
 
             extraction_prompt = build_extraction_prompt(
-                active_intent, required_slots, recent_history, ctx["current_location"]
+                active_intent, required_slots, recent_history
             )
             print(f"Slot extraction prompt: {extraction_prompt}")
             response = model.generate(extraction_prompt, max_tokens=100)
@@ -114,19 +114,23 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
 
                 elif active_intent == "route_info":
                     backend_result = handle_routing(current_slots, jwt_token, user_name)
-                    print(f"Routing result: {backend_result}")
+                    reply = "\n".join(backend_result.get("messages", []))
 
-                    if isinstance(backend_result, dict):
-                        reply = "\n".join(backend_result.get("messages", []))
-                    else:
-                        reply = str(backend_result)
+                    # If routing failed, always send MessageResponseDTO
+                    if not backend_result.get("suggestedRoutes"):
+                        ctx["history"].append({"role": "assistant", "content": reply})
+                        return MessageResponseDTO(
+                            message=reply,
+                            intent=active_intent,
+                            slots=current_slots
+                        )
 
+                    # Otherwise return normal DirectionsResponseDTO
                     ctx["history"].append({"role": "assistant", "content": reply})
-
                     return DirectionsResponseDTO(
                         startLocation=backend_result["startLocation"],
                         endLocation=backend_result["endLocation"],
-                        suggestedRoutes=backend_result["suggestedRoutes"],
+                        suggestedRoutes=backend_result["suggestedRoutes"]
                     )
 
                 else:
@@ -144,11 +148,7 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
 
             # --- Follow-up prompt if there are missing slots ---
             followup_prompt = build_followup_prompt(
-                active_intent,
-                current_slots,
-                recent_history,
-                missing_slots,
-                ctx["current_location"],
+                active_intent, current_slots, recent_history, missing_slots
             )
             print(f"Followup-prompt: {followup_prompt}")
             reply = model.generate(followup_prompt, max_tokens=300)

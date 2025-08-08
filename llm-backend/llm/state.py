@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-MAX_HISTORY_LENGTH = 1
+MAX_HISTORY_LENGTH = 3
 
 # ---- INTENT DETECTION GUARD ----
 CONFIDENCE_THRESHOLD = 0.4
