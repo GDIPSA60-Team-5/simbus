@@ -35,14 +35,14 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
     print(f"Incoming JWT_Token: {jwt_token}")
     user_input = request.userInput.strip()
     current_location = request.currentLocation
-    user_name = "Aung"  # Replace with session or actual user ID
+    user_name = "Aung"  # Replace with session or actual user name
 
     ctx = get_user_context(user_name)
     ctx["current_location"] = current_location
-    print(f"Intent before prediction: {ctx['state']['intent']}")
+    print(f"\nIntent before prediction: {ctx['state']['intent']}\n")
 
     predicted_intent = predict_intent(user_input)
-    print(f"Intent after prediction: {predicted_intent}")
+    print(f"\nIntent after prediction: {predicted_intent}\n")
 
     # --- LLM SESSION START ---
     with model.chat_session():
@@ -74,7 +74,7 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
             extraction_prompt = build_extraction_prompt(
                 active_intent, required_slots, recent_history
             )
-            print(f"Slot extraction prompt: {extraction_prompt}")
+            print(f"\nSlot extraction prompt: {extraction_prompt}\n")
             response = model.generate(extraction_prompt, max_tokens=100)
             extracted = extract_json_from_response(response)
 
@@ -152,7 +152,8 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
             )
             print(f"Followup-prompt: {followup_prompt}")
             reply = model.generate(followup_prompt, max_tokens=300)
-            # ctx["history"].append({"role": "assistant", "content": reply})
+            ctx["history"].append({"role": "assistant", "content": reply})
+            print(f"Context history: {ctx["history"]}")
 
             return MessageResponseDTO(
                 message=reply, intent=active_intent, slots=current_slots

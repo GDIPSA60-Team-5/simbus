@@ -27,7 +27,7 @@ def predict_intent(user_input: str) -> Optional[str]:
     input_vector = embedder.encode([user_input])
     # input_vector = vectorizer.transform([user_input])
     probs = intent_classifier.predict_proba(input_vector)[0]
-    print(f"Prediction probs: {probs}")
+    print(f"\nPrediction probs: {probs}\n")
     max_index = np.argmax(probs)
     max_prob = probs[max_index]
     return (
