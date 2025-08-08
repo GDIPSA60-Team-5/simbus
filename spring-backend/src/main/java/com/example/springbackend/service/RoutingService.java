@@ -5,14 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -36,10 +35,8 @@ public class RoutingService {
     @Value("${onemap.token}")
     private String oneMapToken;
 
-    public RoutingService(WebClient.Builder webClientBuilder,
-                          @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
-        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
-        log.info("OneMap base URL: {}", baseUrl);
+    public RoutingService(@Qualifier("oneMapWebClient") WebClient webClient) {
+        this.webClient = webClient;
     }
 
     public Mono<DirectionsResponseDTO> getBusRoutes(String start, String end, LocalTime arrivalTime) {
@@ -53,21 +50,18 @@ public class RoutingService {
         LocalDateTime nowDateTime = LocalDateTime.of(today, now);
         LocalDateTime deadline = (arrivalTime != null) ? LocalDateTime.of(today, arrivalTime) : null;
 
-        URI uri = UriComponentsBuilder.fromUriString("/api/public/routingsvc/route")
-                .queryParam("start", effectiveStart)
-                .queryParam("end", end)
-                .queryParam("routeType", "pt")
-                .queryParam("mode", "BUS")
-                .queryParam("date", dateParam)
-                .queryParam("time", timeParam)
-                .queryParam("numItineraries", MAX_ITINERARIES)
-                .build()
-                .toUri();
-
-        log.info("Constructed URI: {}", uri);
-
         return webClient.get()
-                .uri(uri)
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/public/routingsvc/route")
+                        .queryParam("start", effectiveStart)
+                        .queryParam("end", end)
+                        .queryParam("routeType", "pt")
+                        .queryParam("mode", "BUS")
+                        .queryParam("date", dateParam)
+                        .queryParam("time", timeParam)
+                        .queryParam("numItineraries", MAX_ITINERARIES)
+                        .build()
+                )
                 .header(HttpHeaders.AUTHORIZATION, oneMapToken)
                 .retrieve()
                 .bodyToMono(String.class)
