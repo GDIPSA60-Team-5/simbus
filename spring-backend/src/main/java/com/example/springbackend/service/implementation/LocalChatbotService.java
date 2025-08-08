@@ -8,7 +8,7 @@ import com.example.springbackend.dto.request.ChatRequest;
 import com.example.springbackend.model.Coordinates;
 import com.example.springbackend.service.ChatbotService;
 import com.example.springbackend.service.GeocodingService;
-import com.example.springbackend.service.OneMapService;
+import com.example.springbackend.service.RoutingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,8 +16,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,14 +32,13 @@ public class LocalChatbotService implements ChatbotService {
     private static final Pattern IGNORE_INPUT = Pattern.compile("(?i)\\b(help|thanks|thank you|please)\\b");
 
 
-    private final OneMapService oneMapService;
+    private final RoutingService routingService;
     private final GeocodingService geocodingService;
 
-    public LocalChatbotService(OneMapService oneMapService, GeocodingService geocodingService) {
-        this.oneMapService = oneMapService;
+    public LocalChatbotService(RoutingService routingService, GeocodingService geocodingService) {
+        this.routingService = routingService;
         this.geocodingService = geocodingService;
     }
-
     @Override
     public Mono<BotResponseDTO> handleChatInput(ChatRequest request, HttpHeaders incomingHeaders) {
         String input = safeTrim(request.userInput());
@@ -121,8 +118,8 @@ public class LocalChatbotService implements ChatbotService {
                     String startCoords = start.toString();
                     String endCoords = end.toString();
 
-                    return oneMapService.getBusRoutes(startCoords, endCoords, null)
-                            .map(directionsDto -> (BotResponseDTO) directionsDto)
+                    return routingService.getBusRoutes(startCoords, endCoords, null)
+                            .map(BotResponseDTO. class::cast)
                             .onErrorResume(e -> {
                                 log.error("Error fetching directions", e);
                                 return Mono.just(new ErrorResponseDTO("Failed to fetch directions."));

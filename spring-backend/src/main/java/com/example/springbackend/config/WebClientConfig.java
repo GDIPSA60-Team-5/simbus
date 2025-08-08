@@ -17,4 +17,9 @@ public class WebClientConfig {
     public WebClient nusWebClient(@Value("${api.nus.baseurl}") String baseUrl) {
         return WebClient.builder().baseUrl(baseUrl).build();
     }
+
+    @Bean
+    public WebClient oneMapWebClient(@Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
+        return WebClient.builder().baseUrl(baseUrl).build();
+    }
 }
