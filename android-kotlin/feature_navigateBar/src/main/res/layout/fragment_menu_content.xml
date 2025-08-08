@@ -15,6 +15,7 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/sample_profile"
+            android:contentDescription="profile picture"
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintTop_toTopOf="parent"
@@ -211,11 +212,16 @@
                     android:textColor="#FFFFFF"
                     android:textSize="16sp" />
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_arrow_right"
-                    app:tint="#FFFFFF" />
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switch1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="80dp"
+                    android:minHeight="56dp"
+                    android:text="@string/switch_label"
+                    android:textColor="@color/white"
+                    app:thumbTint="#AA9D96"
+                    app:trackTint="#000000"/>
             </LinearLayout>
 
             <!-- About Us -->

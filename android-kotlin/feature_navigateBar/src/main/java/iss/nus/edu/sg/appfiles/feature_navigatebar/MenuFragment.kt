@@ -6,6 +6,8 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -22,11 +24,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.google.android.material.switchmaterial.SwitchMaterial
 import iss.nus.edu.sg.appfiles.feature_login.ui.LoginActivity
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import androidx.core.graphics.toColorInt
+
 
 class MenuFragment : Fragment() {
 
@@ -77,8 +82,27 @@ class MenuFragment : Fragment() {
             showImagePickerDialog()
         }
 
+        //init mute notification
+        val switch1 = view.findViewById<SwitchMaterial>(R.id.switch1)
+        handleMuteNotification(switch1)
+
+
         // load save avatar
         loadSavedAvatar()
+    }
+
+    private fun handleMuteNotification(switch1: SwitchMaterial) {
+        switch1.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                Toast.makeText(this@MenuFragment.requireContext(), "mute", Toast.LENGTH_SHORT).show()
+                switch1.thumbTintList = ColorStateList.valueOf("#D17A4B".toColorInt())
+                // TODO: 开启静音逻辑
+            } else {
+                Toast.makeText(this@MenuFragment.requireContext(), "not mute", Toast.LENGTH_SHORT).show()
+                switch1.thumbTintList = ColorStateList.valueOf("#AA9D96".toColorInt())
+                // TODO: 关闭静音逻辑
+            }
+        }
     }
 
     private fun handleLogout(storageManager : SecureStorageManager) {

@@ -25,4 +25,5 @@
         "Delete my route to the mall last Tuesday."\n
         "Is there a delay on my usual commute?"\n
     </string>
+    <string name="switch_label">Mute</string>
 </resources>
