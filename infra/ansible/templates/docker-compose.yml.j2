@@ -23,10 +23,14 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.external-url=/prometheus'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     expose:
       - "9090"
+
 
   grafana:
     image: grafana/grafana:latest
