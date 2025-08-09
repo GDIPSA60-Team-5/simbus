@@ -133,8 +133,8 @@
                 <configuration>
                     <failOnViolation>true</failOnViolation>
                     <rulesets>
-                        <ruleset>rulesets/java/basic.xml</ruleset>
-                        <ruleset>rulesets/java/braces.xml</ruleset>
+                        <ruleset>rulesets/java/design.xml</ruleset>
+                        <ruleset>rulesets/java/codestyle.xml</ruleset>
                     </rulesets>
                 </configuration>
             </plugin>
