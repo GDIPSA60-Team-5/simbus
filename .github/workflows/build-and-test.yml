@@ -105,7 +105,7 @@ jobs:
       - name: 📈 Upload Coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-            token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           slug: GDIPSA60-Team-5/simbus
           directory: spring-backend/target/site/jacoco
           flags: backend
