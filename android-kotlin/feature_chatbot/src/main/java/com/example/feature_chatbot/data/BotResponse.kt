@@ -6,6 +6,8 @@ sealed class BotResponse {
     data class Directions(
         val startLocation: String,
         val endLocation: String,
+        val startCoordinates: Coordinates,
+        val endCoordinates: Coordinates,
         val suggestedRoutes: List<Route>? = null
     ) : BotResponse()
 

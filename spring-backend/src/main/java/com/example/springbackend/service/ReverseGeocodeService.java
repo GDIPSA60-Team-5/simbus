@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -23,17 +24,14 @@ public class ReverseGeocodeService {
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
     private final WebClient webClient;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${onemap.token}")
     private String oneMapToken;
 
-    public ReverseGeocodeService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper,
-                                 @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
-        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
-        this.objectMapper = objectMapper;
+    public ReverseGeocodeService(@Qualifier("oneMapWebClient") WebClient webClient) {
+        this.webClient = webClient;
     }
-
     /**
      * Reverse geocode using SVY21 coordinates.
      *

@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 hilt {
@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.gson)
     implementation(libs.okhttp)

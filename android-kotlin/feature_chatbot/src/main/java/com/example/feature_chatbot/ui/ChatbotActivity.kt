@@ -85,7 +85,6 @@ class ChatbotActivity : AppCompatActivity() {
         initializeComponents()
         setupListeners()
 
-        // Center greeting after layout is complete
         chatRecyclerView.post { centerGreeting() }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)

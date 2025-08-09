@@ -35,26 +35,20 @@
     </LinearLayout>
 
     <View
-        android:layout_width="0.5dp"
+        android:layout_width="1dp"
         android:layout_height="match_parent"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:background="#33FFFFFF" />
-    <HorizontalScrollView
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/routeLegsFlexboxLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:fillViewport="false"
-        android:overScrollMode="ifContentScrolls"
-        android:scrollbars="none">
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/routeLegsChipGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            app:chipSpacing="1dp"
-            app:singleLine="true" />
-    </HorizontalScrollView>
+        android:layout_gravity="center_vertical"
+        app:flexWrap="nowrap"
+        app:alignItems="center"
+        app:justifyContent="flex_start"
+        />
 </LinearLayout>
