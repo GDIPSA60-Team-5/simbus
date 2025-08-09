@@ -21,11 +21,12 @@ services:
     volumes:
       - mongo-data:/data/db
 
-  prometheus:
+prometheus:
     image: prom/prometheus:latest
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.external-url=/prometheus/'
+      - '--web.route-prefix=/'
+      - '--web.external-url=http://{{ aws_server_ip }}/prometheus/'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     expose:
