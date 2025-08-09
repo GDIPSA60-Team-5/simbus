@@ -141,3 +141,8 @@ jobs:
             --extra-vars "backend_env_b64=${{ secrets.BACKEND_ENV_B64 }} image_tag=${{ inputs.image_tag }} docker_username=${{ secrets.DOCKER_USERNAME }}"
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
+
+      - name: Show deployment summary
+        if: success()
+        run: |
+          echo "🎉 Congratulations! Your app is deployed on this IP: ${{ steps.tf-output.outputs.INSTANCE_IP }}" >> $GITHUB_STEP_SUMMARY
