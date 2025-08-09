@@ -111,7 +111,7 @@ jobs:
           flags: backend
 
   android-kotlin:
-    if: needs.validate.outputs.folder == 'android-kotlin'
+    if: needs.validate.outputs.folder == 'android-kotlin-later'
     needs: validate
     runs-on: ubuntu-latest
     steps:
@@ -123,6 +123,9 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: gradle
+
+      - name: Create local.properties file
+        run: echo "map_api_key=${{ secrets.MAP_API_KEY }}" > android-kotlin/local.properties
 
       - name: 🤖 Setup Android SDK
         uses: android-actions/setup-android@v2
