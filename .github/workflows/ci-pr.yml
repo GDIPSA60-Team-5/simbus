@@ -11,19 +11,19 @@ jobs:
   detect-changed:
     uses: ./.github/workflows/change-detect.yml
 
-  build:
+  build_and_test:
     needs: detect-changed
     if: ${{ needs.detect-changed.outputs.hasChanges == 'true' }}
     strategy:
       matrix:
         folder: ${{ fromJson(needs.detect-changed.outputs.matrix) }}
       fail-fast: false
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/build-and-test.yml
     with:
       folder: ${{ matrix.folder }}
 
   codeql:
-    needs: build
+    needs: build_and_test
     if: ${{ needs.detect-changed.outputs.hasChanges == 'true' }}
     strategy:
       matrix:

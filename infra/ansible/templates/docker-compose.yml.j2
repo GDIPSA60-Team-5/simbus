@@ -21,6 +21,30 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  prometheus:
+      image: prom/prometheus:latest
+      command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--web.route-prefix=/'
+        - '--web.external-url=http://{{ aws_server_ip }}/prometheus/'
+      volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      expose:
+        - "9090"
+
+
+  grafana:
+    image: grafana/grafana:latest
+    env_file:
+      - .env
+    expose:
+      - "3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - /home/ubuntu/grafana.ini:/etc/grafana/grafana.ini:ro
+
   nginx:
     image: nginx:latest
     ports:
@@ -30,6 +54,9 @@ services:
     depends_on:
       - frontend
       - backend
+      - prometheus
+      - grafana
 
 volumes:
   mongo-data:
+  grafana-data:

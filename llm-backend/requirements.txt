@@ -5,5 +5,3 @@ gpt4all
 uvicorn
 fastapi
 python-dotenv
-ruff==0.12.7
-bandit==1.8.6

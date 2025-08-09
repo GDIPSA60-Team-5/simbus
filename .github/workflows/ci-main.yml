@@ -1,7 +1,7 @@
 name: Push CD Pipeline
 on:
   push:
-    branches: [main, dev, staging, test/ci-deploy]
+    branches: [main, dev, staging, test/**]
 
 permissions:
   contents: read
