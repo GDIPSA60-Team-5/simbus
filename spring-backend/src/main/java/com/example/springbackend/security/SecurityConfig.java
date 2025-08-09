@@ -31,7 +31,6 @@ public class SecurityConfig {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/auth/**").permitAll()
-                        .pathMatchers("/api/actuator/**").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated()
                 )
