@@ -1,11 +1,15 @@
 package com.example.springbackend.dto.llm;
 
+import com.example.springbackend.model.Coordinates;
+
 import java.util.List;
 
 public record DirectionsResponseDTO(
         String startLocation,
         String endLocation,
-        List<RouteDTO> suggestedRoutes
+        Coordinates startCoordinates,
+        Coordinates endCoordinates,
+        List<RouteDTO>  suggestedRoutes
 ) implements BotResponseDTO {
 
     @Override
@@ -18,7 +22,6 @@ public record DirectionsResponseDTO(
             List<LegDTO> legs,
             String summary
     ) {}
-
     public record LegDTO(
             String type,
             int durationInMinutes,

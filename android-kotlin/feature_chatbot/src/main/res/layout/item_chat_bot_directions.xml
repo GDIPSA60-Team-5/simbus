@@ -12,14 +12,15 @@
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:background="@drawable/map_border"
+        android:clipToPadding="true"
         android:clipToOutline="true"
         android:elevation="4dp">
-
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/routeMapView"
+        <ImageView
+            android:id="@+id/routeStaticMapView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@android:color/transparent" />
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/route_map" />
     </FrameLayout>
 
     <!-- Locations -->

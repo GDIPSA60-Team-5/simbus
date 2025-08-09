@@ -43,5 +43,5 @@ class TypingIndicatorViewHolder(private val binding: ItemTypingIndicatorBinding)
     RecyclerView.ViewHolder(binding.root) {
     fun bind(message: String) {
         binding.typingText.text = message
-    }
+}
 }

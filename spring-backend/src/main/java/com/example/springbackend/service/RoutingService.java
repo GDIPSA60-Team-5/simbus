@@ -1,6 +1,7 @@
 package com.example.springbackend.service;
 
 import com.example.springbackend.dto.llm.DirectionsResponseDTO;
+import com.example.springbackend.model.Coordinates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -16,7 +17,6 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
 @Service
 public class RoutingService {
 
@@ -26,7 +26,6 @@ public class RoutingService {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MM-dd-yyyy");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    private static final String DEFAULT_START = "1.3048227829575314,103.76929361060819";
     private static final int MAX_ITINERARIES = 3;
 
     private final WebClient webClient;
@@ -39,72 +38,66 @@ public class RoutingService {
         this.webClient = webClient;
     }
 
-    public Mono<DirectionsResponseDTO> getBusRoutes(String start, String end, LocalTime arrivalTime) {
-        String effectiveStart = (start == null || start.isBlank()) ? DEFAULT_START : start;
-
-        LocalDate today = LocalDate.now(SINGAPORE);
-        LocalTime now = LocalTime.now(SINGAPORE);
-        String dateParam = today.format(DATE_FMT);
-        String timeParam = now.format(TIME_FMT);
-
-        LocalDateTime nowDateTime = LocalDateTime.of(today, now);
-        LocalDateTime deadline = (arrivalTime != null) ? LocalDateTime.of(today, arrivalTime) : null;
-
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/public/routingsvc/route")
-                        .queryParam("start", effectiveStart)
-                        .queryParam("end", end)
-                        .queryParam("routeType", "pt")
-                        .queryParam("mode", "BUS")
-                        .queryParam("date", dateParam)
-                        .queryParam("time", timeParam)
-                        .queryParam("numItineraries", MAX_ITINERARIES)
-                        .build()
-                )
-                .header(HttpHeaders.AUTHORIZATION, oneMapToken)
-                .retrieve()
-                .bodyToMono(String.class)
-                .doOnNext(response -> log.debug("Raw routing response: {}", response))
-                .doOnError(e -> log.error("Error fetching routing data", e))
-                .map(this::parseAndMapResponse)
-                .map(dto -> {
-                    if (deadline != null) {
-                        List<DirectionsResponseDTO.RouteDTO> filtered = dto.suggestedRoutes().stream()
-                                .filter(route -> {
-                                    LocalDateTime projectedArrival = nowDateTime.plusMinutes(route.durationInMinutes());
-                                    return !projectedArrival.isAfter(deadline);
+    public Mono<List<DirectionsResponseDTO.RouteDTO>> getBusRoutes(String start, String end, LocalTime arrivalTime) {
+        return validateCoordinates(start, end)
+                .then(
+                        webClient.get()
+                                .uri(uriBuilder -> {
+                                    LocalDate today = LocalDate.now(SINGAPORE);
+                                    LocalTime now = LocalTime.now(SINGAPORE);
+                                    String dateParam = today.format(DATE_FMT);
+                                    String timeParam = now.format(TIME_FMT);
+                                    return uriBuilder
+                                            .path("/api/public/routingsvc/route")
+                                            .queryParam("start", start)
+                                            .queryParam("end", end)
+                                            .queryParam("routeType", "pt")
+                                            .queryParam("mode", "BUS")
+                                            .queryParam("date", dateParam)
+                                            .queryParam("time", timeParam)
+                                            .queryParam("numItineraries", MAX_ITINERARIES)
+                                            .build();
                                 })
-                                .collect(Collectors.toList());
-                        return new DirectionsResponseDTO(dto.startLocation(), dto.endLocation(), filtered);
-                    }
-                    return dto;
+                                .header(HttpHeaders.AUTHORIZATION, oneMapToken)
+                                .retrieve()
+                                .bodyToMono(String.class)
+                                .doOnNext(response -> log.debug("Raw routing response: {}", response))
+                                .doOnError(e -> log.error("Error fetching routing data", e))
+                )
+                .map(this::parseRoutesOnly)
+                .map(routes -> {
+                    if (arrivalTime == null) return routes;
+
+                    LocalDateTime nowDateTime = LocalDateTime.of(LocalDate.now(SINGAPORE), LocalTime.now(SINGAPORE));
+                    LocalDateTime deadline = LocalDateTime.of(LocalDate.now(SINGAPORE), arrivalTime);
+
+                    return routes.stream()
+                            .filter(route -> !nowDateTime.plusMinutes(route.durationInMinutes()).isAfter(deadline))
+                            .collect(Collectors.toList());
                 });
     }
 
-    private DirectionsResponseDTO parseAndMapResponse(String jsonResponse) {
+    private List<DirectionsResponseDTO.RouteDTO> parseRoutesOnly(String jsonResponse) {
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
             JsonNode planNode = root.path("plan");
 
             if (planNode.isMissingNode() || planNode.isNull()) {
-                return emptyDirections();
+                return Collections.emptyList();
             }
 
-            String startLoc = planNode.path("from").path("name").asText("Origin");
-            String endLoc = planNode.path("to").path("name").asText("Destination");
+            Coordinates dummyStartCoordinates = new Coordinates(0.0, 0.0);
+            Coordinates dummyEndCoordinates = new Coordinates(0.0, 0.0);
 
-            List<DirectionsResponseDTO.RouteDTO> routes = parseRoutes(planNode.path("itineraries"));
-
-            return new DirectionsResponseDTO(startLoc, endLoc, routes);
+            return parseRoutes(planNode.path("itineraries"), dummyStartCoordinates, dummyEndCoordinates);
 
         } catch (Exception e) {
             log.error("Failed to parse routing JSON response", e);
-            return emptyDirections();
+            return Collections.emptyList();
         }
     }
 
-    private List<DirectionsResponseDTO.RouteDTO> parseRoutes(JsonNode itinerariesNode) {
+    private List<DirectionsResponseDTO.RouteDTO> parseRoutes(JsonNode itinerariesNode, Coordinates startCoordinates, Coordinates endCoordinates) {
         if (!itinerariesNode.isArray()) return Collections.emptyList();
 
         List<DirectionsResponseDTO.RouteDTO> routes = new ArrayList<>();
@@ -115,12 +108,16 @@ public class RoutingService {
             List<DirectionsResponseDTO.LegDTO> legs = parseLegs(itineraryNode.path("legs"));
 
             String summary = legs.stream()
-                    .filter(leg -> "BUS".equals(leg.type()) && leg.busServiceNumber() != null)
+                    .filter(leg -> "BUS".equalsIgnoreCase(leg.type()) && leg.busServiceNumber() != null)
                     .findFirst()
                     .map(leg -> "Bus Service " + leg.busServiceNumber())
                     .orElse("");
 
-            routes.add(new DirectionsResponseDTO.RouteDTO(durationInMinutes, legs, summary));
+            routes.add(new DirectionsResponseDTO.RouteDTO(
+                    durationInMinutes,
+                    legs,
+                    summary
+            ));
         }
         return routes;
     }
@@ -146,7 +143,36 @@ public class RoutingService {
         return legs;
     }
 
-    private DirectionsResponseDTO emptyDirections() {
-        return new DirectionsResponseDTO("Origin", "Destination", Collections.emptyList());
+    private Mono<Void> validateCoordinates(String start, String end) {
+        if (start == null || start.isBlank()) {
+            return Mono.error(new IllegalArgumentException("Start coordinate is required"));
+        }
+        if (end == null || end.isBlank()) {
+            return Mono.error(new IllegalArgumentException("End coordinate is required"));
+        }
+        if (!isValidLatLon(start)) {
+            return Mono.error(new IllegalArgumentException("Invalid start coordinate format"));
+        }
+        if (!isValidLatLon(end)) {
+            return Mono.error(new IllegalArgumentException("Invalid end coordinate format"));
+        }
+        return Mono.empty();
+    }
+
+    private boolean isValidLatLon(String latLon) {
+        Coordinates coords = Coordinates.fromString(latLon);
+        double lat = coords.latitude();
+        double lon = coords.longitude();
+
+        // If fromString returned default 0.0,0.0, reject unless input was exactly "0,0"
+        if ((lat == 0.0 && lon == 0.0) && !latLon.trim().equals("0,0")) {
+            return false;
+        }
+
+        if (lat < -90 || lat > 90) return false;
+        if (lon < -180 || lon > 180) return false;
+
+        return true;
     }
 }
+

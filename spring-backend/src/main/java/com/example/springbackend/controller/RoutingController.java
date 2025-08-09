@@ -2,6 +2,7 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.llm.DirectionsResponseDTO;
 import com.example.springbackend.dto.llm.RoutingIntentDTO;
+import com.example.springbackend.model.Coordinates;
 import com.example.springbackend.service.RoutingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -22,9 +23,21 @@ public class RoutingController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<DirectionsResponseDTO> getDirections(@RequestBody RoutingIntentDTO intent) {
         return routingService.getBusRoutes(
-                intent.start(),
-                intent.end(),
-                intent.arrivalTime()
-        );
+                        intent.startCoordinates(),
+                        intent.endCoordinates(),
+                        intent.arrivalTime()
+                )
+                .map(routes -> new DirectionsResponseDTO(
+                        intent.startLocation() != null && !intent.startLocation().isBlank()
+                                ? intent.startLocation()
+                                : "Origin",
+                        intent.endLocation() != null && !intent.endLocation().isBlank()
+                                ? intent.endLocation()
+                                : "Destination",
+                        Coordinates.fromString(intent.startCoordinates()),
+                        Coordinates.fromString(intent.endCoordinates()),
+                        routes
+                ));
     }
+
 }

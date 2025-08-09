@@ -35,17 +35,20 @@
     </LinearLayout>
 
     <View
-        android:layout_width="0.5dp"
+        android:layout_width="1dp"
         android:layout_height="match_parent"
         android:layout_marginHorizontal="20dp"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:background="#33FFFFFF" />
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/routeLegsChipGroup"
-        android:layout_width="wrap_content"
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/routeLegsFlexboxLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:layout_gravity="center_vertical"
-        app:chipSpacing="1dp"
-        app:singleLine="true" />
+        app:flexWrap="nowrap"
+        app:alignItems="center"
+        app:justifyContent="flex_start"
+        />
 </LinearLayout>

@@ -6,7 +6,7 @@
     <!-- Semi-transparent white border (50% opacity) -->
     <stroke
         android:width="4dp"
-        android:color="#80FFFFFF" /> <!-- 80 hex = 50% opacity white -->
+        android:color="#33FFFFFF" />
     <!-- Transparent center -->
     <solid android:color="@android:color/transparent" />
 </shape>
