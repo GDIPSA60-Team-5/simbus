@@ -87,6 +87,7 @@ jobs:
       - name: 🧪 Run Tests & Build
         run: |
           cd spring-backend
+          chmod +x ./mvnw
           ./mvnw clean test
 
       - name: 🏗️ Package Application
@@ -129,6 +130,9 @@ jobs:
 
       - name: 🤖 Setup Android SDK
         uses: android-actions/setup-android@v2
+
+      - name: Make gradlew executable
+        run: chmod +x android-kotlin/gradlew
 
       - name: 🧪 Run Unit Tests
         run: |
