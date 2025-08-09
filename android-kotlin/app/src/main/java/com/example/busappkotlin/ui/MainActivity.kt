@@ -32,16 +32,12 @@ class MainActivity : AppCompatActivity() {
         val secureStorage = SecureStorageManager(this)
         val token = secureStorage.getToken()
 
-//         Original check, now commented for testing
-                val intent = Intent(this, LoginActivity::class.java)
-                loginLauncher.launch(intent)
-
-//        if (token.isNullOrEmpty()) {
-//            val intent = Intent(this, LoginActivity::class.java)
-//            loginLauncher.launch(intent)
-//        } else {
-//            setupUI()
-//        }
+        if (token.isNullOrEmpty()) {
+            val intent = Intent(this, LoginActivity::class.java)
+            loginLauncher.launch(intent)
+        } else {
+            setupUI()
+        }
     }
 
     private fun setupUI() {
