@@ -1,11 +1,11 @@
 services:
   frontend:
-    image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
+    image: {{ docker_username }}/frontend:{{ image_tag }}
     expose:
       - "3000"
 
   backend:
-    image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
+    image: {{ docker_username }}/backend:{{ image_tag }}
     expose:
       - "8080"
     depends_on:
@@ -30,8 +30,10 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    env_file:
+      - .env
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=yourpassword  
+      - GF_SERVER_ROOT_URL=http://{{ aws_server_ip }}/grafana
     expose:
       - "3000"
     depends_on:
