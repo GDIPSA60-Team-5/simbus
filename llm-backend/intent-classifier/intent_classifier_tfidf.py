@@ -11,7 +11,9 @@ with open("intent_training_data.json", "r", encoding="utf-8") as f:
     raw_data = json.load(f)
 
 df = pd.DataFrame(raw_data)
-assert "text" in df.columns and "intent" in df.columns, "Missing 'text' or 'intent' in training data."
+assert "text" in df.columns and "intent" in df.columns, (
+    "Missing 'text' or 'intent' in training data."
+)
 
 # ----- TF-IDF vectorization -----
 vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=5000)

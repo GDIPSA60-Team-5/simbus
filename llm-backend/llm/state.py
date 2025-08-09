@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-MAX_HISTORY_LENGTH = 1
+MAX_HISTORY_LENGTH = 4
 
 # ---- INTENT DETECTION GUARD ----
 CONFIDENCE_THRESHOLD = 0.4
@@ -14,15 +14,22 @@ INTENT_DESCRIPTIONS = {
     "schedule_commute": "Plan when to leave based on start, destination, arrival time, and notification timing.",
     "next_bus": "Provide arrival time for the next bus given a bus service number and optionally boarding stop info.",
     "help": "Provide guidance on how to use the assistant.",
-    "reset": "Clear the current conversation context to start fresh."
+    "reset": "Clear the current conversation context to start fresh.",
 }
 
 REQUIRED_SLOTS = {
     "route_info": ["start_location", "end_location"],
-    "schedule_commute": ["start_location", "end_location", ["notification_start_time", "arrival_time"]],
-    "next_bus": ["bus_service_number", ["boarding_bus_stop_name", "boarding_bus_stop_code"]],
+    "schedule_commute": [
+        "start_location",
+        "end_location",
+        ["notification_start_time", "arrival_time"],
+    ],
+    "next_bus": [
+        "bus_service_number",
+        ["boarding_bus_stop_name", "boarding_bus_stop_code"],
+    ],
     "help": [],
-    "reset": []
+    "reset": [],
 }
 
 SLOT_TYPES = {
@@ -32,7 +39,7 @@ SLOT_TYPES = {
     "arrival_time": datetime,
     "bus_service_number": str,
     "boarding_bus_stop_name": str,
-    "boarding_bus_stop_code": str
+    "boarding_bus_stop_code": str,
 }
 
 user_conversations = {}
