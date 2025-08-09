@@ -21,16 +21,16 @@ services:
     volumes:
       - mongo-data:/data/db
 
-prometheus:
-    image: prom/prometheus:latest
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.route-prefix=/'
-      - '--web.external-url=http://{{ aws_server_ip }}/prometheus/'
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    expose:
-      - "9090"
+  prometheus:
+      image: prom/prometheus:latest
+      command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--web.route-prefix=/'
+        - '--web.external-url=http://{{ aws_server_ip }}/prometheus/'
+      volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      expose:
+        - "9090"
 
 
   grafana:
