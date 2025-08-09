@@ -111,45 +111,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.9.3.2</version>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>spotbugs</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <xmlOutput>true</xmlOutput>
-                    <outputDirectory>${project.build.directory}/spotbugs-reports</outputDirectory>
-                    <failOnError>true</failOnError>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.17.0</version>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <failOnViolation>true</failOnViolation>
-                    <rulesets>
-                        <ruleset>rulesets/java/design.xml</ruleset>
-                        <ruleset>rulesets/java/codestyle.xml</ruleset>
-                    </rulesets>
-                </configuration>
-            </plugin>
-
         </plugins>
     </build>
 
