@@ -4,7 +4,7 @@ from datetime import datetime
 MAX_HISTORY_LENGTH = 4
 
 # ---- INTENT DETECTION GUARD ----
-CONFIDENCE_THRESHOLD = 0.4
+CONFIDENCE_THRESHOLD = 0.38
 MIN_WORDS_FOR_INTENT = 7
 
 INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]

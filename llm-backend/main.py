@@ -17,7 +17,7 @@ from llm.utils import (
     flatten_slots,
 )
 from llm.intent_handler import handle_next_bus, handle_routing
-from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ChatRequest
+from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ErrorResponseDTO, ChatRequest
 
 
 app = FastAPI()
@@ -140,10 +140,8 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
             else:
                 backend_result = f"Intent '{active_intent}' is recognized, but no handler implemented."
                 ctx["history"].append({"role": "assistant", "content": backend_result})
-                return MessageResponseDTO(
+                return ErrorResponseDTO(
                     message=backend_result,
-                    intent=active_intent,
-                    slots=current_slots,
                 )
 
         # Step 5: If still missing slots → follow-up prompt
