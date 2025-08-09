@@ -16,7 +16,8 @@ from llm.utils import (
     show_help,
     flatten_slots,
 )
-from llm.intent_handler import handle_next_bus, handle_routing
+from llm.next_bus_handler import handle_next_bus
+from llm.routing_handler import handle_routing
 from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ErrorResponseDTO, ChatRequest
 
 
@@ -134,7 +135,9 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
                 return DirectionsResponseDTO(
                     startLocation=backend_result["startLocation"],
                     endLocation=backend_result["endLocation"],
-                    suggestedRoutes=backend_result["suggestedRoutes"],
+                    startCoordinates=backend_result["startCoordinates"],
+                    endCoordinates=backend_result["endCoordinates"],
+                    suggestedRoutes=backend_result["suggestedRoutes"]
                 )
 
             else:

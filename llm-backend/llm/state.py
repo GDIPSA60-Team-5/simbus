@@ -1,12 +1,20 @@
+import os
+from dotenv import load_dotenv
 from datetime import datetime
 
 
+# ---- CONVERSATION HISTORY LENGTH TO KEEP ----
 MAX_HISTORY_LENGTH = 4
 
 # ---- INTENT DETECTION GUARD ----
 CONFIDENCE_THRESHOLD = 0.38
 MIN_WORDS_FOR_INTENT = 7
 
+# ---- LOAD BACKEND URL ----
+load_dotenv()
+BACKEND_URL = os.getenv("BACKEND_URL")
+
+# ---- INTENTS AND DESCRIPTIONS ----
 INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]
 
 INTENT_DESCRIPTIONS = {

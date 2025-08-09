@@ -28,12 +28,12 @@ JSON:
         "route_info": """
 Example:
 
-User: "How can I get to NUS?"
+User: "How can I get from Clementi to Changi Airport?"
 JSON:
 {
     "slots": {
-        "start_location": "Current Location",
-        "end_location": "NUS"
+        "start_location": "Clementi",
+        "end_location": "Changi Airport"
     }
 }
 """,
