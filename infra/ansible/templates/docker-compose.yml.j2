@@ -32,14 +32,13 @@ services:
     image: grafana/grafana:latest
     env_file:
       - .env
-    environment:
-      - GF_SERVER_ROOT_URL=http://{{ aws_server_ip }}/grafana
     expose:
       - "3000"
     depends_on:
       - prometheus
     volumes:
       - grafana-data:/var/lib/grafana
+      - /home/ubuntu/grafana.ini:/etc/grafana/grafana.ini:ro
 
   nginx:
     image: nginx:latest

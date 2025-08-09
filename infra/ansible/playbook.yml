@@ -54,6 +54,13 @@
         owner: ubuntu
         mode: "0644"
 
+    - name: Copy templated grafana.ini
+      template:
+        src: grafana.ini.j2
+        dest: /home/ubuntu/grafana.ini
+        owner: ubuntu
+        mode: "0644"
+
     - name: Copy nginx.conf to EC2 server
       copy:
         src: files/nginx.conf
