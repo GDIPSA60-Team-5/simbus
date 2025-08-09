@@ -1,0 +1,6 @@
+<!-- res/drawable/ic_dot_separator.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <size android:width="8dp" android:height="8dp" />
+    <solid android:color="@color/half_white" /> <!-- or any color you like -->
+</shape>

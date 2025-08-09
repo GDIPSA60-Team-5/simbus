@@ -1,9 +1,9 @@
 package com.example.springbackend.service;
 
 import com.example.springbackend.controller.GeocodeController;
-import com.example.springbackend.model.Coordinates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -28,16 +28,14 @@ public class GeocodingService {
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
     private final WebClient webClient;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${onemap.token}")
     private String oneMapToken;
 
 
-    public GeocodingService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper,
-                            @Value("${onemap.base-url:https://www.onemap.gov.sg}") String baseUrl) {
-        this.webClient = webClientBuilder.baseUrl(baseUrl).build();
-        this.objectMapper = objectMapper;
+    public GeocodingService(@Qualifier("oneMapWebClient") WebClient webClient) {
+        this.webClient = webClient;
     }
 
     /**

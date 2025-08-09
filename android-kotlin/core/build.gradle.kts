@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -42,7 +42,7 @@ android {
 dependencies {
     implementation(project(":feature_login"))
     implementation(project(":feature_chatbot"))
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.gson)
     implementation(libs.okhttp)

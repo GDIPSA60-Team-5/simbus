@@ -5,3 +5,4 @@
 **/.settings/
 /llm-backend/llm/__pycache__/
 .vscode
+*.log

@@ -20,4 +20,5 @@
 
     <!-- Permissions -->
     <string name="microphone_permission_required">Microphone permission is required to use voice input.</string>
+    <string name="route_map">Map Preview Image</string>
 </resources>

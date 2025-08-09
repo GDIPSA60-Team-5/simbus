@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalTime;
 
 public record RoutingIntentDTO(
-        String start,
-        String end,
+        String startCoordinates,
+        String endCoordinates,
+        String startLocation,
+        String endLocation,
         @JsonFormat(pattern = "HH:mm")
         LocalTime arrivalTime
 ) {}
