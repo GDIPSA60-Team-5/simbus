@@ -1,11 +1,11 @@
 services:
   frontend:
-    image: {{ docker_username }}/frontend:{{ image_tag }}
+    image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
     expose:
       - "3000"
 
   backend:
-    image: {{ docker_username }}/backend:{{ image_tag }}
+    image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
     expose:
       - "8080"
     depends_on:
@@ -21,6 +21,24 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    expose:
+      - "9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=yourpassword  
+    expose:
+      - "3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+
   nginx:
     image: nginx:latest
     ports:
@@ -30,6 +48,9 @@ services:
     depends_on:
       - frontend
       - backend
+      - prometheus
+      - grafana
 
 volumes:
   mongo-data:
+  grafana-data:

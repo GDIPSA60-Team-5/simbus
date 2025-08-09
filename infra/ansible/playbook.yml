@@ -60,6 +60,13 @@
         owner: ubuntu
         mode: "0644"
 
+    - name: Copy prometheus.yml to EC2 server
+      copy:
+        src: files/prometheus.yml
+        dest: /home/ubuntu/prometheus.yml
+        owner: ubuntu
+        mode: "0644"
+
     - name: Prune unused Docker data asynchronously
       shell: docker system prune -af
       async: 300
