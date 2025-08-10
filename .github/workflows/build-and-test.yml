@@ -88,7 +88,7 @@ jobs:
         run: |
           cd spring-backend
           chmod +x ./mvnw
-          ./mvnw clean test jacoco:report
+          ./mvnw clean test jacoco:report -Dspring.profiles.active=test
 
       - name: 🏗️ Package Application
         run: |
