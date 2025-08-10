@@ -84,11 +84,11 @@ jobs:
           java-version: 17
           cache: maven
 
-      - name: 🧪 Run Tests & Build
+      - name: 🧪 Run Tests with Coverage
         run: |
           cd spring-backend
           chmod +x ./mvnw
-          ./mvnw clean test -X
+          ./mvnw clean test jacoco:report
 
       - name: 🏗️ Package Application
         run: |
@@ -104,12 +104,12 @@ jobs:
           reporter: java-junit
 
       - name: 📈 Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: GDIPSA60-Team-5/simbus
-          directory: spring-backend/target/site/jacoco
+          file: spring-backend/target/site/jacoco/jacoco.xml
           flags: backend
+          name: spring-backend-coverage
 
   android-kotlin:
     if: needs.validate.outputs.folder == 'android-kotlin-later'
