@@ -35,6 +35,8 @@ permissions:
 jobs:
   build_and_push_frontend:
     runs-on: ubuntu-latest
+    outputs:
+      status: ${{ job.status }}
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -113,6 +115,8 @@ jobs:
 
   build_and_push_backend:
     runs-on: ubuntu-latest
+    outputs:
+      status: ${{ job.status }}
     env:
       IMAGE_TAG: ${{ inputs.image_tag }}
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -198,13 +202,26 @@ jobs:
       - build_and_push_backend
     if: always()
     steps:
-      - name: Show pushed image summary
+      - name: Render summary
         run: |
-          echo "## Docker Images Built and Scanned" >> $GITHUB_STEP_SUMMARY
+          FRONTEND_STATUS="${{ needs.build_and_push_frontend.outputs.status }}"
+          BACKEND_STATUS="${{ needs.build_and_push_backend.outputs.status }}"
+          frontend_icon="❌"
+          backend_icon="❌"
+          if [[ "$FRONTEND_STATUS" == "success" ]]; then
+            frontend_icon="✅"
+          elif [[ "$FRONTEND_STATUS" == "cancelled" ]]; then
+            frontend_icon="⚠️"
+          fi
+          if [[ "$BACKEND_STATUS" == "success" ]]; then
+            backend_icon="✅"
+          elif [[ "$BACKEND_STATUS" == "cancelled" ]]; then
+            backend_icon="⚠️"
+          fi
+          echo "## Docker Images Build & Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Repository | Tag | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------------|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ${{ secrets.DOCKER_USERNAME }}/frontend | ${{ inputs.image_tag }} | ✅ Built, Scanned & Pushed |" >> $GITHUB_STEP_SUMMARY
-          echo "| ${{ secrets.DOCKER_USERNAME }}/backend | ${{ inputs.image_tag }} | ✅ Built, Scanned & Pushed |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ secrets.DOCKER_USERNAME }}/frontend | ${{ inputs.image_tag }} | $frontend_icon |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ secrets.DOCKER_USERNAME }}/backend | ${{ inputs.image_tag }} | $backend_icon |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🛡️ Security: Images were scanned before pushing to registry" >> $GITHUB_STEP_SUMMARY
-          echo "📊 Security scan results are available in the Security tab and as workflow artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "🛡️ Security scans were run ${inputs.security_scan_enabled}." >> $GITHUB_STEP_SUMMARY
