@@ -1,9 +1,11 @@
 package iss.nus.edu.sg.appfiles.feature_login.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.feature_home.ui.HomeActivity
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_login.R
 import iss.nus.edu.sg.appfiles.feature_login.api.AuthController
@@ -48,7 +50,12 @@ class LoginActivity : AppCompatActivity() {
                 val token = authResponse.token
                 SecureStorageManager(this@LoginActivity).saveToken(token)
                 Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
-                setResult(RESULT_OK)
+
+                // Start HomeActivity
+                val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+                startActivity(intent)
+
+                // Close LoginActivity so user can't go back to it
                 finish()
             }, onFailure = { e ->
                 val errorMessage = when (e) {

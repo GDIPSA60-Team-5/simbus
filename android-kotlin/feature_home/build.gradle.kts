@@ -14,12 +14,13 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+
 hilt {
     enableAggregatingTask = false
 }
 
 android {
-    namespace = "com.example.feature_chatbot"
+    namespace = "com.example.feature_home"
     compileSdk = 35
 
     buildFeatures {
@@ -30,13 +31,11 @@ android {
     defaultConfig {
         minSdk = 29
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Pass to AndroidManifest
         manifestPlaceholders["googleMapsKey"] = mapsApiKey
         buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"$mapsApiKey\"")
-    }
 
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
 
     buildTypes {
         release {
@@ -47,22 +46,20 @@ android {
             )
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
     }
 }
 
 dependencies {
+    implementation(libs.play.services.maps)
     implementation(libs.flexbox)
     implementation(libs.glide)
     ksp(libs.compiler)
-    implementation(libs.play.services.maps)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.play.services.location)
@@ -73,8 +70,10 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }

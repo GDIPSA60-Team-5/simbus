@@ -48,7 +48,6 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor.v4110)
     implementation(libs.converter.gson)
-    implementation(libs.retrofit)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -60,4 +59,5 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":feature_login"))
     implementation(project(":feature_chatbot"))
+    implementation(project(":feature_home"))
 }

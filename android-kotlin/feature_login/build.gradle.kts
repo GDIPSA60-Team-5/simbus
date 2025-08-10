@@ -15,7 +15,6 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 35
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,4 +52,5 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.material)
     implementation (libs.blurview)
+    implementation(project(":feature_home"))
 }
