@@ -118,7 +118,6 @@ jobs:
           name: jacoco-coverage-report
           path: spring-backend/target/site/jacoco/
           retention-days: 30
-          
 
   android-kotlin:
     if: needs.validate.outputs.folder == 'android-kotlin-later'
@@ -159,7 +158,6 @@ jobs:
           ./gradlew assembleRelease
 
       - name: 📊 Publish Test Results
-        uses: dorny/test-reporter@v2
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
