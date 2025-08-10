@@ -17,16 +17,20 @@ on:
         required: false
         type: boolean
         default: true
+      upload_to_security_tab:
+        description: "Upload scan results to GitHub Security tab (requires security-events: write permission)"
+        required: false
+        type: boolean
+        default: false
     secrets:
       DOCKER_USERNAME:
         required: true
       DOCKER_PASSWORD:
         required: true
 
+# Only request permissions if security tab upload is enabled
 permissions:
   contents: read
-  security-events: write
-  actions: read
 
 jobs:
   build_and_push_frontend:
