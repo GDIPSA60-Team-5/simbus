@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">NavigateBar</string>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="about_us">👋 We’re Team SA60 – a group of NUS ISS graduate students building smarter ways to navigate life.\n
+        📍 Our App\n
+        • Tracks your daily routes automatically.\n
+        • Reminds you when to leave, based on traffic.\n
+        • Chatbot answers questions like “What’s the fastest way home?”\n\n
+
+        🤖 Why Us? ✓ AI learns your habits.\n
+        ✓ Talk to your navigation like a friend.\n
+        ✓ Your data stays private.</string>
+    <string name="faq">
+        Q1: How is this app different from Google Maps?\n
+        A: Our app automatically logs your daily routes and provides smart departure reminders,
+        not just navigation. The built-in chatbot lets you ask questions like, "What’s the fastest way home now?"\n\n
+
+        Q2: How does the app calculate when to remind me?\n
+        A: It analyzes real-time traffic + your travel history to suggest the best time to leave.\n\n
+
+        Q3: What can I ask the chatbot?\n
+        Examples:\n
+        "How do I get to NUS ISS by 9 AM?"\n
+        "Delete my route to the mall last Tuesday."\n
+        "Is there a delay on my usual commute?"\n
+    </string>
+    <string name="switch_label">Mute</string>
+</resources>
