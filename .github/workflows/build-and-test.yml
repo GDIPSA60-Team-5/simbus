@@ -56,7 +56,7 @@ jobs:
           npm run build
 
       - name: 📊 Upload Coverage Reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: GDIPSA60-Team-5/simbus
@@ -150,7 +150,7 @@ jobs:
           ./gradlew assembleRelease
 
       - name: 📊 Publish Test Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Android Unit Tests
@@ -158,20 +158,12 @@ jobs:
           reporter: java-junit
 
       - name: 📈 Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: GDIPSA60-Team-5/simbus
           directory: android-kotlin/app/build/reports/jacoco/testDebugUnitTestCoverage
           flags: android
-
-      - name: 📱 Upload APK Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apks
-          path: |
-            android-kotlin/app/build/outputs/apk/debug/*.apk
-            android-kotlin/app/build/outputs/apk/release/*.apk
 
   llm-backend:
     if: needs.validate.outputs.folder == 'llm-backend'
