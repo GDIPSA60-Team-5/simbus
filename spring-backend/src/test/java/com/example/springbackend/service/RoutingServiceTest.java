@@ -232,7 +232,7 @@ class RoutingServiceTest {
 
             @Override
             @NonNull
-            public UriBuilder queryParam(@NonNull String name, @NonNull Object... values) {
+            public UriBuilder queryParam(@NonNull String name, @NonNull Object @NonNull... values) {
                 if (!hasQuery) {
                     pathBuilder.append("?");
                     hasQuery = true;
@@ -277,7 +277,7 @@ class RoutingServiceTest {
 
             @Override
             @NonNull
-            public UriBuilder replaceQueryParam(@NonNull String name, @NonNull Object... values) {
+            public UriBuilder replaceQueryParam(@NonNull String name, @NonNull Object @NonNull... values) {
                 return queryParam(name, values);
             }
 
@@ -418,7 +418,7 @@ class RoutingServiceTest {
 
     // --- New test: filter routes by arrivalTime logic ---
     @Test
-    void testFilterRoutesByArrivalTime() throws Exception {
+    void testFilterRoutesByArrivalTime() {
         // Simulate routes list
         DirectionsResponseDTO.RouteDTO route1 = new DirectionsResponseDTO.RouteDTO(10, List.of(), "");
         DirectionsResponseDTO.RouteDTO route2 = new DirectionsResponseDTO.RouteDTO(30, List.of(), "");
