@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -56,6 +57,18 @@ public class LtaBusServiceProvider implements BusServiceProvider {
                         ltaStop.longitude(),
                         API_NAME
                 ));
+    }
+    
+    private Mono<List<LtaDtos.BusStop>> fetchBusStopsPage(int skip) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/BusStops")
+                        .queryParam("$skip", skip)
+                        .build())
+                .header("AccountKey", apiKey)
+                .retrieve()
+                .bodyToMono(LtaDtos.LtaBusStopsResponse.class)
+                .map(LtaDtos.LtaBusStopsResponse::value);
     }
 
     @Override
