@@ -18,4 +18,12 @@
         <item name="layout_constraintStart_toStartOf">parent</item>
         <item name="layout_constraintEnd_toEndOf">parent</item>
     </style>
+    <style name="RoundedCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="shapeAppearanceOverlay">@style/RoundedCorners</item>
+    </style>
+
+    <style name="RoundedCorners">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 </resources>

@@ -5,11 +5,12 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.core.di.SecureStorageManager
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_login.R
 import iss.nus.edu.sg.appfiles.feature_login.api.AuthController
 import iss.nus.edu.sg.appfiles.feature_login.data.AuthRequest
-import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
+import iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -19,6 +20,9 @@ class LoginActivity : AppCompatActivity() {
 
     @Inject
     lateinit var authController: AuthController
+
+    @Inject
+    lateinit var secureStorageManager: SecureStorageManager
 
     private lateinit var usernameEditText: EditText
     private lateinit var passwordEditText: EditText
@@ -47,17 +51,16 @@ class LoginActivity : AppCompatActivity() {
             val result = authController.login(request)
             result.fold(onSuccess = { authResponse ->
                 val token = authResponse.token
-                SecureStorageManager(this@LoginActivity).saveToken(token)
-                SecureStorageManager(this@LoginActivity).saveUsername(username)
+                secureStorageManager.saveToken(token)
+                secureStorageManager.saveUsername(username)
                 Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
-                setResult(RESULT_OK)
-                val intent = Intent().apply {
-                    setClassName(packageName, "iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity")
-                }
-                startActivity(intent)
+
+                // Start HomeActivity
+                val intent = Intent(this@LoginActivity, NavigateActivity::class.java)
                 startActivity(intent)
 
-//                finish()
+                // Close LoginActivity so user can't go back to it
+                finish()
             }, onFailure = { e ->
                 val errorMessage = when (e) {
                     is HttpException -> when (e.code()) {

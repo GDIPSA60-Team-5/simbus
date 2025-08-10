@@ -11,8 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
+import com.example.core.di.SecureStorageManager
 import com.google.android.material.switchmaterial.SwitchMaterial
-import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.AboutUsActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.ChangePasswordActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.FAQActivity
@@ -77,6 +77,7 @@ class MenuFragment : Fragment() {
         }
     }
 
+    //TODO: add a modal that triggers on resume when the jwttoken expires
     private fun handleLogout(storageManager: SecureStorageManager) {
         storageManager.clearAll()
         val intent = Intent()
@@ -85,6 +86,5 @@ class MenuFragment : Fragment() {
             "com.example.busappkotlin.ui.MainActivity"
         )
         requireContext().startActivity(intent)
-//        startActivity(Intent(requireContext(), LoginActivity::class.java))
     }
 }

@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.media3.common.ktx)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.gson)
@@ -58,7 +59,9 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(project(":core"))
+    implementation(project(":network"))
     implementation(project(":feature_login"))
     implementation(project(":feature_chatbot"))
+    implementation(project(":feature_home"))
     implementation(project(":feature_navigateBar"))
 }
