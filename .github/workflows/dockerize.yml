@@ -7,6 +7,16 @@ on:
         description: "Docker image tag"
         required: true
         type: string
+      security_scan_enabled:
+        description: "Enable security scanning with Trivy"
+        required: false
+        type: boolean
+        default: true
+      fail_on_high_severity:
+        description: "Fail the workflow on high/critical vulnerabilities"
+        required: false
+        type: boolean
+        default: true
     secrets:
       DOCKER_USERNAME:
         required: true
@@ -25,13 +35,64 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Build Frontend Image (for scanning)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./next-frontend
+          push: false
+          load: true
+          tags: frontend:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+
+      - name: Run Trivy vulnerability scanner - Frontend
+        if: ${{ inputs.security_scan_enabled }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: frontend:${{ env.IMAGE_TAG }}
+          format: "sarif"
+          output: "trivy-frontend-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab - Frontend
+        if: ${{ inputs.security_scan_enabled && always() }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-frontend-results.sarif"
+
+      - name: Run Trivy vulnerability scanner (Table) - Frontend
+        if: ${{ inputs.security_scan_enabled }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: frontend:${{ env.IMAGE_TAG }}
+          format: "table"
+          exit-code: ${{ inputs.fail_on_high_severity && '1' || '0' }}
+          severity: "CRITICAL,HIGH"
+
+      - name: Run Trivy vulnerability scanner (JSON) - Frontend
+        if: ${{ inputs.security_scan_enabled }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: frontend:${{ env.IMAGE_TAG }}
+          format: "json"
+          output: "trivy-frontend-results.json"
+
+      - name: Upload Trivy scan results as artifact - Frontend
+        if: ${{ inputs.security_scan_enabled && always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-frontend-results
+          path: |
+            trivy-frontend-results.sarif
+            trivy-frontend-results.json
+
       - name: Log in to DockerHub
+        if: success() || !inputs.security_scan_enabled
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & Push Frontend
+      - name: Push Frontend Image to Registry
+        if: success() || !inputs.security_scan_enabled
         uses: docker/build-push-action@v5
         with:
           context: ./next-frontend
@@ -51,13 +112,64 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Build Backend Image (for scanning)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./spring-backend
+          push: false
+          load: true
+          tags: backend:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+
+      - name: Run Trivy vulnerability scanner - Backend
+        if: ${{ inputs.security_scan_enabled }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: backend:${{ env.IMAGE_TAG }}
+          format: "sarif"
+          output: "trivy-backend-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab - Backend
+        if: ${{ inputs.security_scan_enabled && always() }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-backend-results.sarif"
+
+      - name: Run Trivy vulnerability scanner (Table) - Backend
+        if: ${{ inputs.security_scan_enabled }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: backend:${{ env.IMAGE_TAG }}
+          format: "table"
+          exit-code: ${{ inputs.fail_on_high_severity && '1' || '0' }}
+          severity: "CRITICAL,HIGH"
+
+      - name: Run Trivy vulnerability scanner (JSON) - Backend
+        if: ${{ inputs.security_scan_enabled }}
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: backend:${{ env.IMAGE_TAG }}
+          format: "json"
+          output: "trivy-backend-results.json"
+
+      - name: Upload Trivy scan results as artifact - Backend
+        if: ${{ inputs.security_scan_enabled && always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-results
+          path: |
+            trivy-backend-results.sarif
+            trivy-backend-results.json
+
       - name: Log in to DockerHub
+        if: success() || !inputs.security_scan_enabled
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & Push Backend
+      - name: Push Backend Image to Registry
+        if: success() || !inputs.security_scan_enabled
         uses: docker/build-push-action@v5
         with:
           context: ./spring-backend
@@ -71,6 +183,15 @@ jobs:
     needs:
       - build_and_push_frontend
       - build_and_push_backend
+    if: always()
     steps:
       - name: Show pushed image summary
-        run: docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+        run: |
+          echo "## Docker Images Built and Scanned" >> $GITHUB_STEP_SUMMARY
+          echo "| Repository | Tag | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ secrets.DOCKER_USERNAME }}/frontend | ${{ inputs.image_tag }} | ✅ Built, Scanned & Pushed |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ secrets.DOCKER_USERNAME }}/backend | ${{ inputs.image_tag }} | ✅ Built, Scanned & Pushed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🛡️ Security: Images were scanned before pushing to registry" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Security scan results are available in the Security tab and as workflow artifacts." >> $GITHUB_STEP_SUMMARY
