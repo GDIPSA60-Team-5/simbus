@@ -1,7 +1,7 @@
 package iss.nus.edu.sg.appfiles.feature_navigatebar
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.AssistantFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.HomeFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.MenuFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.SchedulesFragment
@@ -30,18 +30,30 @@ class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelecte
     }
 
     override fun onNavItemSelected(itemId: Int) {
-        val fragment = when (itemId) {
-            R.id.nav_home -> HomeFragment()
-            R.id.nav_assistant -> AssistantFragment()
-            R.id.nav_schedules -> SchedulesFragment()
-            R.id.nav_menu -> MenuFragment()
-            else -> null
-        }
-
-        fragment?.let {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.mainFragmentContainer, it)
-                .commit()
+        when (itemId) {
+            R.id.nav_home -> {
+                val fragment = HomeFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.mainFragmentContainer, fragment)
+                    .commit()
+            }
+            R.id.nav_assistant -> {
+                val intent = Intent(this, com.example.feature_chatbot.ui.ChatbotActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.nav_schedules -> {
+                val fragment = SchedulesFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.mainFragmentContainer, fragment)
+                    .commit()
+            }
+            R.id.nav_menu -> {
+                val fragment = MenuFragment()
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.mainFragmentContainer, fragment)
+                    .commit()
+            }
         }
     }
+
 }

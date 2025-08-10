@@ -57,4 +57,5 @@ dependencies {
     implementation(project(":feature_login"))
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     kapt ("com.github.bumptech.glide:compiler:4.16.0")
+    implementation(project(":feature_chatbot"))
 }
