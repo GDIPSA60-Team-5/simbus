@@ -1,22 +1,51 @@
 - hosts: all
   become: yes
   vars:
-    image_tag: "{{ lookup('env', 'IMAGE_TAG') }}"
-    docker_username: "{{ lookup('env', 'DOCKER_USERNAME') }}"
+    image_tag: "{{ image_tag }}"
+    docker_username: "{{ docker_username }}"
+    backend_env_b64: "{{ backend_env_b64 }}"
+    aws_server_ip: "{{ aws_server_ip }}"
 
   tasks:
-    - name: Ensure Docker is installed
+    - name: Check if Docker is installed
+      command: docker --version
+      register: docker_installed
+      ignore_errors: yes
+
+    - name: Install Docker if not installed
       apt:
         name: docker.io
         state: present
         update_cache: yes
+      when: docker_installed.failed
 
-    - name: Install Docker Compose CLI plugin
-      become: yes
+    - name: Check if Docker Compose CLI plugin installed
+      stat:
+        path: /usr/local/lib/docker/cli-plugins/docker-compose
+      register: compose_plugin
+
+    - name: Install Docker Compose CLI plugin if missing
       shell: |
         mkdir -p /usr/local/lib/docker/cli-plugins
         curl -SL https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
         chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+      when: not compose_plugin.stat.exists
+
+    - name: Remove any old docker-compose.yml
+      file:
+        path: /home/ubuntu/docker-compose.yml
+        state: absent
+
+    - name: Debug backend_env_b64 (first 50 chars)
+      debug:
+        msg: "{{ backend_env_b64[:50] }}"
+
+    - name: Write .env file from base64 secret
+      copy:
+        content: "{{ backend_env_b64 | b64decode }}"
+        dest: /home/ubuntu/.env
+        owner: ubuntu
+        mode: "0600"
 
     - name: Copy templated docker-compose.yml
       template:
@@ -25,16 +54,42 @@
         owner: ubuntu
         mode: "0644"
 
-    - name: Prune unused Docker data
+    - name: Copy templated grafana.ini
+      template:
+        src: grafana.ini.j2
+        dest: /home/ubuntu/grafana.ini
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Copy nginx.conf to EC2 server
+      copy:
+        src: files/nginx.conf
+        dest: /home/ubuntu/nginx.conf
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Copy prometheus.yml to EC2 server
+      copy:
+        src: files/prometheus.yml
+        dest: /home/ubuntu/prometheus.yml
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Prune unused Docker data asynchronously
       shell: docker system prune -af
+      async: 300
+      poll: 0
       ignore_errors: yes
 
-    - name: Pull latest images
-      shell: docker compose pull
+    - name: Pull latest images and start containers
+      shell: docker compose up -d --pull missing
       args:
         chdir: /home/ubuntu
 
-    - name: Start services
-      shell: docker compose up -d
-      args:
-        chdir: /home/ubuntu
+    - name: Show running Docker containers
+      shell: docker ps
+      register: running_containers
+
+    - name: Display running containers
+      debug:
+        var: running_containers.stdout_lines

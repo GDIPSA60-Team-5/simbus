@@ -17,6 +17,5 @@ public class User {
 	private String userName;
 	private String userType;
 	private String passwordHash;
-	// don't embed commutePlans/locations unless you want denormalized copies;
 	// keep them separate and reference by userId
 }

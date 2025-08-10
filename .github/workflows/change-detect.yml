@@ -1,19 +1,59 @@
 name: Detect Changed Folders
-on: [workflow_call]
+
+on:
+  workflow_call:
+    outputs:
+      matrix:
+        description: "Matrix of changed folders"
+        value: ${{ jobs.detect.outputs.matrix }}
+      hasChanges:
+        description: "Whether any relevant folder changed"
+        value: ${{ jobs.detect.outputs.hasChanges }}
 
 jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      changed_folders: ${{ steps.filter.outputs.changed }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      hasChanges: ${{ steps.set-matrix.outputs.hasChanges }}
+
     steps:
       - uses: actions/checkout@v4
 
       - id: filter
         uses: dorny/paths-filter@v3
         with:
+          base: dev
           filters: |
             android-kotlin: android-kotlin/**
             spring-backend: spring-backend/**
             llm-backend: llm-backend/**
             next-frontend: next-frontend/**
+
+      - id: set-matrix
+        run: |
+          folders=()
+          if [ "${{ steps.filter.outputs.android-kotlin }}" = "true" ]; then folders+=("android-kotlin"); fi
+          if [ "${{ steps.filter.outputs.spring-backend }}" = "true" ]; then folders+=("spring-backend"); fi
+          if [ "${{ steps.filter.outputs.llm-backend }}" = "true" ]; then folders+=("llm-backend"); fi
+          if [ "${{ steps.filter.outputs.next-frontend }}" = "true" ]; then folders+=("next-frontend"); fi
+
+          # If FORCE_ALL is true and no folders found, include all folders
+          if [ "${FORCE_ALL}" = "true" ] && [ ${#folders[@]} -eq 0 ]; then
+            folders=("android-kotlin" "spring-backend" "llm-backend" "next-frontend")
+          fi
+
+          # Convert bash array to JSON array string
+          matrix=$(printf '%s\n' "${folders[@]}" | jq -R . | jq -s .)
+
+          # Safely export the matrix output as JSON string
+          echo "matrix=$(jq -cn --argjson val "$matrix" '$val')" >> "$GITHUB_OUTPUT"
+
+          # Export hasChanges output
+          if [ ${#folders[@]} -gt 0 ]; then
+            echo "hasChanges=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "hasChanges=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          FORCE_ALL: true

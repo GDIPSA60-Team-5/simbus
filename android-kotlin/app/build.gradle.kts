@@ -2,12 +2,15 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
-    kotlin("kapt")
-
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.ksp)
 }
+
 hilt {
     enableAggregatingTask = false
 }
+
 android {
     namespace = "com.example.busappkotlin"
     compileSdk = 35
@@ -39,7 +42,7 @@ android {
 }
 
 dependencies {
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.gson)
     implementation(libs.okhttp)

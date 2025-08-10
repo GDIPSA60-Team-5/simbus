@@ -1,6 +1,8 @@
 package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.*;
+import com.example.springbackend.dto.request.AuthRequest;
+import com.example.springbackend.dto.response.AuthResponse;
 import com.example.springbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

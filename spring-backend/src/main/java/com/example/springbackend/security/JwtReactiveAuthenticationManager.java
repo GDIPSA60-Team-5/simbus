@@ -1,5 +1,6 @@
 package com.example.springbackend.security;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -24,7 +25,7 @@ public class JwtReactiveAuthenticationManager implements ReactiveAuthenticationM
     public Mono<Authentication> authenticate(Authentication authentication) {
         String token = (String) authentication.getCredentials();
         if (token == null || !tokenProvider.validateToken(token)) {
-            return Mono.empty();
+            return Mono.error(new BadCredentialsException("Invalid JWT token"));
         }
         String username = tokenProvider.getUsernameFromToken(token);
         return userDetailsService.findByUsername(username)

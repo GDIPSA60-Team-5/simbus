@@ -1,29 +1,40 @@
-val mapsApiKey: String = (project.findProperty("MAPS_API_KEY") as? String).orEmpty()
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") ?: error("MAPS_API_KEY is missing in local.properties!")
 
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
+
 hilt {
     enableAggregatingTask = false
 }
+
 android {
     namespace = "com.example.feature_chatbot"
     compileSdk = 35
 
-    defaultConfig {
-        minSdk = 29
-        targetSdk = 35
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders["googleMapsKey"] = mapsApiKey
-    }
-
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
+
+    defaultConfig {
+        minSdk = 29
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Pass to AndroidManifest
+        manifestPlaceholders["googleMapsKey"] = mapsApiKey
+        buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"$mapsApiKey\"")
+    }
+
 
     buildTypes {
         release {
@@ -46,8 +57,12 @@ android {
 }
 
 dependencies {
+    implementation(libs.flexbox)
+    implementation(libs.glide)
+    ksp(libs.compiler)
+    implementation(libs.play.services.maps.v1820)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
     implementation(libs.retrofit)

@@ -8,105 +8,99 @@ import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.graphics.toColorInt
+import com.bumptech.glide.Glide
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.Route
-import com.example.feature_chatbot.data.RouteStep
+import com.example.feature_chatbot.data.RouteLeg
 import com.example.feature_chatbot.databinding.ItemChatBotDirectionsBinding
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapView
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.example.feature_chatbot.BuildConfig
+import com.example.feature_chatbot.data.Coordinates
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.AlignSelf
+import com.google.android.flexbox.FlexboxLayout
+import java.net.URLEncoder
 
 class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding) :
-    androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root), OnMapReadyCallback {
+    androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root) {
 
     companion object {
         private const val ARROW_SIZE_DP = 32
         private const val ARROW_PADDING_DP = 1
     }
-    private var mapView: MapView = binding.routeMapView
-    private var googleMap: GoogleMap? = null
-    private var currentPolylines: MutableList<Polyline> = mutableListOf()
 
-    init {
-        mapView.onCreate(null)
-        mapView.getMapAsync(this)
-    }
-    fun onResume() {
-        mapView.onResume()
-    }
+    private val staticMapImageView: ImageView = binding.routeStaticMapView
 
-    fun onPause() {
-        mapView.onPause()
-    }
+    private var selectedRouteIndex: Int = -1
+    private var allRoutes: List<Route> = emptyList()
+    private var startCoordinates: Coordinates? = null
+    private var endCoordinates: Coordinates? = null
 
-    fun onDestroy() {
-        mapView.onDestroy()
-    }
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-        googleMap?.uiSettings?.isMapToolbarEnabled = false
-    }
     fun bind(directions: BotResponse.Directions) {
+        startCoordinates = directions.startCoordinates
+        endCoordinates = directions.endCoordinates
+
         bindLocationInfo(directions)
         bindRoutes(directions.suggestedRoutes)
-        if (googleMap != null) {
-            drawRoutesOnMap(directions.suggestedRoutes)
-        }
-    }
-    private fun drawRoutesOnMap(routes: List<Route>?) {
-        googleMap?.let { map ->
-            map.clear()
-            currentPolylines.clear()
 
-            if (routes.isNullOrEmpty()) return
+        allRoutes = directions.suggestedRoutes ?: emptyList()
 
-            routes.forEach { route ->
-                route.routeGeometry?.let { encodedPolyline ->
-                    val points = decodePolyline(encodedPolyline)
-                    if (points.isNotEmpty()) {
-                        val polyline = map.addPolyline(
-                            PolylineOptions()
-                                .addAll(points)
-                                .color(getColorForRoute(route))
-                                .width(8f)
-                        )
-                        currentPolylines.add(polyline)
-                    }
-                }
-            }
-
-            // Move camera to first pointof first route's geometry
-            val firstRoute = routes.firstOrNull()
-            val firstPoint = firstRoute?.routeGeometry?.let {
-                decodePolyline(it).firstOrNull()
-            }
-            firstPoint?.let {
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 13f))
-            }
-        }
+        selectedRouteIndex = 0
+        updateRouteSelection()
+        showSelectedRouteOnStaticMap()
     }
 
 
-    private fun getColorForRoute(route: Route): Int {
-        // Simple example: color based on route summary hashcode
-        val colors = listOf(
-            Color.parseColor("#3F51B5"), // Indigo
-            Color.parseColor("#E91E63"), // Pink
-            Color.parseColor("#009688"), // Teal
-            Color.parseColor("#FF5722")  // Deep Orange
-        )
-        return colors[Math.abs(route.summary.hashCode()) % colors.size]
+    private fun showSelectedRouteOnStaticMap() {
+        if (selectedRouteIndex !in allRoutes.indices) return
+
+        val selectedRoute = allRoutes[selectedRouteIndex]
+        val url = buildStaticMapUrl(selectedRoute)
+
+        Glide.with(itemView.context)
+            .load(url)
+            .placeholder(R.drawable.placeholder_map) // your placeholder drawable
+            .error(R.drawable.error_map) // your error drawable
+            .into(staticMapImageView)
     }
+
+    private fun buildStaticMapUrl(route: Route): String {
+        val baseUrl = "https://maps.googleapis.com/maps/api/staticmap"
+        val size = "600x300"
+        val weight = 6
+        val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
+
+        val colors = listOf("FF0000", "0000FF", "FFA500") // red, blue, orange fully opaque
+
+        val maxLegsToShow = 3
+        val legsToShow = route.legs.take(maxLegsToShow)
+
+        val pathParams = legsToShow.mapIndexed { index, leg ->
+            val color = colors[index % colors.size]
+            val safePolyline = URLEncoder.encode(leg.legGeometry, "UTF-8")
+            "path=color:0x$color|weight:$weight|enc:$safePolyline"
+        }.joinToString("&")
+
+        val startLat = startCoordinates?.latitude ?: 0.0
+        val startLng = startCoordinates?.longitude ?: 0.0
+        val endLat = endCoordinates?.latitude ?: 0.0
+        val endLng = endCoordinates?.longitude ?: 0.0
+
+        val markers =
+            "markers=color:green|label:S|$startLat,$startLng&" +
+                    "markers=color:red|label:E|$endLat,$endLng"
+
+        return "$baseUrl?size=$size&$pathParams&$markers&key=$apiKey"
+    }
+
+
     private fun bindLocationInfo(directions: BotResponse.Directions) {
-        binding.startLocationTextView.text = itemView.context.getString(R.string.from_location, directions.startLocation)
-        binding.endLocationTextView.text = itemView.context.getString(R.string.to_location, directions.endLocation)
+        binding.startLocationTextView.text =
+            itemView.context.getString(R.string.from_location, directions.startLocation)
+        binding.endLocationTextView.text =
+            itemView.context.getString(R.string.to_location, directions.endLocation)
     }
 
     private fun bindRoutes(routes: List<Route>?) {
@@ -115,7 +109,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         if (routes.isNullOrEmpty()) {
             addNoRoutesMessage()
         } else {
-            routes.forEach { route -> addRouteView(route) }
+            routes.forEachIndexed { i, route -> addRouteView(route, i) }
         }
     }
 
@@ -126,32 +120,49 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         binding.routesContainer.addView(noRoutesTv)
     }
 
-    private fun addRouteView(route: Route) {
+    private fun addRouteView(route: Route, index: Int) {
         val inflater = LayoutInflater.from(itemView.context)
-        val routeViewBinding = com.example.feature_chatbot.databinding.ItemRouteSuggestionBinding.inflate(inflater, binding.routesContainer, false)
+        val routeViewBinding =
+            com.example.feature_chatbot.databinding.ItemRouteSuggestionBinding.inflate(
+                inflater,
+                binding.routesContainer,
+                false
+            )
 
         routeViewBinding.routeTotalDurationTextView.text = route.durationInMinutes.toString()
-        populateRouteLegs(routeViewBinding.routeLegsChipGroup, route.legs)
+        populateRouteLegs(routeViewBinding.routeLegsFlexboxLayout, route.legs)
+
+        routeViewBinding.root.setOnClickListener {
+            selectedRouteIndex = index
+            updateRouteSelection()
+            showSelectedRouteOnStaticMap()
+        }
 
         binding.routesContainer.addView(routeViewBinding.root)
     }
 
-    private fun populateRouteLegs(chipGroup: ChipGroup, legs: List<RouteStep>) {
-        chipGroup.removeAllViews()
-        val context = chipGroup.context
-
-        legs.forEachIndexed { index, leg ->
-            val chip = createLegChip(context, leg)
-            chipGroup.addView(chip)
-
-            if (index < legs.lastIndex) {
-                val arrow = createArrowView()
-                chipGroup.addView(arrow)
-            }
+    private fun updateRouteSelection() {
+        for (i in 0 until binding.routesContainer.childCount) {
+            val child = binding.routesContainer.getChildAt(i)
+            child.isSelected = (i == selectedRouteIndex)
         }
     }
 
-    private fun createLegChip(context: Context, leg: RouteStep): Chip {
+    private fun populateRouteLegs(flexboxLayout: FlexboxLayout, legs: List<RouteLeg>) {
+        flexboxLayout.removeAllViews()
+        val context = flexboxLayout.context
+
+        legs.forEachIndexed { index, leg ->
+            val chip = createLegChip(context, leg)
+            flexboxLayout.addView(chip)
+
+            if (index < legs.lastIndex) {
+                val separator = createSeparatorView()
+                flexboxLayout.addView(separator)
+            }
+        }
+    }
+    private fun createLegChip(context: Context, leg: RouteLeg): Chip {
         return (LayoutInflater.from(context)
             .inflate(R.layout.route_leg_chip, null, false) as Chip).apply {
 
@@ -164,7 +175,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         }
     }
 
-    private fun configureChipForLegType(chip: Chip, leg: RouteStep) {
+    private fun configureChipForLegType(chip: Chip, leg: RouteLeg) {
         when (leg.type.uppercase()) {
             "WALK" -> {
                 chip.text = leg.durationInMinutes.toString()
@@ -179,8 +190,10 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
                 chip.setTextColor(Color.WHITE)
             }
             else -> {
-                val transportType = leg.type.lowercase().replaceFirstChar(Char::titlecase)
-                chip.text = chip.context.getString(R.string.transport_duration, transportType, leg.durationInMinutes)
+                val transportType =
+                    leg.type.lowercase().replaceFirstChar(Char::titlecase)
+                chip.text =
+                    chip.context.getString(R.string.transport_duration, transportType, leg.durationInMinutes)
                 chip.setChipIconResource(R.drawable.ic_walk) // Default icon
                 chip.chipBackgroundColor = ColorStateList.valueOf(
                     chip.context.getColor(com.google.android.material.R.color.mtrl_chip_background_color)
@@ -192,64 +205,31 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         chip.chipIconTint = null
     }
 
-    fun decodePolyline(encoded: String): List<LatLng> {
-        val poly = ArrayList<LatLng>()
-        var index = 0
-        val len = encoded.length
-        var lat = 0
-        var lng = 0
-
-        while (index < len) {
-            var b: Int
-            var shift = 0
-            var result = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dlat = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
-            lat += dlat
-
-            shift = 0
-            result = 0
-            do {
-                b = encoded[index++].code - 63
-                result = result or (b and 0x1f shl shift)
-                shift += 5
-            } while (b >= 0x20)
-            val dlng = if ((result and 1) != 0) (result shr 1).inv() else (result shr 1)
-            lng += dlng
-
-            poly.add(LatLng(lat.toDouble() / 1E5, lng.toDouble() / 1E5))
-        }
-        return poly
-    }
-
-    private fun createArrowView(): ImageView {
+    private fun createSeparatorView(): ImageView {
         val context = itemView.context
-        val arrow = ImageView(context).apply {
-            setImageResource(R.drawable.ic_arrow_right)
-            layoutParams = ChipGroup.LayoutParams(
-                /* width */ ARROW_SIZE_DP.dpToPx(context),
-                /* height */ LinearLayout.LayoutParams.MATCH_PARENT
+        return ImageView(context).apply {
+            setImageResource(R.drawable.ic_dot_separator)
+            val lp = FlexboxLayout.LayoutParams(
+                8.dpToPx(context),
+                8.dpToPx(context)
             ).apply {
-                // horizontal spacing
-                marginStart = ARROW_PADDING_DP.dpToPx(context)
-                marginEnd = ARROW_PADDING_DP.dpToPx(context)
+                topMargin = 8.dpToPx(context)
+                bottomMargin = 8.dpToPx(context)
+                marginStart = 4.dpToPx(context)
+                marginEnd = 4.dpToPx(context)
+                alignSelf = AlignItems.CENTER
             }
+            layoutParams = lp
             scaleType = ImageView.ScaleType.CENTER_INSIDE
-            adjustViewBounds = false
         }
-        return arrow
     }
 
-    // Extension function moved here to help arrow view creation
-    private fun Int.dpToPx(context: Context): Int {
-        return TypedValue.applyDimension(
+
+    // Extension function for dp to px conversion
+    private fun Int.dpToPx(context: Context): Int =
+        TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             this.toFloat(),
             context.resources.displayMetrics
         ).toInt()
-    }
 }

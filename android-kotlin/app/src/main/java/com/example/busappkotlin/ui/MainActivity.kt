@@ -16,14 +16,13 @@ import iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private val loginLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                setupUI()
-            } else {
-                finish()
-            }
+    private val loginLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            setupUI()
+        } else {
+            finish()
         }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,18 +30,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-//        val secureStorage = SecureStorageManager(this)
-//        val token = secureStorage.getToken()
+        val secureStorage = SecureStorageManager(this)
+        val token = secureStorage.getToken()
 
-        val intent = Intent(this, LoginActivity::class.java)
-        loginLauncher.launch(intent)
-
-//        if (token.isNullOrEmpty()) {
-//            val intent = Intent(this, LoginActivity::class.java)
-//            loginLauncher.launch(intent)
-//        } else {
-//            setupUI()
-//        }
+        if (token.isNullOrEmpty()) {
+            val intent = Intent(this, LoginActivity::class.java)
+            loginLauncher.launch(intent)
+        } else {
+            setupUI()
+        }
     }
 
     private fun setupUI() {
