@@ -19,6 +19,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 @ExtendWith(MockitoExtension.class)
 class ProxyChatbotServiceTest {
 
@@ -34,7 +35,6 @@ class ProxyChatbotServiceTest {
     @Mock
     WebClient.RequestBodySpec requestBodySpec;
 
-    @SuppressWarnings("rawtypes")
     @Mock
     WebClient.RequestHeadersSpec requestHeadersSpec;
 
