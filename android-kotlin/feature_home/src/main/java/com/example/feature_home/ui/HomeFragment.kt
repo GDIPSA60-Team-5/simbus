@@ -96,7 +96,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupBackPressHandler() {
-        requireActivity().onBackPressedDispatcher.onBackPressed()
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            requireActivity().finish()
+        }
     }
 
     private fun hasLocationPermission(): Boolean =

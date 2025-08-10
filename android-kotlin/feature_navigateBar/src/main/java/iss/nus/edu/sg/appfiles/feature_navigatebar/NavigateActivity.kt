@@ -23,7 +23,7 @@ class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelecte
 
         // Default fragment is HomeFragment
         if (savedInstanceState == null) {
-            replaceMainFragment(HomeFragment())
+            replaceMainFragment(MenuFragment())
         }
     }
 
