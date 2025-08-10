@@ -1,5 +1,6 @@
 package iss.nus.edu.sg.appfiles.feature_login.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -50,7 +51,13 @@ class LoginActivity : AppCompatActivity() {
                 SecureStorageManager(this@LoginActivity).saveUsername(username)
                 Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
                 setResult(RESULT_OK)
-                finish()
+                val intent = Intent().apply {
+                    setClassName(packageName, "iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity")
+                }
+                startActivity(intent)
+                startActivity(intent)
+
+//                finish()
             }, onFailure = { e ->
                 val errorMessage = when (e) {
                     is HttpException -> when (e.code()) {

@@ -16,6 +16,12 @@ class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelecte
             .replace(R.id.bottomNavContainer, BottomNavFragment())
             .commit()
 
+        // default is HomeFragment
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.mainFragmentContainer, HomeFragment())
+                .commit()
+        }
 
     }
 
