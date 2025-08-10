@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 @WebFluxTest(controllers = CommutePlanController.class)
 @Import(TestSecurityConfig.class)
+@ContextConfiguration(classes = CommutePlanController.class)
 class CommutePlanControllerTest {
 
     @Autowired

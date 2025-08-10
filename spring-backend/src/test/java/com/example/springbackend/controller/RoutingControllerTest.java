@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 @ActiveProfiles("test")
 @WebFluxTest(RoutingController.class)
+@ContextConfiguration(classes = RoutingController.class)
 @ImportAutoConfiguration(exclude = {
         org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration.class
 })
