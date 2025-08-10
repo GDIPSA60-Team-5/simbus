@@ -15,8 +15,6 @@ android {
 
     defaultConfig {
         minSdk = 29
-        targetSdk = 35
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,15 +38,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":feature_login"))
-    implementation(project(":feature_chatbot"))
+    implementation(libs.androidx.security.crypto)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
-    implementation(libs.gson)
-    implementation(libs.okhttp)
-    implementation(libs.logging.interceptor.v4110)
-    implementation(libs.converter.gson)
-    implementation(libs.retrofit)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)

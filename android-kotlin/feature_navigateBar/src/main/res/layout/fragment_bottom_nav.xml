@@ -1,117 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipChildren="false"
     android:clipToPadding="false">
 
-    <!-- navigate bar -->
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:background="#000000"
-        android:padding="12dp">
+        android:layout_margin="8dp"
+        android:background="@drawable/rounded_nav_card"
+        android:elevation="4dp"
+        android:orientation="vertical">
 
-        <!-- Linear for 4 navigate button -->
-        <LinearLayout
-            android:id="@+id/navBar"
+        <!-- Your nav bar RelativeLayout inside card -->
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentBottom="true"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:weightSum="4">
+            android:padding="12dp">
 
-            <!-- btnHome -->
+            <!-- Linear for 4 navigate button -->
             <LinearLayout
-                android:id="@+id/btnHome"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <ImageView
-                    android:id="@+id/iconHome"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_home" />
-                <TextView
-                    android:id="@+id/textHome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Home"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                android:id="@+id/navBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:weightSum="4">
 
-            <!-- btnAssistant -->
-            <LinearLayout
-                android:id="@+id/btnAssistant"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <ImageView
-                    android:id="@+id/iconAssistant"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_assistant" />
-                <TextView
-                    android:id="@+id/textAssistant"
-                    android:layout_width="wrap_content"
+                <!-- btnHome -->
+                <LinearLayout
+                    android:id="@+id/btnHome"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Assistant"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <ImageView
+                        android:id="@+id/iconHome"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_home" />
+                    <TextView
+                        android:id="@+id/textHome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Home"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
-            <!-- btnSchedules -->
-            <LinearLayout
-                android:id="@+id/btnSchedules"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <ImageView
-                    android:id="@+id/iconSchedules"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_schedule" />
-                <TextView
-                    android:id="@+id/textSchedules"
-                    android:layout_width="wrap_content"
+                <!-- btnAssistant -->
+                <LinearLayout
+                    android:id="@+id/btnAssistant"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Schedules"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <ImageView
+                        android:id="@+id/iconAssistant"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_assistant" />
+                    <TextView
+                        android:id="@+id/textAssistant"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Assistant"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
-            <!-- btnMenu -->
-            <LinearLayout
-                android:id="@+id/btnMenu"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-                <ImageView
-                    android:id="@+id/iconMenu"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_menu" />
-                <TextView
-                    android:id="@+id/textMenu"
-                    android:layout_width="wrap_content"
+                <!-- btnSchedules -->
+                <LinearLayout
+                    android:id="@+id/btnSchedules"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Menu"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <ImageView
+                        android:id="@+id/iconSchedules"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_schedule" />
+                    <TextView
+                        android:id="@+id/textSchedules"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Schedules"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
-        </LinearLayout>
-    </RelativeLayout>
+                <!-- btnMenu -->
+                <LinearLayout
+                    android:id="@+id/btnMenu"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+                    <ImageView
+                        android:id="@+id/iconMenu"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_menu" />
+                    <TextView
+                        android:id="@+id/textMenu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Menu"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
 
     <!-- Mic -->
     <ImageView
@@ -124,5 +133,4 @@
         android:src="@drawable/ic_mic"
         android:padding="12dp"
         android:elevation="8dp" />
-
 </FrameLayout>

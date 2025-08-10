@@ -60,7 +60,7 @@ dependencies {
     implementation(libs.flexbox)
     implementation(libs.glide)
     ksp(libs.compiler)
-    implementation(libs.play.services.maps.v1820)
+    implementation(libs.play.services.maps)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.play.services.location)

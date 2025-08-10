@@ -39,13 +39,11 @@
         <!-- Header -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:paddingStart="32dp"
-            android:paddingEnd="32dp">
+            android:layout_height="56dp">
 
             <ImageView
                 android:id="@+id/backArrow"
-                android:layout_width="50dp"
+                android:layout_width="45dp"
                 android:layout_height="50dp"
                 android:contentDescription="Back"
                 android:src="@drawable/arrow"
@@ -126,13 +124,12 @@
             android:elevation="4dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingVertical="15dp"
             android:paddingHorizontal="25dp">
 
             <EditText
                 android:id="@+id/chat_input"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:hint="What kind of help do you need?"
                 android:textColor="#ffffff"
@@ -141,12 +138,13 @@
                 android:background="@android:color/transparent"
                 android:inputType="text"
                 android:maxLines="4"
+                android:paddingVertical="15dp"
                 android:imeOptions="actionSend" />
 
             <ImageButton
                 android:id="@+id/send_icon"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="Send"
                 android:src="@drawable/ic_send"

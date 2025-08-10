@@ -6,7 +6,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
 import javax.inject.Singleton
 
 @Module

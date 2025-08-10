@@ -1,7 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    kotlin("kapt")
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -38,7 +39,13 @@ android {
 }
 
 dependencies {
+    implementation(project(":feature_chatbot"))
+    implementation(project(":feature_home"))
+    implementation(project(":core"))
 
+    implementation(libs.retrofit)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.hilt.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -61,5 +68,4 @@ dependencies {
     implementation(project(":feature_saveRoute"))
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
 }

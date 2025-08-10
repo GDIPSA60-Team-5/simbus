@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">feature_home</string>
+    <string name="bg_image_desc">Main Background</string>
+    <string name="mic_desc">mic icon</string>
+    <string name="send_desc">send icon\n</string>
+    <string name="button1_desc">plan commute button image</string>
+    <string name="button2_desc">tag location image\n</string>
+    <string name="button3_desc">trip history image</string>
+</resources>

@@ -13,7 +13,6 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 35
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -37,6 +36,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.core.ktx)
@@ -48,7 +48,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-    implementation(libs.androidx.security.crypto)
     implementation(libs.material)
     implementation (libs.blurview)
+    implementation(project(":feature_navigateBar"))
 }

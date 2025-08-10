@@ -6,18 +6,16 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
+import androidx.lifecycle.lifecycleScope
+import com.example.core.di.SecureStorageManager
+import dagger.hilt.android.AndroidEntryPoint
+import iss.nus.edu.sg.appfiles.feature_navigatebar.ChangePasswordRequest
 import iss.nus.edu.sg.appfiles.feature_navigatebar.R
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
+import iss.nus.edu.sg.appfiles.feature_navigatebar.UserApi
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ChangePasswordActivity : AppCompatActivity() {
 
     private lateinit var currentPasswordEdit: EditText
@@ -26,24 +24,22 @@ class ChangePasswordActivity : AppCompatActivity() {
     private lateinit var submitButton: Button
     private lateinit var backButton: ImageView
 
-    private lateinit var secureStorageManager: SecureStorageManager
-    private val client = OkHttpClient()
-    private val baseUrl = "http://10.0.2.2:8080/api/user"
+    @Inject
+    lateinit var secureStorageManager: SecureStorageManager
+
+    @Inject
+    lateinit var userApi: UserApi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
 
-        // init ui
+        // init UI
         currentPasswordEdit = findViewById(R.id.currentPassword)
         newPasswordEdit = findViewById(R.id.newPassword)
         confirmPasswordEdit = findViewById(R.id.confirmPassword)
         submitButton = findViewById(R.id.submitBtn)
         backButton = findViewById(R.id.btnBack)
-
-        // init secureStorage manager
-        secureStorageManager = SecureStorageManager(this)
-        val token = secureStorageManager.getToken()
 
         backButton.setOnClickListener {
             finish()
@@ -55,59 +51,37 @@ class ChangePasswordActivity : AppCompatActivity() {
             val confirmPassword = confirmPasswordEdit.text.toString().trim()
 
             if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                Toast.makeText(this, "please fill all the part", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (newPassword != confirmPassword) {
-                Toast.makeText(this, "The passwords you entered don't match up.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            val token = secureStorageManager.getToken()
             if (token == null) {
                 Toast.makeText(this, "Not logged in yet. Please log in first.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            sendChangePasswordRequest(token, currentPassword, newPassword)
-        }
-    }
-
-    private fun sendChangePasswordRequest(token: String, currentPassword: String, newPassword: String) {
-        val json = JSONObject().apply {
-            put("currentPassword", currentPassword)
-            put("newPassword", newPassword)
-        }
-
-        val requestBody = RequestBody.Companion.create(
-            "application/json".toMediaTypeOrNull(),
-            json.toString()
-        )
-
-        val request = Request.Builder()
-            .url("$baseUrl/change-password")
-            .post(requestBody)
-            .addHeader("Authorization", "Bearer $token")
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread {
-                    Toast.makeText(this@ChangePasswordActivity, "Network request failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                runOnUiThread {
+            lifecycleScope.launch {
+                try {
+                    val response = userApi.changePassword(
+                        ChangePasswordRequest(currentPassword, newPassword)
+                    )
                     if (response.isSuccessful) {
-                        Toast.makeText(this@ChangePasswordActivity, "Password modification successful", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ChangePasswordActivity, "Password changed successfully", Toast.LENGTH_SHORT).show()
                         finish()
                     } else {
-                        val errorMsg = response.body?.string() ?: "Password modification failed"
-                        Toast.makeText(this@ChangePasswordActivity, errorMsg, Toast.LENGTH_LONG).show()
+                        val error = response.errorBody()?.string() ?: "Unknown error"
+                        Toast.makeText(this@ChangePasswordActivity, error, Toast.LENGTH_LONG).show()
                     }
+                } catch (e: Exception) {
+                    Toast.makeText(this@ChangePasswordActivity, "Network error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                 }
             }
-        })
+        }
     }
 }

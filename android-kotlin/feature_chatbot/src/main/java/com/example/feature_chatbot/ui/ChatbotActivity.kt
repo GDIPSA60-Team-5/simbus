@@ -4,8 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.feature_chatbot.R
+import com.example.feature_chatbot.databinding.ActivityChatbotBinding
 import com.example.feature_chatbot.data.ChatAdapter
 import com.example.feature_chatbot.data.Coordinates
 import com.example.feature_chatbot.api.ChatController
@@ -30,12 +29,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ChatbotActivity : AppCompatActivity() {
 
-
     companion object {
-        private const val SCROLL_VISIBILITY_THRESHOLD = 2
         private const val SCROLL_ANIMATION_DELAY = 300L
     }
 
+    private lateinit var binding: ActivityChatbotBinding
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocation: Coordinates? = null
 
@@ -68,12 +66,7 @@ class ChatbotActivity : AppCompatActivity() {
     lateinit var chatController: ChatController
 
     // UI Components
-    private lateinit var micButton: ImageButton
-    private lateinit var chatRecyclerView: RecyclerView
     private lateinit var chatAdapter: ChatAdapter
-    private lateinit var chatInput: EditText
-    private lateinit var sendIcon: ImageButton
-    private lateinit var scrollToBottomButton: ImageButton
 
     // State
     private var isAutoScrolling = false
@@ -81,11 +74,14 @@ class ChatbotActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityChatbotBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         setupUI()
         initializeComponents()
         setupListeners()
 
-        chatRecyclerView.post { centerGreeting() }
+        binding.chatRecyclerView.post { centerGreeting() }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         checkLocationPermission()
@@ -129,25 +125,15 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun setupUI() {
         enableEdgeToEdge()
-        setContentView(R.layout.activity_chatbot)
         applyWindowInsets()
-        initUIReferences()
     }
 
     private fun applyWindowInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-    }
-
-    private fun initUIReferences() {
-        scrollToBottomButton = findViewById(R.id.scroll_to_bottom_button)
-        chatRecyclerView = findViewById(R.id.chat_recycler_view)
-        chatInput = findViewById(R.id.chat_input)
-        sendIcon = findViewById(R.id.send_icon)
-        micButton = findViewById(R.id.micButton)
     }
 
     private fun initializeComponents() {
@@ -159,7 +145,7 @@ class ChatbotActivity : AppCompatActivity() {
         chatAdapter = ChatAdapter { scrollToBottom() }
         chatAdapter.replaceAll(emptyList())
 
-        with(chatRecyclerView) {
+        with(binding.chatRecyclerView) {
             adapter = chatAdapter
             layoutManager = LinearLayoutManager(this@ChatbotActivity)
             addOnScrollListener(createScrollListener())
@@ -177,11 +163,11 @@ class ChatbotActivity : AppCompatActivity() {
     }
 
     private fun updateScrollToBottomButtonVisibility() {
-        chatRecyclerView.post {
+        binding.chatRecyclerView.post {
             val itemCount = chatAdapter.itemCount
-            val canScrollFurther = chatRecyclerView.canScrollVertically(1)
+            val canScrollFurther = binding.chatRecyclerView.canScrollVertically(1)
             val shouldShow = canScrollFurther && itemCount > 1
-            scrollToBottomButton.visibility = if (shouldShow) View.VISIBLE else View.GONE
+            binding.scrollToBottomButton.visibility = if (shouldShow) View.VISIBLE else View.GONE
         }
     }
 
@@ -190,34 +176,35 @@ class ChatbotActivity : AppCompatActivity() {
             context = this,
             onPartial = { partial ->
                 runOnUiThread {
-                    chatInput.setText(getString(R.string.listening_partial, partial))
+                    binding.chatInput.setText(getString(R.string.listening_partial, partial))
                 }
             },
             onFinal = { final ->
                 runOnUiThread {
-                    chatInput.setText(final)
+                    binding.chatInput.setText(final)
                     handleUserMessage(final)
                 }
             },
             onError = { error ->
                 runOnUiThread {
-                    chatInput.setText(getString(R.string.speech_error, error))
+                    binding.chatInput.setText(getString(R.string.speech_error, error))
                 }
             }
         )
     }
 
     private fun setupListeners() {
-        sendIcon.setOnClickListener { handleSendClick() }
-        micButton.setOnClickListener { handleMicClick() }
-        scrollToBottomButton.setOnClickListener { scrollToBottom() }
+        binding.sendIcon.setOnClickListener { handleSendClick() }
+        binding.micButton.setOnClickListener { handleMicClick() }
+        binding.scrollToBottomButton.setOnClickListener { scrollToBottom() }
+        binding.backArrow.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 
     private fun handleSendClick() {
-        val userMessage = chatInput.text.toString().trim()
+        val userMessage = binding.chatInput.text.toString().trim()
         if (userMessage.isNotEmpty()) {
             handleUserMessage(userMessage)
-            chatInput.text.clear()
+            binding.chatInput.text.clear()
         }
     }
 
@@ -237,7 +224,7 @@ class ChatbotActivity : AppCompatActivity() {
         if (message.isEmpty()) return
 
         removeGreetingPaddingIfNeeded()
-        scrollToBottomButton.visibility = ImageButton.GONE
+        binding.scrollToBottomButton.visibility = View.GONE
         val userChatItem = ChatItem.UserMessage(UUID.randomUUID().toString(), message)
         val typingIndicator = ChatItem.TypingIndicator()
         chatAdapter.addChatItem(userChatItem)
@@ -260,25 +247,25 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun removeGreetingPaddingIfNeeded() {
         if (!isGreetingPaddingRemoved) {
-            chatRecyclerView.setPadding(
-                chatRecyclerView.paddingLeft,
+            binding.chatRecyclerView.setPadding(
+                binding.chatRecyclerView.paddingLeft,
                 0,
-                chatRecyclerView.paddingRight,
-                chatRecyclerView.paddingBottom
+                binding.chatRecyclerView.paddingRight,
+                binding.chatRecyclerView.paddingBottom
             )
             isGreetingPaddingRemoved = true
         }
     }
 
     private fun centerGreeting() {
-        val layoutManager = chatRecyclerView.layoutManager as LinearLayoutManager
+        val layoutManager = binding.chatRecyclerView.layoutManager as LinearLayoutManager
         val greetingPosition = 0
 
-        chatRecyclerView.post {
-            val viewHolder = chatRecyclerView.findViewHolderForAdapterPosition(greetingPosition)
+        binding.chatRecyclerView.post {
+            val viewHolder = binding.chatRecyclerView.findViewHolderForAdapterPosition(greetingPosition)
 
             if (viewHolder == null) {
-                chatRecyclerView.post { centerGreeting() }
+                binding.chatRecyclerView.post { centerGreeting() }
                 return@post
             }
 
@@ -291,28 +278,28 @@ class ChatbotActivity : AppCompatActivity() {
         layoutManager: LinearLayoutManager,
         greetingPosition: Int
     ) {
-        val recyclerViewHeight = chatRecyclerView.height
+        val recyclerViewHeight = binding.chatRecyclerView.height
         val greetingHeight = viewHolder.itemView.height
         val topPadding = (recyclerViewHeight / 2) - (greetingHeight / 2)
 
-        chatRecyclerView.setPadding(
-            chatRecyclerView.paddingLeft,
+        binding.chatRecyclerView.setPadding(
+            binding.chatRecyclerView.paddingLeft,
             topPadding,
-            chatRecyclerView.paddingRight,
-            chatRecyclerView.paddingBottom
+            binding.chatRecyclerView.paddingRight,
+            binding.chatRecyclerView.paddingBottom
         )
 
         layoutManager.scrollToPositionWithOffset(greetingPosition, 0)
     }
 
     private fun scrollToBottom() {
-        scrollToBottomButton.visibility = ImageButton.GONE
+        binding.scrollToBottomButton.visibility = View.GONE
 
         if (chatAdapter.itemCount > 0) {
-            chatRecyclerView.post {
+            binding.chatRecyclerView.post {
                 isAutoScrolling = true
-                chatRecyclerView.smoothScrollToPosition(chatAdapter.itemCount - 1)
-                chatRecyclerView.postDelayed(
+                binding.chatRecyclerView.smoothScrollToPosition(chatAdapter.itemCount - 1)
+                binding.chatRecyclerView.postDelayed(
                     { isAutoScrolling = false },
                     SCROLL_ANIMATION_DELAY
                 )
