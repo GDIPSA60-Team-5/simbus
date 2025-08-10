@@ -17,11 +17,7 @@ on:
         required: false
         type: boolean
         default: true
-      upload_to_security_tab:
-        description: "Upload scan results to GitHub Security tab (requires security-events: write permission)"
-        required: false
-        type: boolean
-        default: false
+
     secrets:
       DOCKER_USERNAME:
         required: true
@@ -84,14 +80,12 @@ jobs:
           format: "json"
           output: "trivy-frontend-results.json"
 
-      - name: Upload Trivy scan results as artifact - Frontend
+      - name: Upload Trivy security report - Frontend
         if: ${{ inputs.security_scan_enabled && always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-frontend-results
-          path: |
-            trivy-frontend-results.sarif
-            trivy-frontend-results.json
+          name: trivy-frontend-security-report
+          path: trivy-frontend-report.json
 
       - name: Log in to DockerHub
         if: success() || !inputs.security_scan_enabled
