@@ -23,8 +23,6 @@ on:
         required: true
       DOCKER_PASSWORD:
         required: true
-      GITHUB_TOKEN:
-        required: true
 
 # Updated permissions to allow writing to security events
 permissions:
