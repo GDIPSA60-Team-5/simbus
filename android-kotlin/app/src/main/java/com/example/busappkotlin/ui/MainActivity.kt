@@ -2,15 +2,14 @@ package com.example.busappkotlin.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.example.busappkotlin.R
-import com.example.feature_chatbot.ui.ChatbotActivity
+import android.util.Log
+
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_login.ui.LoginActivity
-import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
+import com.example.core.di.SecureStorageManager
+import iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -22,16 +21,19 @@ class MainActivity : AppCompatActivity() {
         val secureStorage = SecureStorageManager(this)
         val token = secureStorage.getToken()
 
-        val intent = if (token != null) {
-            Intent(this, HomeActivity::class.java)  // Token exists: go Home
+        Log.d("MainActivity", "Token retrieved: $token")
+
+        val intent = if (!token.isNullOrEmpty()) {
+            Intent(this, NavigateActivity::class.java)
         } else {
-            Intent(this, LoginActivity::class.java) // No token: go Login
+            Intent(this, LoginActivity::class.java)
         }
 
-    private fun setupUI() {
-        val intent = Intent(this, NavigateActivity::class.java)
-        startActivity(intent)
-        startActivity(intent)
-        finish() // Close MainActivity so user can't go back to it
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to start activity", e)
+        }
+        finish()
     }
 }

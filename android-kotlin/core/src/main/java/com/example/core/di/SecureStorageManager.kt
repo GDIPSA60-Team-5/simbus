@@ -1,4 +1,4 @@
-package iss.nus.edu.sg.appfiles.feature_login.util
+package com.example.core.di
 
 import android.content.Context
 import android.content.SharedPreferences
