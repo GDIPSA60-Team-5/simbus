@@ -56,7 +56,7 @@ jobs:
           npm run build
 
       - name: 📊 Upload Coverage Reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: GDIPSA60-Team-5/simbus
@@ -84,11 +84,11 @@ jobs:
           java-version: 17
           cache: maven
 
-      - name: 🧪 Run Tests & Build
+      - name: 🧪 Run Tests with Coverage
         run: |
           cd spring-backend
           chmod +x ./mvnw
-          ./mvnw clean test -X
+          ./mvnw clean test jacoco:report -Dspring.profiles.active=test
 
       - name: 🏗️ Package Application
         run: |
@@ -96,7 +96,7 @@ jobs:
           ./mvnw package -DskipTests
 
       - name: 📊 Generate Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Spring Boot Tests
@@ -104,12 +104,20 @@ jobs:
           reporter: java-junit
 
       - name: 📈 Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: GDIPSA60-Team-5/simbus
-          directory: spring-backend/target/site/jacoco
+          file: spring-backend/target/site/jacoco/jacoco.xml
           flags: backend
+          name: spring-backend-coverage
+
+      - name: 📊 Upload JaCoCo Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-coverage-report
+          path: spring-backend/target/site/jacoco/
+          retention-days: 30
 
   android-kotlin:
     if: needs.validate.outputs.folder == 'android-kotlin-later'
@@ -150,7 +158,7 @@ jobs:
           ./gradlew assembleRelease
 
       - name: 📊 Publish Test Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
           name: Android Unit Tests
@@ -158,20 +166,12 @@ jobs:
           reporter: java-junit
 
       - name: 📈 Upload Coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: GDIPSA60-Team-5/simbus
           directory: android-kotlin/app/build/reports/jacoco/testDebugUnitTestCoverage
           flags: android
-
-      - name: 📱 Upload APK Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apks
-          path: |
-            android-kotlin/app/build/outputs/apk/debug/*.apk
-            android-kotlin/app/build/outputs/apk/release/*.apk
 
   llm-backend:
     if: needs.validate.outputs.folder == 'llm-backend'
@@ -251,7 +251,6 @@ jobs:
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
-          echo "- 📈 **Test Results**: Check the Actions summary for detailed test reports" >> $GITHUB_STEP_SUMMARY
-          echo "- 📊 **Code Coverage**: Available on Codecov dashboard" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔒 **Security Reports**: Uploaded as artifacts (for Python backend)" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Coverage Reports Available" >> $GITHUB_STEP_SUMMARY
+          echo "- 📈 **JaCoCo HTML Report**: Download from [Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Codecov Dashboard**: [View Online Coverage](https://codecov.io/gh/GDIPSA60-Team-5/simbus)" >> $GITHUB_STEP_SUMMARY

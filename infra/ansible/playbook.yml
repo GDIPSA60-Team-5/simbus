@@ -75,11 +75,20 @@
         owner: ubuntu
         mode: "0644"
 
-    - name: Prune unused Docker data asynchronously
-      shell: docker system prune -af
-      async: 300
-      poll: 0
+    - name: Clean up Docker resources before deployment
+      shell: docker system prune -a -f --volumes
+      async: 180
+      poll: 5
       ignore_errors: yes
+      register: docker_cleanup
+
+    - name: Check disk space after cleanup
+      shell: df -h / | grep -E '^/dev'
+      register: disk_space
+
+    - name: Show available space
+      debug:
+        msg: "Available space: {{ disk_space.stdout }}"
 
     - name: Pull latest images and start containers
       shell: docker compose up -d --pull missing
