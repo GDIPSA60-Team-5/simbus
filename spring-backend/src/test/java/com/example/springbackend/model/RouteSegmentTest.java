@@ -55,5 +55,57 @@ public class RouteSegmentTest {
         assertEquals("locA", segment.getFromLocationId());
         assertEquals("locB", segment.getToLocationId());
     }
+
+    @Test
+    public void testEqualsHashCodeAndToString() {
+        RouteSegment segment1 = RouteSegment.builder()
+                .id("seg100")
+                .segmentOrder(1)
+                .transportMode("Bus")
+                .estimatedTimeMin(10)
+                .routeId("route100")
+                .fromLocationId("locStart")
+                .toLocationId("locEnd")
+                .build();
+
+        RouteSegment segment2 = RouteSegment.builder()
+                .id("seg100")
+                .segmentOrder(1)
+                .transportMode("Bus")
+                .estimatedTimeMin(10)
+                .routeId("route100")
+                .fromLocationId("locStart")
+                .toLocationId("locEnd")
+                .build();
+
+        RouteSegment segment3 = RouteSegment.builder()
+                .id("seg200")
+                .segmentOrder(2)
+                .transportMode("Train")
+                .estimatedTimeMin(20)
+                .routeId("route200")
+                .fromLocationId("locA")
+                .toLocationId("locB")
+                .build();
+
+        // Positive equals/hashCode
+        assertEquals(segment1, segment2);
+        assertEquals(segment1.hashCode(), segment2.hashCode());
+
+        // Negative equals/hashCode
+        assertNotEquals(segment1, segment3);
+        assertNotEquals(segment1.hashCode(), segment3.hashCode());
+
+        // equals with null and different class
+        assertNotEquals(null, segment1);
+        assertNotEquals("some string", segment1);
+
+        // toString contains key field values
+        String toString = segment1.toString();
+        assertTrue(toString.contains("id=seg100"));
+        assertTrue(toString.contains("segmentOrder=1"));
+        assertTrue(toString.contains("transportMode=Bus"));
+        assertTrue(toString.contains("estimatedTimeMin=10"));
+    }
 }
 

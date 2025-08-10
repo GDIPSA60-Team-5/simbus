@@ -76,4 +76,43 @@ public class CommuteRecurrenceDayTest {
         Set<ConstraintViolation<CommuteRecurrenceDay>> violationsValid = validator.validate(validDay);
         assertTrue(violationsValid.isEmpty());
     }
+
+    @Test
+    public void testEqualsHashCodeAndToString() {
+        CommuteRecurrenceDay day1 = CommuteRecurrenceDay.builder()
+                .id("rec123")
+                .dayOfWeek(3)
+                .commutePlanId("plan456")
+                .build();
+
+        CommuteRecurrenceDay day2 = CommuteRecurrenceDay.builder()
+                .id("rec123")
+                .dayOfWeek(3)
+                .commutePlanId("plan456")
+                .build();
+
+        CommuteRecurrenceDay day3 = CommuteRecurrenceDay.builder()
+                .id("rec789")
+                .dayOfWeek(5)
+                .commutePlanId("plan987")
+                .build();
+
+        // equals and hashCode positive case
+        assertEquals(day1, day2);
+        assertEquals(day1.hashCode(), day2.hashCode());
+
+        // equals and hashCode negative case
+        assertNotEquals(day1, day3);
+        assertNotEquals(day1.hashCode(), day3.hashCode());
+
+        // equals null and different class
+        assertNotEquals(null, day1);
+        assertNotEquals("some string", day1);
+
+        // toString contains key properties
+        String toString = day1.toString();
+        assertTrue(toString.contains("rec123"));
+        assertTrue(toString.contains("3"));
+        assertTrue(toString.contains("plan456"));
+    }
 }

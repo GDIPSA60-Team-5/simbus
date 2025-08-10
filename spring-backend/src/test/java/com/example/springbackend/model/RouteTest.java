@@ -64,4 +64,58 @@ public class RouteTest {
         assertEquals(List.of("histB"), route.getCommuteHistoryIds());
         assertEquals(List.of("prefC"), route.getPreferredRouteIds());
     }
+
+    @Test
+    public void testEqualsHashCodeAndToString() {
+        Route route1 = Route.builder()
+                .id("id1")
+                .routeName("Route 1")
+                .estimatedTimeMin(20)
+                .startLocationId("start1")
+                .endLocationId("end1")
+                .routeSegmentIds(List.of("seg1"))
+                .commuteHistoryIds(List.of("hist1"))
+                .preferredRouteIds(List.of("pref1"))
+                .build();
+
+        Route route2 = Route.builder()
+                .id("id1")  // same id and fields to test equality
+                .routeName("Route 1")
+                .estimatedTimeMin(20)
+                .startLocationId("start1")
+                .endLocationId("end1")
+                .routeSegmentIds(List.of("seg1"))
+                .commuteHistoryIds(List.of("hist1"))
+                .preferredRouteIds(List.of("pref1"))
+                .build();
+
+        Route route3 = Route.builder()
+                .id("id2") // different id to test inequality
+                .routeName("Route 2")
+                .estimatedTimeMin(30)
+                .startLocationId("start2")
+                .endLocationId("end2")
+                .routeSegmentIds(List.of("seg2"))
+                .commuteHistoryIds(List.of("hist2"))
+                .preferredRouteIds(List.of("pref2"))
+                .build();
+
+        // equals and hashCode positive test
+        assertEquals(route1, route2);
+        assertEquals(route1.hashCode(), route2.hashCode());
+
+        // equals negative test
+        assertNotEquals(route1, route3);
+        assertNotEquals(route1.hashCode(), route3.hashCode());
+
+        // equals null and different class tests
+        assertNotEquals(null, route1);
+        assertNotEquals("some string", route1);
+
+        // toString test: just check contains key data (simpler than exact string match)
+        String toString = route1.toString();
+        assertTrue(toString.contains("id=id1"));
+        assertTrue(toString.contains("routeName=Route 1"));
+        assertTrue(toString.contains("estimatedTimeMin=20"));
+    }
 }

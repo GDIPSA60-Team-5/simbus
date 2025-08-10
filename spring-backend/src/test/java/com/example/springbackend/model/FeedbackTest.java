@@ -74,4 +74,58 @@ public class FeedbackTest {
         assertEquals("tag5,tag6", feedback.getTagList());
         assertEquals(now, feedback.getSubmittedAt());
     }
+
+    @Test
+    void testEqualsHashCodeAndToString() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Feedback feedback1 = Feedback.builder()
+                .id("abc")
+                .userId(101L)
+                .historyId(201L)
+                .feedbackText("Good job")
+                .rating(5)
+                .tagList("tagA,tagB")
+                .submittedAt(now)
+                .build();
+
+        Feedback feedback2 = Feedback.builder()
+                .id("abc") // same id and fields for equality
+                .userId(101L)
+                .historyId(201L)
+                .feedbackText("Good job")
+                .rating(5)
+                .tagList("tagA,tagB")
+                .submittedAt(now)
+                .build();
+
+        Feedback feedback3 = Feedback.builder()
+                .id("def") // different id and fields for inequality
+                .userId(102L)
+                .historyId(202L)
+                .feedbackText("Needs work")
+                .rating(2)
+                .tagList("tagC")
+                .submittedAt(now.plusDays(1))
+                .build();
+
+        // equals and hashCode positive case
+        assertEquals(feedback1, feedback2);
+        assertEquals(feedback1.hashCode(), feedback2.hashCode());
+
+        // equals and hashCode negative case
+        assertNotEquals(feedback1, feedback3);
+        assertNotEquals(feedback1.hashCode(), feedback3.hashCode());
+
+        // equals null and different class
+        assertNotEquals(null, feedback1);
+        assertNotEquals("some string", feedback1);
+
+        // toString contains key field values
+        String toString = feedback1.toString();
+        assertTrue(toString.contains("id=abc"));
+        assertTrue(toString.contains("userId=101"));
+        assertTrue(toString.contains("feedbackText=Good job"));
+        assertTrue(toString.contains("rating=5"));
+    }
 }

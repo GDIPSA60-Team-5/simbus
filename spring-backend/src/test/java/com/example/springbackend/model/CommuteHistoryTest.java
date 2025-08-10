@@ -52,5 +52,53 @@ public class CommuteHistoryTest {
         assertEquals("plan123", history.getCommutePlanId());
         assertEquals("route456", history.getRouteId());
     }
+
+    @Test
+    public void testEqualsHashCodeAndToString() {
+        CommuteHistory history1 = CommuteHistory.builder()
+                .id("history123")
+                .status("COMPLETED")
+                .startedAt(LocalDateTime.of(2025, 8, 10, 8, 0))
+                .endedAt(LocalDateTime.of(2025, 8, 10, 8, 45))
+                .commutePlanId("plan456")
+                .routeId("route789")
+                .build();
+
+        CommuteHistory history2 = CommuteHistory.builder()
+                .id("history123")
+                .status("COMPLETED")
+                .startedAt(LocalDateTime.of(2025, 8, 10, 8, 0))
+                .endedAt(LocalDateTime.of(2025, 8, 10, 8, 45))
+                .commutePlanId("plan456")
+                .routeId("route789")
+                .build();
+
+        CommuteHistory history3 = CommuteHistory.builder()
+                .id("history999")
+                .status("IN_PROGRESS")
+                .startedAt(LocalDateTime.of(2025, 8, 10, 9, 0))
+                .endedAt(LocalDateTime.of(2025, 8, 10, 9, 30))
+                .commutePlanId("plan123")
+                .routeId("route456")
+                .build();
+
+        // Positive tests for equals and hashCode
+        assertEquals(history1, history2);
+        assertEquals(history1.hashCode(), history2.hashCode());
+
+        // Negative tests for equals and hashCode
+        assertNotEquals(history1, history3);
+        assertNotEquals(history1.hashCode(), history3.hashCode());
+
+        // equals with null and different class
+        assertNotEquals(null, history1);
+        assertNotEquals("some string", history1);
+
+        // toString test (just check contains some key values)
+        String toString = history1.toString();
+        assertTrue(toString.contains("history123"));
+        assertTrue(toString.contains("COMPLETED"));
+        assertTrue(toString.contains("plan456"));
+    }
 }
 

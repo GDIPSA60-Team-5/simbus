@@ -89,4 +89,64 @@ public class CommutePlanTest {
         plan.setCommuteRecurrenceDayIds(List.of("dayX"));
         return plan;
     }
+
+    @Test
+    public void testEqualsAndHashCode() {
+        CommutePlan plan1 = CommutePlan.builder()
+                .id("plan123")
+                .commutePlanName("Morning")
+                .notifyAt(LocalTime.of(7, 0))
+                .arrivalTime(LocalTime.of(8, 0))
+                .reminderOffsetMin(5)
+                .recurrence(true)
+                .startLocationId("start1")
+                .endLocationId("end1")
+                .userId("user1")
+                .commuteHistoryIds(List.of("hist1"))
+                .preferredRouteIds(List.of("route1"))
+                .commuteRecurrenceDayIds(List.of("day1"))
+                .build();
+
+        CommutePlan plan2 = CommutePlan.builder()
+                .id("plan123")
+                .commutePlanName("Morning")
+                .notifyAt(LocalTime.of(7, 0))
+                .arrivalTime(LocalTime.of(8, 0))
+                .reminderOffsetMin(5)
+                .recurrence(true)
+                .startLocationId("start1")
+                .endLocationId("end1")
+                .userId("user1")
+                .commuteHistoryIds(List.of("hist1"))
+                .preferredRouteIds(List.of("route1"))
+                .commuteRecurrenceDayIds(List.of("day1"))
+                .build();
+
+        CommutePlan plan3 = CommutePlan.builder()
+                .id("plan999")
+                .commutePlanName("Evening")
+                .notifyAt(LocalTime.of(18, 0))
+                .arrivalTime(LocalTime.of(19, 0))
+                .reminderOffsetMin(10)
+                .recurrence(false)
+                .startLocationId("start2")
+                .endLocationId("end2")
+                .userId("user2")
+                .commuteHistoryIds(List.of("hist2"))
+                .preferredRouteIds(List.of("route2"))
+                .commuteRecurrenceDayIds(List.of("day2"))
+                .build();
+
+        // Positive test equals/hashCode
+        assertEquals(plan1, plan2);
+        assertEquals(plan1.hashCode(), plan2.hashCode());
+
+        // Negative test equals/hashCode
+        assertNotEquals(plan1, plan3);
+        assertNotEquals(plan1.hashCode(), plan3.hashCode());
+
+        // equals with null and different class
+        assertNotEquals(null, plan1);
+        assertNotEquals("some string", plan1);
+    }
 }

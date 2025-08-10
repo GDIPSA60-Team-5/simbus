@@ -52,4 +52,52 @@ public class AnnouncementTest {
         assertEquals(Instant.parse("2025-08-15T09:30:00Z"), announcement.getExpiresAt());
         assertEquals("user123", announcement.getUserId());
     }
+
+    @Test
+    public void testEqualsHashCodeAndToString() {
+        Announcement a1 = Announcement.builder()
+                .id("ann123")
+                .title("System Maintenance")
+                .content("The system will be down tonight from 12 AM to 2 AM.")
+                .createdAt(Instant.parse("2025-08-10T10:00:00Z"))
+                .expiresAt(Instant.parse("2025-08-11T10:00:00Z"))
+                .userId("user789")
+                .build();
+
+        Announcement a2 = Announcement.builder()
+                .id("ann123")
+                .title("System Maintenance")
+                .content("The system will be down tonight from 12 AM to 2 AM.")
+                .createdAt(Instant.parse("2025-08-10T10:00:00Z"))
+                .expiresAt(Instant.parse("2025-08-11T10:00:00Z"))
+                .userId("user789")
+                .build();
+
+        Announcement a3 = Announcement.builder()
+                .id("ann999")
+                .title("Other Announcement")
+                .content("Different content")
+                .createdAt(Instant.parse("2025-08-12T12:00:00Z"))
+                .expiresAt(Instant.parse("2025-08-13T12:00:00Z"))
+                .userId("user000")
+                .build();
+
+        // equals and hashCode positive test
+        assertEquals(a1, a2);
+        assertEquals(a1.hashCode(), a2.hashCode());
+
+        // equals and hashCode negative test
+        assertNotEquals(a1, a3);
+        assertNotEquals(a1.hashCode(), a3.hashCode());
+
+        // equals null and different class
+        assertNotEquals(null, a1);
+        assertNotEquals("some string", a1);
+
+        // toString contains key fields
+        String str = a1.toString();
+        assertTrue(str.contains("ann123"));
+        assertTrue(str.contains("System Maintenance"));
+        assertTrue(str.contains("user789"));
+    }
 }
