@@ -115,4 +115,54 @@ public class CommuteRecurrenceDayTest {
         assertTrue(toString.contains("3"));
         assertTrue(toString.contains("plan456"));
     }
+
+    @Test
+    public void testNullFields() {
+        CommuteRecurrenceDay day = new CommuteRecurrenceDay();
+
+        // All fields are null by default
+        assertNull(day.getId());
+        assertNull(day.getDayOfWeek());
+        assertNull(day.getCommutePlanId());
+
+        // Validate without setting dayOfWeek (should be valid since @Min/@Max ignore null)
+        Set<ConstraintViolation<CommuteRecurrenceDay>> violations = validator.validate(day);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    public void testSettersWithNull() {
+        CommuteRecurrenceDay day = new CommuteRecurrenceDay();
+
+        day.setId(null);
+        day.setDayOfWeek(null);
+        day.setCommutePlanId(null);
+
+        assertNull(day.getId());
+        assertNull(day.getDayOfWeek());
+        assertNull(day.getCommutePlanId());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        CommuteRecurrenceDay day1 = new CommuteRecurrenceDay(null, null, null);
+        CommuteRecurrenceDay day2 = new CommuteRecurrenceDay(null, null, null);
+
+        assertEquals(day1, day2);
+        assertEquals(day1.hashCode(), day2.hashCode());
+
+        day2.setId("abc");
+        assertNotEquals(day1, day2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNull() {
+        CommuteRecurrenceDay day1 = new CommuteRecurrenceDay("id1", 3, null);
+        CommuteRecurrenceDay day2 = new CommuteRecurrenceDay("id1", 3, null);
+
+        assertEquals(day1, day2);
+
+        day2.setDayOfWeek(4);
+        assertNotEquals(day1, day2);
+    }
 }

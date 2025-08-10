@@ -100,5 +100,73 @@ public class CommuteHistoryTest {
         assertTrue(toString.contains("COMPLETED"));
         assertTrue(toString.contains("plan456"));
     }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        CommuteHistory history = CommuteHistory.builder().build();
+
+        assertNull(history.getId());
+        assertNull(history.getStatus());
+        assertNull(history.getStartedAt());
+        assertNull(history.getEndedAt());
+        assertNull(history.getCommutePlanId());
+        assertNull(history.getRouteId());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        CommuteHistory history1 = new CommuteHistory();
+        CommuteHistory history2 = new CommuteHistory();
+
+        // Both empty objects should be equal
+        assertEquals(history1, history2);
+        assertEquals(history1.hashCode(), history2.hashCode());
+
+        // Change one field in one object
+        history2.setId("someId");
+        assertNotEquals(history1, history2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        CommuteHistory history1 = new CommuteHistory();
+        history1.setId("abc");
+
+        CommuteHistory history2 = new CommuteHistory();
+        history2.setId("abc");
+
+        assertEquals(history1, history2);
+
+        history2.setId("def");
+        assertNotEquals(history1, history2);
+    }
+
+    @Test
+    public void testToStringHandlesNullFields() {
+        CommuteHistory history = new CommuteHistory();
+        String str = history.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("CommuteHistory"));
+    }
+
+    @Test
+    public void testSettersAndGettersWithNulls() {
+        CommuteHistory history = new CommuteHistory();
+
+        history.setId(null);
+        history.setStatus(null);
+        history.setStartedAt(null);
+        history.setEndedAt(null);
+        history.setCommutePlanId(null);
+        history.setRouteId(null);
+
+        assertNull(history.getId());
+        assertNull(history.getStatus());
+        assertNull(history.getStartedAt());
+        assertNull(history.getEndedAt());
+        assertNull(history.getCommutePlanId());
+        assertNull(history.getRouteId());
+    }
 }
 

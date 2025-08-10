@@ -107,5 +107,76 @@ public class RouteSegmentTest {
         assertTrue(toString.contains("transportMode=Bus"));
         assertTrue(toString.contains("estimatedTimeMin=10"));
     }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        RouteSegment segment = RouteSegment.builder().build();
+
+        assertNull(segment.getId());
+        assertNull(segment.getSegmentOrder());
+        assertNull(segment.getTransportMode());
+        assertNull(segment.getEstimatedTimeMin());
+        assertNull(segment.getRouteId());
+        assertNull(segment.getFromLocationId());
+        assertNull(segment.getToLocationId());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        RouteSegment seg1 = new RouteSegment();
+        RouteSegment seg2 = new RouteSegment();
+
+        // Both empty objects should be equal
+        assertEquals(seg1, seg2);
+        assertEquals(seg1.hashCode(), seg2.hashCode());
+
+        // Set one field non-null in one object to test inequality
+        seg2.setId("someId");
+        assertNotEquals(seg1, seg2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        RouteSegment seg1 = new RouteSegment();
+        seg1.setId("abc");
+
+        RouteSegment seg2 = new RouteSegment();
+        seg2.setId("abc");
+
+        assertEquals(seg1, seg2);
+
+        seg2.setId("def");
+        assertNotEquals(seg1, seg2);
+    }
+
+    @Test
+    public void testToStringHandlesNullFields() {
+        RouteSegment segment = new RouteSegment();
+        String str = segment.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("RouteSegment"));
+    }
+
+    @Test
+    public void testSettersAndGettersWithNulls() {
+        RouteSegment segment = new RouteSegment();
+
+        segment.setId(null);
+        segment.setSegmentOrder(null);
+        segment.setTransportMode(null);
+        segment.setEstimatedTimeMin(null);
+        segment.setRouteId(null);
+        segment.setFromLocationId(null);
+        segment.setToLocationId(null);
+
+        assertNull(segment.getId());
+        assertNull(segment.getSegmentOrder());
+        assertNull(segment.getTransportMode());
+        assertNull(segment.getEstimatedTimeMin());
+        assertNull(segment.getRouteId());
+        assertNull(segment.getFromLocationId());
+        assertNull(segment.getToLocationId());
+    }
 }
 

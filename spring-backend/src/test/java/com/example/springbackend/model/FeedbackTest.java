@@ -128,4 +128,75 @@ public class FeedbackTest {
         assertTrue(toString.contains("feedbackText=Good job"));
         assertTrue(toString.contains("rating=5"));
     }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        Feedback feedback = Feedback.builder().build();
+
+        assertNull(feedback.getId());
+        assertNull(feedback.getUserId());
+        assertNull(feedback.getHistoryId());
+        assertNull(feedback.getFeedbackText());
+        assertNull(feedback.getRating());
+        assertNull(feedback.getTagList());
+        assertNull(feedback.getSubmittedAt());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        Feedback feedback1 = new Feedback();
+        Feedback feedback2 = new Feedback();
+
+        // Both empty objects should be equal
+        assertEquals(feedback1, feedback2);
+        assertEquals(feedback1.hashCode(), feedback2.hashCode());
+
+        // Change one field to non-null to test inequality
+        feedback2.setId("someId");
+        assertNotEquals(feedback1, feedback2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        Feedback feedback1 = new Feedback();
+        feedback1.setId("abc");
+
+        Feedback feedback2 = new Feedback();
+        feedback2.setId("abc");
+
+        assertEquals(feedback1, feedback2);
+
+        feedback2.setId("def");
+        assertNotEquals(feedback1, feedback2);
+    }
+
+    @Test
+    public void testToStringHandlesNullFields() {
+        Feedback feedback = new Feedback();
+        String str = feedback.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("Feedback"));
+    }
+
+    @Test
+    public void testSettersAndGettersWithNulls() {
+        Feedback feedback = new Feedback();
+
+        feedback.setId(null);
+        feedback.setUserId(null);
+        feedback.setHistoryId(null);
+        feedback.setFeedbackText(null);
+        feedback.setRating(null);
+        feedback.setTagList(null);
+        feedback.setSubmittedAt(null);
+
+        assertNull(feedback.getId());
+        assertNull(feedback.getUserId());
+        assertNull(feedback.getHistoryId());
+        assertNull(feedback.getFeedbackText());
+        assertNull(feedback.getRating());
+        assertNull(feedback.getTagList());
+        assertNull(feedback.getSubmittedAt());
+    }
 }

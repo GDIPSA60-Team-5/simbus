@@ -3,7 +3,9 @@ package com.example.springbackend.model;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -148,5 +150,166 @@ public class CommutePlanTest {
         // equals with null and different class
         assertNotEquals(null, plan1);
         assertNotEquals("some string", plan1);
+    }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        CommutePlan plan = CommutePlan.builder().build();
+
+        assertNull(plan.getId());
+        assertNull(plan.getCommutePlanName());
+        assertNull(plan.getNotifyAt());
+        assertNull(plan.getArrivalTime());
+        assertNull(plan.getReminderOffsetMin());
+        assertNull(plan.getRecurrence());
+        assertNull(plan.getStartLocationId());
+        assertNull(plan.getEndLocationId());
+        assertNull(plan.getUserId());
+        assertNull(plan.getCommuteHistoryIds());
+        assertNull(plan.getPreferredRouteIds());
+        assertNull(plan.getCommuteRecurrenceDayIds());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        CommutePlan plan1 = new CommutePlan();
+        CommutePlan plan2 = new CommutePlan();
+
+        // Both empty objects should be equal
+        assertEquals(plan1, plan2);
+        assertEquals(plan1.hashCode(), plan2.hashCode());
+
+        // One with null lists, other with empty lists should NOT be equal
+        plan2.setCommuteHistoryIds(Collections.emptyList());
+        assertNotEquals(plan1, plan2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        CommutePlan plan1 = new CommutePlan();
+        plan1.setId("abc");
+
+        CommutePlan plan2 = new CommutePlan();
+        plan2.setId("abc");
+
+        assertEquals(plan1, plan2);
+
+        plan2.setId("def");
+        assertNotEquals(plan1, plan2);
+    }
+
+    @Test
+    public void testToStringNotNull() {
+        CommutePlan plan = getSamplePlanWithNulls();
+        String str = plan.toString();
+
+        // toString should include class name and id if set or "null" placeholders
+        assertNotNull(str);
+        assertTrue(str.contains("CommutePlan"));
+    }
+
+    @Test
+    public void testListFieldsWithEmptyAndNull() {
+        CommutePlan plan = new CommutePlan();
+
+        // Set lists to empty and null and check getter returns
+        plan.setCommuteHistoryIds(Collections.emptyList());
+        plan.setPreferredRouteIds(null);
+        plan.setCommuteRecurrenceDayIds(new ArrayList<>());
+
+        assertTrue(plan.getCommuteHistoryIds().isEmpty());
+        assertNull(plan.getPreferredRouteIds());
+        assertTrue(plan.getCommuteRecurrenceDayIds().isEmpty());
+    }
+
+    private CommutePlan getSamplePlanWithNulls() {
+        return CommutePlan.builder()
+                .id(null)
+                .commutePlanName(null)
+                .notifyAt(null)
+                .arrivalTime(null)
+                .reminderOffsetMin(null)
+                .recurrence(null)
+                .startLocationId(null)
+                .endLocationId(null)
+                .userId(null)
+                .commuteHistoryIds(null)
+                .preferredRouteIds(null)
+                .commuteRecurrenceDayIds(null)
+                .build();
+    }
+
+    @Test
+    public void testSetRecurrenceNull() {
+        CommutePlan plan = new CommutePlan();
+        plan.setRecurrence(null);
+        assertNull(plan.getRecurrence());
+    }
+
+    @Test
+    public void testEqualsWithDifferentListOrder() {
+        List<String> list1 = Arrays.asList("a", "b", "c");
+        List<String> list2 = Arrays.asList("c", "b", "a");
+
+        CommutePlan plan1 = CommutePlan.builder()
+                .commuteHistoryIds(list1)
+                .preferredRouteIds(list1)
+                .commuteRecurrenceDayIds(list1)
+                .build();
+
+        CommutePlan plan2 = CommutePlan.builder()
+                .commuteHistoryIds(list2)
+                .preferredRouteIds(list2)
+                .commuteRecurrenceDayIds(list2)
+                .build();
+
+        // Lists with same elements but different order are not equal
+        assertNotEquals(plan1, plan2);
+    }
+
+    @Test
+    public void testHashCodeWithNullFields() {
+        CommutePlan plan = new CommutePlan();
+        // Should not throw NPE
+        int hc = plan.hashCode();
+        assertTrue(hc != 0); // just verify hashcode runs
+    }
+
+    @Test
+    public void testToStringIncludesFields() {
+        CommutePlan plan = CommutePlan.builder()
+                .id("plan123")
+                .commutePlanName("Test Plan")
+                .build();
+
+        String str = plan.toString();
+        assertTrue(str.contains("plan123"));
+        assertTrue(str.contains("Test Plan"));
+    }
+
+    @Test
+    public void testListMutationAfterSet() {
+        List<String> mutableList = new ArrayList<>();
+        mutableList.add("initial");
+
+        CommutePlan plan = new CommutePlan();
+        plan.setCommuteHistoryIds(mutableList);
+
+        // Mutate original list and check that getter reflects change (since no defensive copy)
+        mutableList.add("added");
+
+        List<String> retrieved = plan.getCommuteHistoryIds();
+        assertEquals(2, retrieved.size());
+        assertTrue(retrieved.contains("added"));
+    }
+
+    @Test
+    public void testSetImmutableLists() {
+        List<String> immutableList = List.of("x", "y");
+
+        CommutePlan plan = new CommutePlan();
+        plan.setPreferredRouteIds(immutableList);
+
+        assertEquals(immutableList, plan.getPreferredRouteIds());
     }
 }

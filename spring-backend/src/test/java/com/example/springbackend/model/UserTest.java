@@ -82,4 +82,64 @@ public class UserTest {
         assertTrue(toString.contains("john_doe"));
         assertTrue(toString.contains("admin"));
     }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        User user = User.builder().build();
+
+        assertNull(user.getId());
+        assertNull(user.getUserName());
+        assertNull(user.getUserType());
+        assertNull(user.getPasswordHash());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        User u1 = new User();
+        User u2 = new User();
+
+        assertEquals(u1, u2);
+        assertEquals(u1.hashCode(), u2.hashCode());
+
+        u2.setId("someId");
+        assertNotEquals(u1, u2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        User u1 = new User();
+        u1.setId("abc");
+
+        User u2 = new User();
+        u2.setId("abc");
+
+        assertEquals(u1, u2);
+
+        u2.setId("def");
+        assertNotEquals(u1, u2);
+    }
+
+    @Test
+    public void testToStringWithNullFields() {
+        User user = new User();
+        String str = user.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("User"));
+    }
+
+    @Test
+    public void testSettersAndGettersWithNull() {
+        User user = new User();
+
+        user.setId(null);
+        user.setUserName(null);
+        user.setUserType(null);
+        user.setPasswordHash(null);
+
+        assertNull(user.getId());
+        assertNull(user.getUserName());
+        assertNull(user.getUserType());
+        assertNull(user.getPasswordHash());
+    }
 }

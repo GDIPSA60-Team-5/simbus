@@ -3,6 +3,7 @@ package com.example.springbackend.model;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -117,5 +118,69 @@ public class RouteTest {
         assertTrue(toString.contains("id=id1"));
         assertTrue(toString.contains("routeName=Route 1"));
         assertTrue(toString.contains("estimatedTimeMin=20"));
+    }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        Route route = Route.builder().build();
+
+        assertNull(route.getId());
+        assertNull(route.getRouteName());
+        assertNull(route.getEstimatedTimeMin());
+        assertNull(route.getStartLocationId());
+        assertNull(route.getEndLocationId());
+        assertNull(route.getRouteSegmentIds());
+        assertNull(route.getCommuteHistoryIds());
+        assertNull(route.getPreferredRouteIds());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        Route route1 = new Route();
+        Route route2 = new Route();
+
+        // Both empty routes should be equal
+        assertEquals(route1, route2);
+        assertEquals(route1.hashCode(), route2.hashCode());
+
+        // Set empty list vs null list — should not be equal
+        route2.setRouteSegmentIds(Collections.emptyList());
+        assertNotEquals(route1, route2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        Route route1 = new Route();
+        route1.setId("abc");
+
+        Route route2 = new Route();
+        route2.setId("abc");
+
+        assertEquals(route1, route2);
+
+        route2.setId("def");
+        assertNotEquals(route1, route2);
+    }
+
+    @Test
+    public void testToStringHandlesNullFields() {
+        Route route = new Route();
+        String str = route.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("Route"));
+    }
+
+    @Test
+    public void testListFieldsWithEmptyAndNull() {
+        Route route = new Route();
+
+        route.setRouteSegmentIds(Collections.emptyList());
+        route.setCommuteHistoryIds(null);
+        route.setPreferredRouteIds(List.of());
+
+        assertTrue(route.getRouteSegmentIds().isEmpty());
+        assertNull(route.getCommuteHistoryIds());
+        assertTrue(route.getPreferredRouteIds().isEmpty());
     }
 }

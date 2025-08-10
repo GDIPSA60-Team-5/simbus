@@ -109,4 +109,75 @@ public class UserNotificationTest {
         assertTrue(toString.contains("INFO"));
         assertTrue(toString.contains("Reminder"));
     }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        UserNotification notif = UserNotification.builder().build();
+
+        assertNull(notif.getId());
+        assertNull(notif.getUserId());
+        assertNull(notif.getType());
+        assertNull(notif.getTitle());
+        assertNull(notif.getMessage());
+        assertNull(notif.getSentAt());
+        assertNull(notif.getExpiresAt());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        UserNotification notif1 = new UserNotification();
+        UserNotification notif2 = new UserNotification();
+
+        // Both empty objects should be equal
+        assertEquals(notif1, notif2);
+        assertEquals(notif1.hashCode(), notif2.hashCode());
+
+        // Change one field from null to non-null - should be not equal
+        notif2.setId("someId");
+        assertNotEquals(notif1, notif2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        UserNotification notif1 = new UserNotification();
+        notif1.setId("abc");
+
+        UserNotification notif2 = new UserNotification();
+        notif2.setId("abc");
+
+        assertEquals(notif1, notif2);
+
+        notif2.setId("def");
+        assertNotEquals(notif1, notif2);
+    }
+
+    @Test
+    public void testToStringHandlesNullFields() {
+        UserNotification notif = new UserNotification();
+        String str = notif.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("UserNotification"));
+    }
+
+    @Test
+    public void testSettersAndGettersWithNulls() {
+        UserNotification notif = new UserNotification();
+
+        notif.setId(null);
+        notif.setUserId(null);
+        notif.setType(null);
+        notif.setTitle(null);
+        notif.setMessage(null);
+        notif.setSentAt(null);
+        notif.setExpiresAt(null);
+
+        assertNull(notif.getId());
+        assertNull(notif.getUserId());
+        assertNull(notif.getType());
+        assertNull(notif.getTitle());
+        assertNull(notif.getMessage());
+        assertNull(notif.getSentAt());
+        assertNull(notif.getExpiresAt());
+    }
 }

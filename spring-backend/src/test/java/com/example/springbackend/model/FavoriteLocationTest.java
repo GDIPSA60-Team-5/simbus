@@ -90,4 +90,69 @@ public class FavoriteLocationTest {
         assertTrue(str.contains("Home"));
         assertTrue(str.contains("user789"));
     }
+
+    @Test
+    public void testBuilderWithNoFieldsSet() {
+        FavoriteLocation location = FavoriteLocation.builder().build();
+
+        assertNull(location.getId());
+        assertNull(location.getLocationName());
+        assertNull(location.getLatitude());
+        assertNull(location.getLongitude());
+        assertNull(location.getUserId());
+    }
+
+    @Test
+    public void testEqualsWithNullFields() {
+        FavoriteLocation loc1 = new FavoriteLocation();
+        FavoriteLocation loc2 = new FavoriteLocation();
+
+        // Both empty should be equal
+        assertEquals(loc1, loc2);
+        assertEquals(loc1.hashCode(), loc2.hashCode());
+
+        // Change one field
+        loc2.setId("someId");
+        assertNotEquals(loc1, loc2);
+    }
+
+    @Test
+    public void testEqualsWithPartialNullAndNonNull() {
+        FavoriteLocation loc1 = new FavoriteLocation();
+        loc1.setId("abc");
+
+        FavoriteLocation loc2 = new FavoriteLocation();
+        loc2.setId("abc");
+
+        assertEquals(loc1, loc2);
+
+        loc2.setId("def");
+        assertNotEquals(loc1, loc2);
+    }
+
+    @Test
+    public void testToStringWithNullFields() {
+        FavoriteLocation loc = new FavoriteLocation();
+        String str = loc.toString();
+
+        assertNotNull(str);
+        assertTrue(str.contains("FavoriteLocation"));
+    }
+
+    @Test
+    public void testSettersAndGettersWithNull() {
+        FavoriteLocation loc = new FavoriteLocation();
+
+        loc.setId(null);
+        loc.setLocationName(null);
+        loc.setLatitude(null);
+        loc.setLongitude(null);
+        loc.setUserId(null);
+
+        assertNull(loc.getId());
+        assertNull(loc.getLocationName());
+        assertNull(loc.getLatitude());
+        assertNull(loc.getLongitude());
+        assertNull(loc.getUserId());
+    }
 }
