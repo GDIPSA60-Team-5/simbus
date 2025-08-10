@@ -8,6 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Date;
+
 
 @SpringBootApplication
 public class SpringBackendApplication {
@@ -28,6 +30,7 @@ public class SpringBackendApplication {
                                             .userName("user")
                                             .userType("admin")
                                             .passwordHash(passwordEncoder.encode("password"))
+                                            .createdAt(new Date())
                                             .build()
                             )
                     )

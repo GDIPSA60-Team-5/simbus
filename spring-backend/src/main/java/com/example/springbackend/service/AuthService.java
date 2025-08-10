@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Date;
+
 @Service
 public class AuthService {
 
@@ -48,6 +50,7 @@ public class AuthService {
                                         User.builder()
                                                 .userName(authRequest.username())
                                                 .passwordHash(passwordEncoder.encode(authRequest.password()))
+                                                .createdAt(new Date())
                                                 .build()
                                 ).thenReturn("registration successful")
                         )
