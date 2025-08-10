@@ -4,6 +4,7 @@
     image_tag: "{{ image_tag }}"
     docker_username: "{{ docker_username }}"
     backend_env_b64: "{{ backend_env_b64 }}"
+    aws_server_ip: "{{ aws_server_ip }}"
 
   tasks:
     - name: Check if Docker is installed
@@ -53,10 +54,24 @@
         owner: ubuntu
         mode: "0644"
 
+    - name: Copy templated grafana.ini
+      template:
+        src: grafana.ini.j2
+        dest: /home/ubuntu/grafana.ini
+        owner: ubuntu
+        mode: "0644"
+
     - name: Copy nginx.conf to EC2 server
       copy:
         src: files/nginx.conf
         dest: /home/ubuntu/nginx.conf
+        owner: ubuntu
+        mode: "0644"
+
+    - name: Copy prometheus.yml to EC2 server
+      copy:
+        src: files/prometheus.yml
+        dest: /home/ubuntu/prometheus.yml
         owner: ubuntu
         mode: "0644"
 
