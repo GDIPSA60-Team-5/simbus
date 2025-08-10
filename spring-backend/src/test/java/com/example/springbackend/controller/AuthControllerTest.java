@@ -2,31 +2,31 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.request.AuthRequest;
 import com.example.springbackend.dto.response.AuthResponse;
+import com.example.springbackend.SpringBackendApplication;
 import com.example.springbackend.dto.MessageResponse;
 import com.example.springbackend.service.AuthService;
-
-import de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
-@AutoConfigureWebTestClient
+@WebFluxTest(AuthController.class)
+@ContextConfiguration(classes = AuthController.class)
 @ActiveProfiles("test")
-@EnableAutoConfiguration(exclude = { EmbeddedMongoAutoConfiguration.class })
+@ImportAutoConfiguration(exclude = { ReactiveSecurityAutoConfiguration.class })
 public class AuthControllerTest {
 
         @Autowired
