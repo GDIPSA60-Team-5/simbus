@@ -96,7 +96,7 @@ jobs:
           ./mvnw package -DskipTests
 
       - name: 📊 Generate Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Spring Boot Tests
@@ -150,7 +150,7 @@ jobs:
           ./gradlew assembleRelease
 
       - name: 📊 Publish Test Results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
           name: Android Unit Tests
