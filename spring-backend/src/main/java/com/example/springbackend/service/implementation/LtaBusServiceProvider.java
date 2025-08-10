@@ -42,14 +42,16 @@ public class LtaBusServiceProvider implements BusServiceProvider {
     @Override
     @Cacheable("ltaBusStops")
     public Flux<BusStop> getAllBusStops() {
+        final int PAGE_SIZE =500;
         // LTA API paginates every 500 results. A real implementation needs to loop.
         // For simplicity, we'll just fetch the first page.
-        return webClient.get()
-                .uri("/BusStops")
-                .header("AccountKey", apiKey)
-                .retrieve()
-                .bodyToMono(LtaDtos.LtaBusStopsResponse.class)
-                .flatMapMany(response -> Flux.fromIterable(response.value()))
+
+
+        return Flux
+                .range(0, 100)
+                .concatMap(page -> fetchBusStopsPage(page * PAGE_SIZE))
+                .takeUntil(list -> list.size() < PAGE_SIZE)
+                .flatMapIterable(list -> list)
                 .map(ltaStop -> new BusStop(
                         ltaStop.code(),
                         ltaStop.description(),
@@ -58,7 +60,6 @@ public class LtaBusServiceProvider implements BusServiceProvider {
                         API_NAME
                 ));
     }
-    
     private Mono<List<LtaDtos.BusStop>> fetchBusStopsPage(int skip) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -70,6 +71,7 @@ public class LtaBusServiceProvider implements BusServiceProvider {
                 .bodyToMono(LtaDtos.LtaBusStopsResponse.class)
                 .map(LtaDtos.LtaBusStopsResponse::value);
     }
+
 
     @Override
     public Flux<BusArrival> getBusArrivals(String busStopCode) {
