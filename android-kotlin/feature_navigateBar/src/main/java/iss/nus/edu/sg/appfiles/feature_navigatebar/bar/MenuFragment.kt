@@ -1,21 +1,22 @@
-package iss.nus.edu.sg.appfiles.feature_navigatebar
+package iss.nus.edu.sg.appfiles.feature_navigatebar.bar
 
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.Fragment
 import com.google.android.material.switchmaterial.SwitchMaterial
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
-import androidx.core.graphics.toColorInt
-
+import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.AboutUsActivity
+import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.ChangePasswordActivity
+import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.FAQActivity
+import iss.nus.edu.sg.appfiles.feature_navigatebar.R
 
 class MenuFragment : Fragment() {
 
@@ -63,22 +64,27 @@ class MenuFragment : Fragment() {
     private fun handleMuteNotification(switch1: SwitchMaterial) {
         switch1.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                Toast.makeText(this@MenuFragment.requireContext(), "mute", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MenuFragment.requireContext(), "mute", Toast.LENGTH_SHORT)
+                    .show()
                 switch1.thumbTintList = ColorStateList.valueOf("#D17A4B".toColorInt())
                 // TODO: 开启静音逻辑
             } else {
-                Toast.makeText(this@MenuFragment.requireContext(), "not mute", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MenuFragment.requireContext(), "not mute", Toast.LENGTH_SHORT)
+                    .show()
                 switch1.thumbTintList = ColorStateList.valueOf("#AA9D96".toColorInt())
                 // TODO: 关闭静音逻辑
             }
         }
     }
 
-    private fun handleLogout(storageManager : SecureStorageManager) {
+    private fun handleLogout(storageManager: SecureStorageManager) {
         storageManager.clearAll()
         val intent = Intent()
-        intent.setClassName(requireContext().packageName, "com.example.busappkotlin.ui.MainActivity")
+        intent.setClassName(
+            requireContext().packageName,
+            "com.example.busappkotlin.ui.MainActivity"
+        )
         requireContext().startActivity(intent)
 //        startActivity(Intent(requireContext(), LoginActivity::class.java))
     }
-    }
+}

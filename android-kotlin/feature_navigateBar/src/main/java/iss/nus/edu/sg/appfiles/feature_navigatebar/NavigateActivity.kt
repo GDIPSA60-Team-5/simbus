@@ -1,6 +1,10 @@
 package iss.nus.edu.sg.appfiles.feature_navigatebar
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.AssistantFragment
+import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.HomeFragment
+import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.MenuFragment
+import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.SchedulesFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.databinding.ActivityNavigateBinding
 
 class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelectedListener  {

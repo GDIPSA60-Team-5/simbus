@@ -8,13 +8,13 @@
             android:name=".NavigateActivity"
             android:exported="true" />
         <activity
-            android:name=".ChangePasswordActivity"
+            android:name=".menu.ChangePasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".AboutUsActivity"
+            android:name=".menu.AboutUsActivity"
             android:exported="false" />
         <activity
-            android:name=".FAQActivity"
+            android:name=".menu.FAQActivity"
             android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"

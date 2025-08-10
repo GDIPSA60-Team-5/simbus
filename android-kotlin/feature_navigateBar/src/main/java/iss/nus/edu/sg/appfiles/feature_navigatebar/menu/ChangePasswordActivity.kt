@@ -1,4 +1,4 @@
-package iss.nus.edu.sg.appfiles.feature_navigatebar
+package iss.nus.edu.sg.appfiles.feature_navigatebar.menu
 
 import android.os.Bundle
 import android.widget.Button
@@ -7,8 +7,14 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import iss.nus.edu.sg.appfiles.feature_login.util.SecureStorageManager
-import okhttp3.*
+import iss.nus.edu.sg.appfiles.feature_navigatebar.R
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 
@@ -73,7 +79,7 @@ class ChangePasswordActivity : AppCompatActivity() {
             put("newPassword", newPassword)
         }
 
-        val requestBody = RequestBody.create(
+        val requestBody = RequestBody.Companion.create(
             "application/json".toMediaTypeOrNull(),
             json.toString()
         )

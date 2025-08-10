@@ -65,6 +65,10 @@ class BottomNavFragment : Fragment() {
             label.setTextColor(resources.getColor(R.color.selected_text, null))
         }
 
+        resetIconsAndText()
+        activateButton(btnHome, R.drawable.ic_home_click)
+        listener?.onNavItemSelected(R.id.nav_home)
+
         btnHome.setOnClickListener {
             resetIconsAndText()
             activateButton(btnHome, R.drawable.ic_home_click)
