@@ -5,11 +5,10 @@ export async function apiPost<T>(url: string, body: any): Promise<T> {
     body: JSON.stringify(body),
   });
 
-  const data = await res.json().catch(() => ({}));
-
   if (!res.ok) {
-    throw new Error(data.error || "Request failed");
+    const errorData = await res.json();
+    throw new Error(errorData.error || "Unknown error");
   }
 
-  return data as T;
+  return res.json();
 }
