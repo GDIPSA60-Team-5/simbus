@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class AnnouncementController {
 
+    // demo
     private final AnnouncementService announcementService;
 
     // Get all announcements
