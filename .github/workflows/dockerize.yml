@@ -204,22 +204,31 @@ jobs:
         run: |
           FRONTEND_STATUS="${{ needs.build_and_push_frontend.outputs.status }}"
           BACKEND_STATUS="${{ needs.build_and_push_backend.outputs.status }}"
+          SECURITY_SCAN_ENABLED="${{ inputs.security_scan_enabled }}"
           frontend_icon="❌"
           backend_icon="❌"
+
           if [[ "$FRONTEND_STATUS" == "success" ]]; then
             frontend_icon="✅"
           elif [[ "$FRONTEND_STATUS" == "cancelled" ]]; then
             frontend_icon="⚠️"
           fi
+
           if [[ "$BACKEND_STATUS" == "success" ]]; then
             backend_icon="✅"
           elif [[ "$BACKEND_STATUS" == "cancelled" ]]; then
             backend_icon="⚠️"
           fi
+
           echo "## Docker Images Build & Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Repository | Tag | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------------|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| ${{ secrets.DOCKER_USERNAME }}/frontend | ${{ inputs.image_tag }} | $frontend_icon |" >> $GITHUB_STEP_SUMMARY
           echo "| ${{ secrets.DOCKER_USERNAME }}/backend | ${{ inputs.image_tag }} | $backend_icon |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🛡️ Security scans were run ${inputs.security_scan_enabled}." >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$SECURITY_SCAN_ENABLED" == "true" ]]; then
+            echo "🛡️ Security scans were run and completed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🛡️ Security scans were disabled." >> $GITHUB_STEP_SUMMARY
+          fi
