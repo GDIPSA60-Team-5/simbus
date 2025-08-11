@@ -207,7 +207,7 @@ export default function LoginPage() {
               {/* Demo Credentials Helper */}
               <div className="mt-4 p-4 bg-white bg-opacity-30 backdrop-blur-xl rounded-2xl border border-white border-opacity-50 shadow-lg">
                 <p className="text-gray-800 text-sm text-center">
-                  <span className="text-gray-900 font-bold">Demo Access:</span> username: "demo", password: "demo"
+                  <span className="text-gray-900 font-bold">Demo Access:</span> username: "user", password: "password"
                 </p>
               </div>
             </div>
