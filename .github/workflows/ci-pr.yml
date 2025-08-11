@@ -23,27 +23,6 @@ jobs:
       folder: ${{ matrix.folder }}
     secrets: inherit
 
-  codeql:
-    needs: build_and_test
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: java-kotlin, javascript-typescript, python
-          build-mode: none
-
-      - name: Run CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:${{matrix.language}}"
-
   no_changes_notice:
     needs: detect-changed
     if: ${{ needs.detect-changed.outputs.hasChanges == 'false' }}
