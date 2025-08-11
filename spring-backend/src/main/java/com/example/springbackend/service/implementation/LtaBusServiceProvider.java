@@ -45,8 +45,6 @@ public class LtaBusServiceProvider implements BusServiceProvider {
         final int PAGE_SIZE =500;
         // LTA API paginates every 500 results. A real implementation needs to loop.
         // For simplicity, we'll just fetch the first page.
-
-
         return Flux
                 .range(0, 100)
                 .concatMap(page -> fetchBusStopsPage(page * PAGE_SIZE))
