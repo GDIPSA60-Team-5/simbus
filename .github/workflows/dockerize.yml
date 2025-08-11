@@ -57,22 +57,37 @@ jobs:
 
       - name: Run Trivy vulnerability scanner - Frontend
         if: ${{ inputs.security_scan_enabled }}
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: frontend:${{ env.IMAGE_TAG }}
           format: "sarif"
           output: "trivy-frontend-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      # Debug step to check SARIF file
+      - name: Check SARIF file exists - Frontend
+        if: ${{ inputs.security_scan_enabled }}
+        run: |
+          echo "Checking for SARIF file..."
+          ls -la trivy-frontend-results.sarif || echo "SARIF file not found"
+          if [ -f "trivy-frontend-results.sarif" ]; then
+            echo "SARIF file size: $(wc -c < trivy-frontend-results.sarif) bytes"
+            echo "SARIF file lines: $(wc -l < trivy-frontend-results.sarif)"
+            echo "First few lines of SARIF:"
+            head -10 trivy-frontend-results.sarif
+          fi
 
       - name: Upload Trivy scan results to GitHub Security tab - Frontend
         if: ${{ inputs.security_scan_enabled && always() }}
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "trivy-frontend-results.sarif"
+          category: "trivy-frontend"
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner (Table) - Frontend
         if: ${{ inputs.security_scan_enabled }}
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: frontend:${{ env.IMAGE_TAG }}
           format: "table"
@@ -81,18 +96,21 @@ jobs:
 
       - name: Run Trivy vulnerability scanner (JSON) - Frontend
         if: ${{ inputs.security_scan_enabled }}
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: frontend:${{ env.IMAGE_TAG }}
           format: "json"
           output: "trivy-frontend-results.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
 
       - name: Upload Trivy security report - Frontend
         if: ${{ inputs.security_scan_enabled && always() }}
         uses: actions/upload-artifact@v4
         with:
           name: trivy-frontend-security-report
-          path: trivy-frontend-results.json
+          path: |
+            trivy-frontend-results.sarif
+            trivy-frontend-results.json
 
       - name: Log in to DockerHub
         if: success() || !inputs.security_scan_enabled
@@ -137,22 +155,37 @@ jobs:
 
       - name: Run Trivy vulnerability scanner - Backend
         if: ${{ inputs.security_scan_enabled }}
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: backend:${{ env.IMAGE_TAG }}
           format: "sarif"
           output: "trivy-backend-results.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
+
+      # Debug step to check SARIF file
+      - name: Check SARIF file exists - Backend
+        if: ${{ inputs.security_scan_enabled }}
+        run: |
+          echo "Checking for SARIF file..."
+          ls -la trivy-backend-results.sarif || echo "SARIF file not found"
+          if [ -f "trivy-backend-results.sarif" ]; then
+            echo "SARIF file size: $(wc -c < trivy-backend-results.sarif) bytes"
+            echo "SARIF file lines: $(wc -l < trivy-backend-results.sarif)"
+            echo "First few lines of SARIF:"
+            head -10 trivy-backend-results.sarif
+          fi
 
       - name: Upload Trivy scan results to GitHub Security tab - Backend
         if: ${{ inputs.security_scan_enabled && always() }}
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "trivy-backend-results.sarif"
+          category: "trivy-backend"
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner (Table) - Backend
         if: ${{ inputs.security_scan_enabled }}
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: backend:${{ env.IMAGE_TAG }}
           format: "table"
@@ -161,11 +194,12 @@ jobs:
 
       - name: Run Trivy vulnerability scanner (JSON) - Backend
         if: ${{ inputs.security_scan_enabled }}
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: backend:${{ env.IMAGE_TAG }}
           format: "json"
           output: "trivy-backend-results.json"
+          severity: "CRITICAL,HIGH,MEDIUM"
 
       - name: Upload Trivy scan results as artifact - Backend
         if: ${{ inputs.security_scan_enabled && always() }}
@@ -229,6 +263,7 @@ jobs:
 
           if [[ "$SECURITY_SCAN_ENABLED" == "true" ]]; then
             echo "🛡️ Security scans were run and completed." >> $GITHUB_STEP_SUMMARY
+            echo "📊 Check the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning) for detailed results." >> $GITHUB_STEP_SUMMARY
           else
             echo "🛡️ Security scans were disabled." >> $GITHUB_STEP_SUMMARY
           fi
