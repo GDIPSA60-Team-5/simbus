@@ -1,19 +1,15 @@
-export async function apiLogin(userName: string, password: string) {
-  const res = await fetch("http://localhost:8080/api/auth/login", {
+export async function apiPost<T>(url: string, body: any): Promise<T> {
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      username: userName,   //  AuthRequest.username()
-      password              //  AuthRequest.password()
-    })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 
+  const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    throw new Error("Login failed");
+    throw new Error(data.error || "Request failed");
   }
 
-  return res.json(); // { token: "xxx" }
+  return data as T;
 }
-

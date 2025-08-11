@@ -3,24 +3,26 @@
 import { useState } from "react";
 import { apiPost } from "@/lib/apiClient";
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-export default function LoginPage() {
+export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      const data = await apiPost<{ token: string }>(`${backendUrl}/api/auth/login`, {
+      const data = await apiPost<{ message: string }>(
+  `${backendUrl}/api/auth/register`, {
         username,
         password,
       });
-      console.log("Login successfully", data.token);
-      alert("Login successfully");
+      setSuccess(data.message || "Registration success");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -30,8 +32,8 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h1>Login</h1>
-      <form onSubmit={handleLogin}>
+      <h1>Registration</h1>
+      <form onSubmit={handleRegister}>
         <input
           placeholder="Username"
           value={username}
@@ -44,10 +46,11 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button type="submit" disabled={loading}>
-          {loading ? "Logining..." : "Login"}
+          {loading ? "registing.." : "Registration"}
         </button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
     </div>
   );
 }
