@@ -19,6 +19,7 @@ object RouteStorage {
             busService = route.busService ?: "",
             startTime = route.startTime ?: "",
             arrivalTime = route.arrivalTime ?: "",
+            notificationNum = route.notificationNum?:"",
             selectedDays = (route.selectedDays ?: booleanArrayOf()).toList()
         )
 

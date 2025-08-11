@@ -12,6 +12,7 @@ data class Route(
     var busService: String? = null,
     var startTime: String? = null,
     var arrivalTime: String? = null,
+    var notificationNum: String? =null,
     var selectedDays: BooleanArray? = null
 ) : Parcelable
 
@@ -22,6 +23,7 @@ data class RouteRequest(
     val busService: String,
     val startTime: String,
     val arrivalTime: String,
+    val notificationNum: String,
     val selectedDays: List<Boolean>
 )
 
@@ -34,6 +36,7 @@ data class RouteMongo(
     val busService: String,
     val startTime: String,
     val arrivalTime: String? = null,
+    val notificationNum: String?,
     val selectedDays: List<Boolean>? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null
@@ -47,6 +50,7 @@ fun Route.toRequest(): RouteRequest =
         busService = busService ?: "",
         startTime = startTime ?: "",
         arrivalTime = arrivalTime ?: "",
+        notificationNum = notificationNum ?: "",
         selectedDays = (selectedDays ?: booleanArrayOf()).toList()
     )
 
@@ -59,6 +63,7 @@ fun RouteMongo.toUi(): Route =
         busService = busService,
         startTime = startTime,
         arrivalTime = arrivalTime,
+        notificationNum = notificationNum,
         selectedDays = (selectedDays ?: emptyList()).toBooleanArray()
     )
 

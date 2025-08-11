@@ -6,3 +6,4 @@
 /llm-backend/llm/__pycache__/
 .vscode
 *.log
+*.DS_Store
