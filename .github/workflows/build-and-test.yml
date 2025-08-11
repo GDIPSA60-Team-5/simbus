@@ -73,7 +73,7 @@ jobs:
 
       - name: 📈 Publish Test Results
         uses: dorny/test-reporter@v1
-        if: always()
+        if: steps.check_python_test_results.outputs.exists == 'true'
         with:
           name: Next.js Tests
           path: next-frontend/test-results.xml
@@ -168,9 +168,18 @@ jobs:
           cd android-kotlin
           ./gradlew assembleRelease
 
+      - name: Check if Spring Boot test reports exist
+        id: check_spring_test_results
+        run: |
+          if ls spring-backend/target/surefire-reports/*.xml 1> /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: 📊 Publish Test Results
         uses: dorny/test-reporter@v2.1.1
-        if: always()
+        if: steps.check_python_test_results.outputs.exists == 'true'
         with:
           name: Android Unit Tests
           path: android-kotlin/app/build/test-results/testDebugUnitTest/*.xml
