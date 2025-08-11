@@ -8,7 +8,10 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import iss.nus.edu.sg.feature_saveroute.Data.Route
@@ -70,6 +73,7 @@ class AddEditRouteActivity : AppCompatActivity() {
                 binding.BusServiceEdit.setText(it.busService)
                 binding.StartTimeEdit.setText(it.startTime)
                 binding.ArrivalTimeEdit.setText(it.arrivalTime)
+                binding.NotfiEdit.setText((it.notificationNum))
                 it.selectedDays?.let { days ->
                     binding.MonCheck.isChecked = days[0]
                     binding.TuesCheck.isChecked = days[1]
@@ -79,6 +83,7 @@ class AddEditRouteActivity : AppCompatActivity() {
                     binding.SatCheck.isChecked = days[5]
                     binding.SunCheck.isChecked = days[6]
                 }
+                updateSummary()
             }
         }
 
@@ -106,6 +111,18 @@ class AddEditRouteActivity : AppCompatActivity() {
 
         binding.StartTimeEdit.setOnClickListener { showStartTimeClock() }
         binding.ArrivalTimeEdit.setOnClickListener { showArrivalTimeClock() }
+        val numbers = (1..10).map { it.toString() }.toTypedArray()
+        binding.NotfiEdit.setOnClickListener {
+            AlertDialog.Builder(this)
+            .setTitle("Select a number")
+            .setItems(numbers){_,which->
+                binding.NotfiEdit.setText(numbers[which])
+                updateSummary()
+            }
+            .show()
+        }
+
+
     }
 
     private fun saveRoute() {
@@ -258,6 +275,7 @@ class AddEditRouteActivity : AppCompatActivity() {
         picker.addOnPositiveButtonClickListener {
             val formattedTime = String.format("%02d:%02d", picker.hour, picker.minute)
             binding.StartTimeEdit.setText(formattedTime)
+            updateSummary()
         }
     }
 
@@ -293,7 +311,7 @@ class AddEditRouteActivity : AppCompatActivity() {
         binding.FromEdit.enableDropdown()
         binding.ToEdit.enableDropdown()
 
-        // handle item picks
+
         binding.FromEdit.setOnItemClickListener { _, _, position, _ ->
             handleLocationPick(isStart = true, position = position, input = binding.FromEdit)
         }
@@ -320,6 +338,18 @@ class AddEditRouteActivity : AppCompatActivity() {
         val saved = SavedLocation.load(this)
         val chosen = saved[position - 1]
         input.setText(chosen.name, false)
+    }
+
+    private fun updateSummary() {
+        val start = binding.StartTimeEdit.text?.toString()?.trim().orEmpty()
+        val notif = binding.NotfiEdit.text?.toString()?.trim().orEmpty()
+
+        if (start.isNotEmpty() && notif.isNotEmpty()) {
+            binding.notifupdate.text = getString(R.string.notif_update, start, notif)
+            binding.notifupdate.isVisible = true
+        } else {
+            binding.notifupdate.isGone = true
+        }
     }
 
 }
