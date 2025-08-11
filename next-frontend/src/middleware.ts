@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // url under protect
-const protectedRoutes = ["/dashboard"];
+const protectedRoutes = ["/dashboarda"];
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("token")?.value;

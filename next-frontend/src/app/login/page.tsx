@@ -1,6 +1,7 @@
 "use client";
 import { apiPost } from "@/lib/apiClient";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, User, Lock, ArrowRight, Bus, Route, Clock, MapPin } from "lucide-react";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "/api";
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -33,8 +35,15 @@ export default function LoginPage() {
           password,
         }
       );
+
       console.log("Login successful", data.token);
-      alert("Login successful!");
+
+      // Store the token (you might want to use a more secure method)
+      localStorage.setItem("authToken", data.token);
+
+      // Navigate to dashboard
+      router.push("/dashboard");
+
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -204,12 +213,7 @@ export default function LoginPage() {
                 </div>
               </button>
 
-              {/* Demo Credentials Helper */}
-              <div className="mt-4 p-4 bg-white bg-opacity-30 backdrop-blur-xl rounded-2xl border border-white border-opacity-50 shadow-lg">
-                <p className="text-gray-800 text-sm text-center">
-                  <span className="text-gray-900 font-bold">Demo Access:</span> username: "user", password: "password"
-                </p>
-              </div>
+
             </div>
 
             {/* Error Message */}
@@ -219,31 +223,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Alternative sign-in */}
-            <div className="mt-8">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-400 border-opacity-30"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white bg-opacity-50 backdrop-blur-xl text-gray-600 rounded-full border border-white border-opacity-60">Quick Access</span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <button className="w-full inline-flex justify-center py-4 px-4 rounded-2xl border border-white border-opacity-60 bg-white bg-opacity-30 backdrop-blur-xl text-gray-700 hover:bg-opacity-40 hover:text-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  </svg>
-                </button>
-                <button className="w-full inline-flex justify-center py-4 px-4 rounded-2xl border border-white border-opacity-60 bg-white bg-opacity-30 backdrop-blur-xl text-gray-700 hover:bg-opacity-40 hover:text-gray-900 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
 
             {/* Sign Up Link */}
             <div className="mt-8 text-center">
