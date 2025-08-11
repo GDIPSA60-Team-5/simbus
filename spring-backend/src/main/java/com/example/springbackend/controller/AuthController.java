@@ -40,7 +40,7 @@ public class AuthController {
     @PostMapping("/register")
     public Mono<ResponseEntity<MessageResponse>> register(@RequestBody AuthRequest authRequest) {
         return authService.register(authRequest)
-                .map(result -> ResponseEntity.ok(new MessageResponse(result)))
+                .map(result -> ResponseEntity.ok(new MessageResponse((String)result)))
                 .onErrorResume(e -> {
                     if (e instanceof IllegalArgumentException) {
                         return Mono.just(ResponseEntity

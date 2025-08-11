@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Date;
+
 @Service
 public class AuthService {
 
@@ -39,18 +41,19 @@ public class AuthService {
                 });
     }
 
-    public Mono<String> register(AuthRequest authRequest) {
+    public Mono<Object> register(AuthRequest authRequest) {
         return userRepository.findByUserName(authRequest.username())
-                .flatMap(existingUser -> Mono.<String>error(new IllegalArgumentException("Username already in use")))
+                .flatMap(existingUser ->
+                        Mono.error(new IllegalArgumentException("Username already in use"))
+                )
                 .switchIfEmpty(
-                        Mono.defer(() ->
-                                userRepository.save(
-                                        User.builder()
-                                                .userName(authRequest.username())
-                                                .passwordHash(passwordEncoder.encode(authRequest.password()))
-                                                .build()
-                                ).thenReturn("registration successful")
-                        )
+                        userRepository.save(
+                                User.builder()
+                                        .userName(authRequest.username())
+                                        .passwordHash(passwordEncoder.encode(authRequest.password()))
+                                        .createdAt(new Date())
+                                        .build()
+                        ).thenReturn("registration successful")
                 );
     }
 }

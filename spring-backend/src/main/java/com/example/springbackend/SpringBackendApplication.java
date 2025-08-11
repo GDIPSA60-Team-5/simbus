@@ -4,12 +4,16 @@ import com.example.springbackend.repository.UserRepository;
 import com.example.springbackend.model.User;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class SpringBackendApplication {
+import java.util.Date;
 
+
+@SpringBootApplication(excludeName = "de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration")
+public class SpringBackendApplication {
+	
     public static void main(String[] args) {
 
         SpringApplication.run(SpringBackendApplication.class, args);
@@ -17,7 +21,6 @@ public class SpringBackendApplication {
     }
 
     @Bean
-    @Profile("!test")
     CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             userRepository.findByUserName("user")
@@ -27,9 +30,14 @@ public class SpringBackendApplication {
                                             .userName("user")
                                             .userType("admin")
                                             .passwordHash(passwordEncoder.encode("password"))
-                                            .build()))
+                                            .createdAt(new Date())
+                                            .build()
+                            )
+                    )
                     .block();
         };
     }
+
+
 
 }
