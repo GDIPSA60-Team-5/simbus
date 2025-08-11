@@ -1,6 +1,14 @@
-import { redirect } from 'next/navigation';
+"use client";
 
-export default function Home() {
-  redirect('/login');
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function RedirectToLogin() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/login");
+  }, [router]);
+
   return null;
 }
