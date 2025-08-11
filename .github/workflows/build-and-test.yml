@@ -60,11 +60,20 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: GDIPSA60-Team-5/simbus
-          flags: backend
+          flags: frontend
+
+      - name: Check if test results exist
+        id: check_test_results
+        run: |
+          if ls next-frontend/test-results.xml 1> /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: 📈 Publish Test Results
         uses: dorny/test-reporter@v1
-        if: always()
+        if: steps.check_python_test_results.outputs.exists == 'true'
         with:
           name: Next.js Tests
           path: next-frontend/test-results.xml
@@ -120,7 +129,7 @@ jobs:
           retention-days: 30
 
   android-kotlin:
-    if: needs.validate.outputs.folder == 'android-kotlin-later'
+    if: needs.validate.outputs.folder == 'android-kotlin'
     needs: validate
     runs-on: ubuntu-latest
     steps:
@@ -134,7 +143,9 @@ jobs:
           cache: gradle
 
       - name: Create local.properties file
-        run: echo "map_api_key=${{ secrets.MAP_API_KEY }}" > android-kotlin/local.properties
+        run: |
+          echo "map_api_key=${{ secrets.MAP_API_KEY }}" > android-kotlin/local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> android-kotlin/local.properties
 
       - name: 🤖 Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -157,9 +168,18 @@ jobs:
           cd android-kotlin
           ./gradlew assembleRelease
 
+      - name: Check if Spring Boot test reports exist
+        id: check_spring_test_results
+        run: |
+          if ls spring-backend/target/surefire-reports/*.xml 1> /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: 📊 Publish Test Results
         uses: dorny/test-reporter@v2.1.1
-        if: always()
+        if: steps.check_python_test_results.outputs.exists == 'true'
         with:
           name: Android Unit Tests
           path: android-kotlin/app/build/test-results/testDebugUnitTest/*.xml
@@ -204,6 +224,15 @@ jobs:
           slug: GDIPSA60-Team-5/simbus
           directory: llm-backend
           flags: llm-backend
+
+      - name: Check if Python test results exist
+        id: check_python_test_results
+        run: |
+          if ls llm-backend/test-results.xml 1> /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: 📈 Publish Test Results
         uses: dorny/test-reporter@v1

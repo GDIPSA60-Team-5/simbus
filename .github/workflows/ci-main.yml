@@ -1,11 +1,13 @@
 name: Push CD Pipeline
 on:
   push:
-    branches: [main, dev, staging, test/**]
+    branches: [main, dev, staging, fix/**, test/**]
 
 permissions:
   contents: read
+  actions: read
   issues: write
+  security-events: write
 
 jobs:
   dockerize:
