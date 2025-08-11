@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { apiPost } from "@/lib/apiClient";
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "/api";
+
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -18,10 +20,12 @@ export default function RegisterPage() {
 
     try {
       const data = await apiPost<{ message: string }>(
-  `${backendUrl}/api/auth/register`, {
-        username,
-        password,
-      });
+        `${backendUrl}/auth/register`, // Remove the duplicate /api
+        {
+          username,
+          password,
+        }
+      );
       setSuccess(data.message || "Registration success");
     } catch (err: any) {
       setError(err.message);
@@ -46,7 +50,7 @@ export default function RegisterPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <button type="submit" disabled={loading}>
-          {loading ? "registing.." : "Registration"}
+          {loading ? "Registering..." : "Register"}
         </button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}

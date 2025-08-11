@@ -3,9 +3,12 @@ import { apiPost } from "@/lib/apiClient";
 import { useState } from "react";
 import { Eye, EyeOff, User, Lock, ArrowRight, Bus, Route, Clock, MapPin } from "lucide-react";
 
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "/api";
+
 type LoginResponse = {
   token: string;
 };
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -23,8 +26,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-        username,
-        password,
+      const data = await apiPost<LoginResponse>(
+        `${backendUrl}/auth/login`,
+        {
+          username,
+          password,
+        }
+      );
       console.log("Login successful", data.token);
       alert("Login successful!");
     } catch (err: any) {
@@ -69,19 +77,13 @@ export default function LoginPage() {
           {/* Logo placeholder and branding */}
           <div className="mb-12">
             {/* Your Logo Goes Here */}
-            <div className="w-32 h-32 bg-white bg-opacity-40 backdrop-blur-xl rounded-3xl flex items-center justify-center mb-8 mx-auto border border-white border-opacity-60 shadow-2xl shadow-orange-200">
-              {/* REPLACE THIS SECTION WITH YOUR LOGO */}
-              <div className="w-full h-full rounded-2xl flex items-center justify-center bg-gray-100 bg-opacity-50">
+            <div className="w-50 h-50 backdrop-blur-xl rounded-3xl flex items-center justify-center mb-8 mx-auto border shadow-2xl shadow-orange-200">
+              <div className="w-full h-full rounded-2xl flex items-center justify-center bg-opacity-50">
                 <div className="text-center">
-                  <div className="text-gray-500 text-xs mb-1">YOUR LOGO</div>
-                  <div className="text-gray-400 text-xs">GOES HERE</div>
+                  <img src="/logo.png" alt="Nimbus" className="w-full h-full object-contain" />
                 </div>
               </div>
-              {/* END LOGO SECTION */}
             </div>
-            <h1 className="text-6xl font-bold mb-4 text-gray-900">
-              Nimbus Transit
-            </h1>
             <p className="text-xl text-gray-700 leading-relaxed">
               Your journey starts here. Smart, reliable, and always on time.
             </p>

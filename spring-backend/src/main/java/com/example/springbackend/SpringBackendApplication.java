@@ -11,7 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Date;
 
 
-@SpringBootApplication
+@SpringBootApplication(excludeName = "de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration")
 public class SpringBackendApplication {
 	
     public static void main(String[] args) {
