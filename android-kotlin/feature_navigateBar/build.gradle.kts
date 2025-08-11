@@ -39,9 +39,10 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(project(":feature_chatbot"))
     implementation(project(":feature_home"))
-    implementation(project(":core"))
+    implementation(project(":feature_saveRoute"))
 
     implementation(libs.retrofit)
     ksp(libs.hilt.android.compiler)
@@ -59,13 +60,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.material)
-    implementation ("de.hdodenhof:circleimageview:3.1.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation(project(":feature_login"))
-    implementation ("com.github.bumptech.glide:glide:4.16.0")
-    kapt ("com.github.bumptech.glide:compiler:4.16.0")
-    implementation(project(":feature_chatbot"))
-    implementation(project(":feature_saveRoute"))
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
