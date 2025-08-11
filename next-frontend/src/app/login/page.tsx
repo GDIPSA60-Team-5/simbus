@@ -23,10 +23,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await apiPost<LoginResponse>(`${backendUrl}/api/auth/login`, {
         username,
         password,
-      });
       console.log("Login successful", data.token);
       alert("Login successful!");
     } catch (err: any) {

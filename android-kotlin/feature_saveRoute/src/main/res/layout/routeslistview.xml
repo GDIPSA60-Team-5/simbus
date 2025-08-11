@@ -1,0 +1,158 @@
+
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginTop="12dp"
+    app:cardCornerRadius="30dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:contentPadding="0dp"
+    app:cardUseCompatPadding="false"
+    app:cardPreventCornerOverlap="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="13dp"
+        android:background="@drawable/eachrow">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/routeNumber"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Route"
+                android:textColor="@color/white"
+                android:layout_marginStart="30dp"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/frequency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@color/white"
+                android:layout_marginEnd="15dp"
+                android:background="@drawable/frequency_background"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="3dp" />
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/FromText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="From:"
+                android:textColor="@color/white"
+                android:textSize="25dp"
+                android:layout_marginLeft="30dp"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="→"
+                android:textColor="@color/white"
+                android:textSize="40dp"/>
+
+            <TextView
+                android:id="@+id/DestinationText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To:"
+                android:textColor="@color/white"
+                android:textSize="25dp"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/StartTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start at:"
+            android:textColor="@color/white"
+            android:layout_marginLeft="30dp"
+            android:textSize="20dp"
+            />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/BusStop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bus Stop: "
+                android:textColor="@color/white"
+                android:layout_marginLeft="30dp"
+            />
+            <TextView
+                android:id="@+id/BusService"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bus Service:"
+                android:textColor="@color/white"
+                android:layout_marginLeft="30dp"
+            />
+    </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/ArrivalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/white"
+            android:layout_marginLeft="30dp"
+            />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/editRouteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit"
+            android:backgroundTint="#80944C24"
+            android:layout_marginLeft="30dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
+
+        </Button>
+
+        <Button
+            android:id="@+id/deleteRoute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:backgroundTint="@color/red"
+            android:layout_marginLeft="15dp"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
+        </Button>
+
+    </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
