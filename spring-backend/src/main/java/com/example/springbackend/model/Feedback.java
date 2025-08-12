@@ -19,8 +19,8 @@ public class Feedback {
 	@Id
 	private String id;
 
-	private Long userId;
-	private Long historyId;
+	private String userName;
+	private String userId;
 	private String feedbackText;
 	private Integer rating;
 	private String tagList;
