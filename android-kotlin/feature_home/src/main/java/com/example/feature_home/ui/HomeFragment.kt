@@ -22,6 +22,8 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import android.content.Intent
+import com.example.feature_guidemap.MapsNavigationActivity
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
@@ -109,7 +111,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         googleMapInstance = googleMap
         handleLocationPermissionAndSetup()
+
+        googleMap.setOnMapClickListener {
+            val context = requireContext()
+            val intent = Intent(context, MapsNavigationActivity::class.java)
+            startActivity(intent)
+        }
     }
+
 
     private fun handleLocationPermissionAndSetup() {
         if (hasLocationPermission()) {
