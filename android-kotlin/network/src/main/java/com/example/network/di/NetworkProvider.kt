@@ -18,6 +18,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 import com.example.network.BuildConfig
 import iss.nus.edu.sg.appfiles.feature_navigatebar.UserApi
+import iss.nus.edu.sg.appfiles.feature_notification.api.DeviceTokenApi
 import iss.nus.edu.sg.feature_saveroute.RouteApi
 import java.util.concurrent.TimeUnit
 
@@ -94,7 +95,10 @@ object NetworkProvider {
     fun provideRouteApi(retrofit: Retrofit): RouteApi =
         retrofit.create(RouteApi::class.java)
 
-
+    @Provides
+    @Singleton
+    fun provideDeviceTokenApi(retrofit: Retrofit): DeviceTokenApi =
+        retrofit.create(DeviceTokenApi::class.java)
 }
 
 

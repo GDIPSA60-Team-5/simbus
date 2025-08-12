@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":feature_chatbot"))
     implementation(project(":feature_navigateBar"))
     implementation(project(":feature_saveRoute"))
+    implementation(project(":feature_notification"))
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.gson)

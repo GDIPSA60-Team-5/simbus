@@ -66,4 +66,5 @@ dependencies {
     implementation(project(":feature_saveRoute"))
     implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
 }

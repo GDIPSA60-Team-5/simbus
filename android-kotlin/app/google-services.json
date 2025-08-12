@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1033475619179:android:0da47979b3ffa6d85ef42e",
+        "mobilesdk_app_id": "1:1033475619179:android:d5e6af733cf532895ef42e",
         "android_client_info": {
-          "package_name": "iss.nus.edu.sg.appfiles.feature_notification"
+          "package_name": "com.example.busappkotlin"
         }
       },
       "oauth_client": [],
