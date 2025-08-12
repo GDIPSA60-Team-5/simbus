@@ -1,4 +1,4 @@
-package com.example.core.di
+package com.example.network.di
 
 import okhttp3.Interceptor
 import okhttp3.Response

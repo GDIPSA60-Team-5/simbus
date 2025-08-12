@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.example.core.di.SecureStorageManager
 import com.example.feature_home.databinding.FragmentHomeBinding
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -24,7 +27,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.content.Intent
 import com.example.feature_guidemap.MapsNavigationActivity
+import dagger.hilt.android.AndroidEntryPoint
+import com.example.core.api.UserApi
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
     companion object {
@@ -36,6 +44,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         private const val LOCATION_UPDATE_INTERVAL = 10_000L
         private const val MARKER_TITLE = "You are here"
     }
+
+    @Inject
+    lateinit var userApi: UserApi
+
+    @Inject
+    lateinit var secureStorageManager: SecureStorageManager
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -69,6 +83,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupUI(savedInstanceState)
+        loadUserData()
     }
 
     private fun setupUI(savedInstanceState: Bundle?) {
@@ -217,5 +232,31 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
+    }
+
+    private fun loadUserData() {
+        val token = secureStorageManager.getToken()
+        if (token != null) {
+            lifecycleScope.launch {
+                try {
+                    val response = userApi.getCurrentUser()
+                    if (response.isSuccessful) {
+                        response.body()?.let { user ->
+                            updateWelcomeMessage(user.username)
+                        }
+                    } else {
+                        Log.e("HomeFragment", "Failed to fetch user data: ${response.code()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeFragment", "Error fetching user data", e)
+                }
+            }
+        } else {
+            Log.w("HomeFragment", "No JWT token found")
+        }
+    }
+
+    private fun updateWelcomeMessage(username: String) {
+        binding.homeTitle.text = "Welcome $username"
     }
 }

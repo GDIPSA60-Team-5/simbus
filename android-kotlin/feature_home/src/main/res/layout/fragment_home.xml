@@ -1,19 +1,19 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:contentDescription="@string/bg_image_desc"
         android:scaleType="centerCrop"
-        android:src="@drawable/main_bg"
-        android:contentDescription="@string/bg_image_desc" />
+        android:src="@drawable/main_bg" />
 
     <LinearLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:orientation="vertical"
         android:paddingBottom="56dp">
@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="10sp"
-                android:text="Welcome Aung"
+                android:text="Welcome"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -106,11 +106,11 @@
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:background="@drawable/btn_bg_dark"
-                        android:src="@drawable/ic_icon1"
-                        android:scaleType="centerInside"
                         android:contentDescription="@string/button1_desc"
-                        android:padding="8dp"
-                        android:elevation="4dp" />
+                        android:elevation="4dp"
+                        android:padding="18dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_icon1" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -118,8 +118,8 @@
                         android:layout_marginTop="8dp"
                         android:text="Plan Commute"
                         android:textColor="@color/black"
-                        android:textStyle="bold"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -135,20 +135,20 @@
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:background="@drawable/btn_bg_light"
-                        android:src="@drawable/ic_icon2"
-                        android:scaleType="centerInside"
                         android:contentDescription="@string/button2_desc"
-                        android:padding="8dp"
-                        android:elevation="4dp" />
+                        android:elevation="4dp"
+                        android:padding="18dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_icon2" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Tag Locations"
-                        android:textStyle="bold"
                         android:textColor="@color/black"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -164,20 +164,20 @@
                         android:layout_width="64dp"
                         android:layout_height="64dp"
                         android:background="@drawable/btn_bg_light"
-                        android:src="@drawable/ic_icon3"
-                        android:scaleType="centerInside"
                         android:contentDescription="@string/button3_desc"
-                        android:padding="8dp"
-                        android:elevation="4dp" />
+                        android:elevation="4dp"
+                        android:padding="18dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_icon3" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Trip History"
-                        android:textStyle="bold"
                         android:textColor="@color/black"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -186,9 +186,8 @@
         <com.google.android.gms.maps.MapView
             android:id="@+id/mapView"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="24dp"
-            android:layout_weight="1" />
+            android:layout_height="300dp"
+            android:layout_marginTop="24dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -201,9 +200,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="Upcoming Commutes"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/viewPager"

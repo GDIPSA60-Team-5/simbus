@@ -56,6 +56,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(project(":feature_guidemap"))
     implementation(libs.play.services.maps)
     implementation(libs.flexbox)

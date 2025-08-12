@@ -7,11 +7,11 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.core.api.UserApi
 import com.example.core.di.SecureStorageManager
 import dagger.hilt.android.AndroidEntryPoint
-import iss.nus.edu.sg.appfiles.feature_navigatebar.ChangePasswordRequest
+import com.example.core.api.ChangePasswordRequest
 import iss.nus.edu.sg.appfiles.feature_navigatebar.R
-import iss.nus.edu.sg.appfiles.feature_navigatebar.UserApi
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

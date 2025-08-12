@@ -13,6 +13,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.lifecycleScope
+import com.example.core.api.UserApi
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.databinding.ActivityChatbotBinding
 import com.example.feature_chatbot.data.ChatAdapter
@@ -23,6 +25,7 @@ import com.example.feature_chatbot.domain.SpeechManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
@@ -64,6 +67,8 @@ class ChatbotActivity : AppCompatActivity() {
     private lateinit var speechManager: SpeechManager
     @Inject
     lateinit var chatController: ChatController
+    @Inject
+    lateinit var userApi: UserApi
 
     // UI Components
     private lateinit var chatAdapter: ChatAdapter
@@ -71,6 +76,7 @@ class ChatbotActivity : AppCompatActivity() {
     // State
     private var isAutoScrolling = false
     private var isGreetingPaddingRemoved = false
+    private var username: String = "User"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +86,7 @@ class ChatbotActivity : AppCompatActivity() {
         setupUI()
         initializeComponents()
         setupListeners()
+        loadUserData()
 
         binding.chatRecyclerView.post { centerGreeting() }
 
@@ -314,6 +321,32 @@ class ChatbotActivity : AppCompatActivity() {
             Toast.LENGTH_SHORT
         ).show()
     }
+
+    private fun loadUserData() {
+        lifecycleScope.launch {
+            try {
+                val response = userApi.getCurrentUser()
+                if (response.isSuccessful) {
+                    response.body()?.let { user ->
+                        username = user.username
+                        updateGreeting()
+                    }
+                }
+            } catch (e: Exception) {
+                // Keep default username if API call fails
+            }
+        }
+    }
+
+    private fun updateGreeting() {
+        // Update username in adapter and refresh the greeting
+        if (::chatAdapter.isInitialized) {
+            chatAdapter.username = username
+            chatAdapter.notifyItemChanged(0) // Greeting is always at position 0
+        }
+    }
+
+    fun getUsername(): String = username
 
     override fun onDestroy() {
         super.onDestroy()

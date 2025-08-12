@@ -39,6 +39,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.security.crypto)
+    implementation(libs.retrofit)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.androidx.activity)

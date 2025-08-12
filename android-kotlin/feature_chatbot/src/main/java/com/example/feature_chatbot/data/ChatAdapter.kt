@@ -15,6 +15,7 @@ class ChatAdapter(
 
     private val items = mutableListOf<ChatItem>()
     private val onMessageAddedCallback = onMessageAdded
+    var username: String = "User"
 
     private val viewHolderFactories = mapOf(
         ChatViewType.GREETING to { parent: ViewGroup -> GreetingViewHolder(ItemGreetingBinding.inflate(LayoutInflater.from(parent.context), parent, false)) },
@@ -54,7 +55,7 @@ class ChatAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = getItem(position)) {
-            is ChatItem.Greeting -> (holder as GreetingViewHolder).bind()
+            is ChatItem.Greeting -> (holder as GreetingViewHolder).bind(username)
             is ChatItem.UserMessage -> (holder as UserMessageViewHolder).bind(item.text)
             is ChatItem.TypingIndicator -> (holder as TypingIndicatorViewHolder).bind(item.message)
             is ChatItem.BotMessage -> bindBotMessage(holder, item)
