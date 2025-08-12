@@ -2,6 +2,7 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.model.NotificationJobMongo;
 import com.example.springbackend.model.RouteMongo;
+import com.example.springbackend.repository.DeviceTokenMongoRepository;
 import com.example.springbackend.repository.NotificationJobMongoRepository;
 import com.example.springbackend.repository.RouteMongoRepository;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +20,13 @@ public class RoutesController {
 
     private final RouteMongoRepository routeRepository;
     private final NotificationJobMongoRepository notificationRepository;
+    private final DeviceTokenMongoRepository deviceTokenRepository;
 
-    public RoutesController(RouteMongoRepository routeRepository, NotificationJobMongoRepository notificationRepository) {
+    public RoutesController(RouteMongoRepository routeRepository, NotificationJobMongoRepository notificationRepository,
+        DeviceTokenMongoRepository deviceTokenRepository) {
         this.routeRepository = routeRepository;
         this.notificationRepository = notificationRepository;
+        this.deviceTokenRepository = deviceTokenRepository;
     }
 
     @GetMapping("/routes")
@@ -61,7 +65,14 @@ public class RoutesController {
                         " is arriving soon.");
                 job.setStatus("PENDING");
 
-                return notificationRepository.save(job).thenReturn(savedRoute);
+                return deviceTokenRepository.findByDeviceId(deviceId)
+                        .flatMap(deviceToken -> {
+                            job.setFcmToken(deviceToken.getFcmToken());
+                            return notificationRepository.save(job).thenReturn(savedRoute);
+                        })
+                        .switchIfEmpty(
+                                notificationRepository.save(job).thenReturn(savedRoute)
+                        );
             });
     }
 
@@ -103,10 +114,13 @@ public class RoutesController {
                     existing.setUpdatedAt(LocalDateTime.now());
                     return routeRepository.save(existing)
                         .flatMap(updatedRoute ->
-                                notificationRepository.findByRouteId(routeId)
-                                    .flatMap(notificationRepository::delete) // remove old jobs
-                                    .then(notificationRepository.save(createJobFromRoute(updatedRoute)))
-                                    .thenReturn(updatedRoute)
+                            notificationRepository.findByRouteId(routeId)
+                                .flatMap(notificationRepository::delete)
+                                .then(
+                                    Mono.just(createJobFromRoute(updatedRoute))
+                                            .flatMap(notificationRepository::save)
+                                )
+                                .thenReturn(updatedRoute)
                         );
                 })
                 .map(ResponseEntity::ok)
@@ -127,7 +141,13 @@ public class RoutesController {
         job.setStatus("PENDING");
         job.setCreatedAt(LocalDateTime.now());
         job.setUpdatedAt(LocalDateTime.now());
-        return job;
+
+        return deviceTokenRepository.findByDeviceId(route.getDeviceId())
+                .map(deviceToken -> {
+                    job.setFcmToken(deviceToken.getFcmToken());
+                    return job;
+                })
+                .defaultIfEmpty(job).block();
     }
 }
 
