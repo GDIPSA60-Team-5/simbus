@@ -48,7 +48,7 @@ class ProxyChatbotServiceTest {
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
 
-        service = new ProxyChatbotService(webClientBuilder);
+        service = new ProxyChatbotService(webClientBuilder, "http://fake-url");
 
         when(webClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);

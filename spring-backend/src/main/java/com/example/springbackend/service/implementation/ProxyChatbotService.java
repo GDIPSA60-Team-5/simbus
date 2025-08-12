@@ -4,6 +4,7 @@ import com.example.springbackend.dto.llm.BotResponseDTO;
 import com.example.springbackend.dto.llm.ErrorResponseDTO;
 import com.example.springbackend.dto.request.ChatRequest;
 import com.example.springbackend.service.ChatbotService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,9 @@ import org.springframework.http.HttpHeaders;
 public class ProxyChatbotService implements ChatbotService {
     private final WebClient llmClient;
 
-    public ProxyChatbotService(WebClient.Builder webClientBuilder) {
+    public ProxyChatbotService(WebClient.Builder webClientBuilder, @Value("${chatbot.proxy.base-url}") String baseUrl) {
         this.llmClient = webClientBuilder
-                .baseUrl("http://localhost:8000")
+                .baseUrl(baseUrl)
                 .build();
     }
 
