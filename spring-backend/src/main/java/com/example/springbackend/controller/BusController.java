@@ -172,34 +172,11 @@ public class BusController {
         return savedLocationRepository.save(location);
     }
     
-    @PostMapping("/sync/route")
-    public Mono<RouteMongo> syncRoute(
-            @RequestHeader("Device-ID") String deviceId,
-            @RequestBody Map<String, Object> routeData) {
-        
-    	RouteMongo route = new RouteMongo(
-    	        deviceId,
-    	        (String) routeData.get("from"),
-    	        (String) routeData.get("to"),
-    	        (String) routeData.get("busStop"),
-    	        (String) routeData.get("busService"),
-    	        (String) routeData.get("startTime"),
-    	        (String) routeData.get("arrivalTime"),
-    	        (List<Boolean>) routeData.get("selectedDays")
-    	    );
-                
-        return routeRepository.save(route);
-    }
-    
     @GetMapping("/locations")
     public Flux<SavedLocationMongo> getSavedLocations(@RequestHeader("Device-ID") String deviceId) {
         return savedLocationRepository.findByDeviceId(deviceId);
     }
-    
-    @GetMapping("/routes")
-    public Flux<RouteMongo> getSavedRoutes(@RequestHeader("Device-ID") String deviceId) {
-        return routeRepository.findByDeviceId(deviceId);
-    }
+
     
     @DeleteMapping("/locations/{locationId}")
     public Mono<Void> deleteLocation(
@@ -207,41 +184,5 @@ public class BusController {
             @PathVariable String locationId) {
         return savedLocationRepository.deleteByDeviceIdAndId(deviceId, locationId);
     }
-    
-    @DeleteMapping("/routes/{routeId}")
-    public Mono<ResponseEntity<Void>> deleteRoute(
-            @RequestHeader("Device-ID") String deviceId,
-            @PathVariable String routeId) {
 
-        return routeRepository.findByDeviceIdAndId(deviceId, routeId)
-            .flatMap(existing -> routeRepository.delete(existing).thenReturn(ResponseEntity.noContent().<Void>build()))
-            .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
-    
-    @PutMapping("/routes/{routeId}")
-    public Mono<ResponseEntity<RouteMongo>> updateRoute(
-            @RequestHeader("Device-ID") String deviceId,
-            @PathVariable String routeId,
-            @RequestBody Map<String, Object> body) {
-
-        return routeRepository.findByDeviceIdAndId(deviceId, routeId)
-            .flatMap(existing -> {
-                // apply incoming fields if present
-                if (body.containsKey("from")) existing.setFrom((String) body.get("from"));
-                if (body.containsKey("to")) existing.setTo((String) body.get("to"));
-                if (body.containsKey("busStop")) existing.setBusStop((String) body.get("busStop"));
-                if (body.containsKey("busService")) existing.setBusService((String) body.get("busService"));
-                if (body.containsKey("startTime")) existing.setStartTime((String) body.get("startTime"));
-                if (body.containsKey("arrivalTime")) existing.setArrivalTime((String) body.get("arrivalTime"));
-                if (body.containsKey("selectedDays")) {
-                    @SuppressWarnings("unchecked")
-                    var list = (List<Boolean>) body.get("selectedDays"); // JSON array → List<Boolean>
-                    existing.setSelectedDays(list);
-                }
-                existing.setUpdatedAt(LocalDateTime.now());
-                return routeRepository.save(existing);
-            })
-            .map(ResponseEntity::ok)
-            .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
 }

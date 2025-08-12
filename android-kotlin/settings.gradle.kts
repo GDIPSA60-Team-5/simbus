@@ -26,3 +26,4 @@ include(":app", ":feature_login", ":feature_chatbot", ":feature_navigateBar", ":
 include(":core")
 include(":feature_home")
 include(":network")
+include(":feature_notification")

@@ -1,16 +1,23 @@
-package iss.nus.edu.sg.feature_saveroute.Data
+package iss.nus.edu.sg.feature_saveroute
 
 import android.content.Context
 import android.util.Log
-import iss.nus.edu.sg.feature_saveroute.DeviceIdUtil
-import iss.nus.edu.sg.feature_saveroute.RetrofitClient
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import dagger.hilt.android.qualifiers.ApplicationContext
+import iss.nus.edu.sg.feature_saveroute.Data.Route
+import iss.nus.edu.sg.feature_saveroute.Data.RouteRequest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object RouteStorage {
+@Singleton
+class RouteStorage @Inject constructor(
+    private val routeController: RouteController,
+    @ApplicationContext private val context: Context
+) {
 
-    fun syncRouteToMongoDB(context: Context, route: Route, callback: ((String?) -> Unit)? = null) {
+    fun syncRouteToMongoDB(route: Route, callback: ((String?) -> Unit)? = null) {
         val deviceId = DeviceIdUtil.getDeviceId(context)
         val routeRequest = RouteRequest(
             from = route.from ?: "",
@@ -19,25 +26,21 @@ object RouteStorage {
             busService = route.busService ?: "",
             startTime = route.startTime ?: "",
             arrivalTime = route.arrivalTime ?: "",
-            notificationNum = route.notificationNum?:"",
+            notificationNum = route.notificationNum?: "",
             selectedDays = (route.selectedDays ?: booleanArrayOf()).toList()
         )
 
-        RetrofitClient.api.syncRoute(deviceId, routeRequest).enqueue(object : Callback<RouteMongo> {
-            override fun onResponse(call: Call<RouteMongo>, response: Response<RouteMongo>) {
-                if (response.isSuccessful && response.body() != null) {
-                    val serverRoute = response.body()!!
+        CoroutineScope(Dispatchers.IO).launch {
+            routeController.syncRoute(deviceId, routeRequest).fold(
+                onSuccess = { serverRoute ->
                     Log.d("MongoDB", "Route synced with id: ${serverRoute.id}")
                     callback?.invoke(serverRoute.id)
-                } else {
-                    Log.e("MongoDB", "Route sync failed with code: ${response.code()}")
+                },
+                onFailure = { error ->
+                    Log.e("MongoDB", "Route sync failed: ${error.message}")
                     callback?.invoke(null)
                 }
-            }
-            override fun onFailure(call: Call<RouteMongo>, t: Throwable) {
-                Log.e("MongoDB", "Route sync failed: ${t.message}")
-                callback?.invoke(null)
-            }
-        })
+            )
+        }
     }
 }

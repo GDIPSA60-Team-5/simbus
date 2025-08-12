@@ -7,9 +7,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-hilt {
-    enableAggregatingTask = false
-}
 
 android {
     namespace = "com.example.busappkotlin"
@@ -64,4 +61,6 @@ dependencies {
     implementation(project(":feature_chatbot"))
     implementation(project(":feature_home"))
     implementation(project(":feature_navigateBar"))
+    implementation(project(":feature_notification"))
+    implementation(project(":feature_saveRoute"))
 }

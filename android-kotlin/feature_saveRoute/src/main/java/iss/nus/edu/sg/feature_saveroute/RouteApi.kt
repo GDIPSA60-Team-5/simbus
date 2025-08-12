@@ -19,7 +19,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-interface ApiInterface {
+interface RouteApi {
 
     @GET("api/bus/legacy/nusbus")
     fun getNusArrivalInfo(
@@ -51,24 +51,24 @@ interface ApiInterface {
     @POST("api/bus/sync/location")
     fun syncLocation(@Header("Device-ID") deviceId: String, @Body locationData: LocationRequest): Call<SavedLocationMongo>
 
-    @POST("api/bus/sync/route")
+    @POST("api/sync/route")
     fun syncRoute(@Header("Device-ID") deviceId: String, @Body routeData: RouteRequest): Call<RouteMongo>
 
     @GET("api/bus/locations")
     fun getStoredLocations(@Header("Device-ID") deviceId: String): Call<List<SavedLocationMongo>>
 
-    @GET("api/bus/routes")
+    @GET("api/routes")
     fun getSavedRoutes(
         @Header("Device-ID") deviceId: String): retrofit2.Call<List<RouteMongo>>
 
-    @PUT("api/bus/routes/{routeId}")
+    @PUT("api/routes/{routeId}")
     fun updateRoute(
         @Header("Device-ID") deviceId: String,
         @Path("routeId") routeId: String,
         @Body route: RouteRequest
     ): retrofit2.Call<RouteMongo>
 
-    @DELETE("api/bus/routes/{routeId}")
+    @DELETE("api/routes/{routeId}")
     fun deleteRoute(
         @Header("Device-ID") deviceId: String,
         @Path("routeId") routeId: String

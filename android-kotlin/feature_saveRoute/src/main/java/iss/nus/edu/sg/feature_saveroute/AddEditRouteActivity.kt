@@ -12,17 +12,18 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.feature_saveroute.Data.Route
-import iss.nus.edu.sg.feature_saveroute.Data.RouteMongo
-import iss.nus.edu.sg.feature_saveroute.Data.RouteStorage
+import iss.nus.edu.sg.feature_saveroute.Data.savedLocationData
 import iss.nus.edu.sg.feature_saveroute.Data.toRequest
 import iss.nus.edu.sg.feature_saveroute.databinding.AddeditRouteBinding
-import retrofit2.Call
-import retrofit2.Response
-import retrofit2.Callback
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AddEditRouteActivity : AppCompatActivity() {
     private lateinit var binding: AddeditRouteBinding
     private var isEdit = false
@@ -31,6 +32,11 @@ class AddEditRouteActivity : AppCompatActivity() {
     private lateinit var startAdapter: ArrayAdapter<String>
     private lateinit var endAdapter: ArrayAdapter<String>
     private val ADD_NEW = "+Add new location…"
+
+    @Inject
+    lateinit var routeController: RouteController
+    @Inject
+    lateinit var savedLocationStore: SavedLocationStore
 
     private val addLocationLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -114,15 +120,13 @@ class AddEditRouteActivity : AppCompatActivity() {
         val numbers = (1..10).map { it.toString() }.toTypedArray()
         binding.NotfiEdit.setOnClickListener {
             AlertDialog.Builder(this)
-            .setTitle("Select a number")
-            .setItems(numbers){_,which->
-                binding.NotfiEdit.setText(numbers[which])
-                updateSummary()
-            }
-            .show()
+                .setTitle("Select a number")
+                .setItems(numbers){_,which->
+                    binding.NotfiEdit.setText(numbers[which])
+                    updateSummary()
+                }
+                .show()
         }
-
-
     }
 
     private fun saveRoute() {
@@ -187,8 +191,11 @@ class AddEditRouteActivity : AppCompatActivity() {
             busService = binding.BusServiceEdit.text.toString(),
             startTime = binding.StartTimeEdit.text.toString(),
             arrivalTime = binding.ArrivalTimeEdit.text.toString(),
+            notificationNum = binding.NotfiEdit.text.toString(),
             selectedDays = frequency
         )
+
+        val deviceId = DeviceIdUtil.getDeviceId(this)
 
         if (isEdit) {
             val existingRoute = intent.getParcelableExtra<Route>("Edit_Route")
@@ -198,31 +205,30 @@ class AddEditRouteActivity : AppCompatActivity() {
                 Toast.makeText(this, "Missing route ID for update", Toast.LENGTH_SHORT).show()
                 return
             }
-            val deviceId = DeviceIdUtil.getDeviceId(this)
 
-            RetrofitClient.api.updateRoute(deviceId, routeId, newRoute.toRequest())
-                .enqueue(object : Callback<RouteMongo> {
-                    override fun onResponse(call: Call<RouteMongo>, response: Response<RouteMongo>) {
-                        if (response.isSuccessful) {
-                            Toast.makeText(this@AddEditRouteActivity, "Route updated successfully", Toast.LENGTH_SHORT).show()
-                            finishWithResult(newRoute)
-                        } else {
-                            Toast.makeText(this@AddEditRouteActivity, "Failed to update route: ${response.code()}", Toast.LENGTH_SHORT).show()
-                        }
+            lifecycleScope.launch {
+                routeController.updateRoute(deviceId, routeId, newRoute.toRequest()).fold(
+                    onSuccess = { serverRoute ->
+                        Toast.makeText(this@AddEditRouteActivity, "Route updated successfully", Toast.LENGTH_SHORT).show()
+                        finishWithResult(newRoute)
+                    },
+                    onFailure = { error ->
+                        Toast.makeText(this@AddEditRouteActivity, "Failed to update route: ${error.message}", Toast.LENGTH_SHORT).show()
                     }
-                    override fun onFailure(call: Call<RouteMongo>, t: Throwable) {
-                        Toast.makeText(this@AddEditRouteActivity, "Update failed: ${t.message}", Toast.LENGTH_SHORT).show()
-                    }
-                })
+                )
+            }
         } else {
-            RouteStorage.syncRouteToMongoDB(this, newRoute) { serverId ->
-                if (serverId != null) {
-                    newRoute.id = serverId
-                    Toast.makeText(this, "Route saved successfully", Toast.LENGTH_SHORT).show()
-                    finishWithResult(newRoute)
-                } else {
-                    Toast.makeText(this, "Failed to save route", Toast.LENGTH_SHORT).show()
-                }
+            lifecycleScope.launch {
+                routeController.syncRoute(deviceId, newRoute.toRequest()).fold(
+                    onSuccess = { serverRoute ->
+                        newRoute.id = serverRoute.id
+                        Toast.makeText(this@AddEditRouteActivity, "Route saved successfully", Toast.LENGTH_SHORT).show()
+                        finishWithResult(newRoute)
+                    },
+                    onFailure = { error ->
+                        Toast.makeText(this@AddEditRouteActivity, "Failed to save route: ${error.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
     }
@@ -293,49 +299,50 @@ class AddEditRouteActivity : AppCompatActivity() {
     }
 
     private fun setupLocationAdapters() {
-        val saved = SavedLocation.load(this)
+        lifecycleScope.launch {
+            val saved = savedLocationStore.load()           // suspend
+            val display = mutableListOf(ADD_NEW) + saved.map { it.name }
 
-        val display = mutableListOf(ADD_NEW) + saved.map { "${it.name}" }
+            startAdapter = ArrayAdapter(this@AddEditRouteActivity,
+                android.R.layout.simple_dropdown_item_1line, display)
+            endAdapter = ArrayAdapter(this@AddEditRouteActivity,
+                android.R.layout.simple_dropdown_item_1line, display)
 
-        startAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, display)
-        endAdapter   = ArrayAdapter(this, android.R.layout.simple_list_item_1, display)
+            binding.FromEdit.setAdapter(startAdapter)
+            binding.ToEdit.setAdapter(endAdapter)
 
-        binding.FromEdit.setAdapter(startAdapter)
-        binding.ToEdit.setAdapter(endAdapter)
+            fun AutoCompleteTextView.enableDropdown() {
+                threshold = 0
+                setOnFocusChangeListener { v, hasFocus ->
+                    if (hasFocus) (v as AutoCompleteTextView).showDropDown()
+                }
+                setOnClickListener { showDropDown() }
+            }
+            binding.FromEdit.enableDropdown()
+            binding.ToEdit.enableDropdown()
 
-        fun AutoCompleteTextView.enableDropdown() {
-            threshold = 0
-            setOnFocusChangeListener { v, hasFocus -> if (hasFocus) (v as AutoCompleteTextView).showDropDown() }
-            setOnClickListener { showDropDown() }
+            binding.FromEdit.setOnItemClickListener { _, _, position, _ ->
+                handleLocationPick(isStart = true, position = position, input = binding.FromEdit, saved = saved)
+            }
+            binding.ToEdit.setOnItemClickListener { _, _, position, _ ->
+                handleLocationPick(isStart = false, position = position, input = binding.ToEdit, saved = saved)
+            }
         }
-        binding.FromEdit.enableDropdown()
-        binding.ToEdit.enableDropdown()
-
-
-        binding.FromEdit.setOnItemClickListener { _, _, position, _ ->
-            handleLocationPick(isStart = true, position = position, input = binding.FromEdit)
-        }
-        binding.ToEdit.setOnItemClickListener { _, _, position, _ ->
-            handleLocationPick(isStart = false, position = position, input = binding.ToEdit)
-        }
-
-
-
-
-
     }
 
-    private fun handleLocationPick(isStart: Boolean, position: Int, input: AutoCompleteTextView) {
+    private fun handleLocationPick(
+        isStart: Boolean,
+        position: Int,
+        input: AutoCompleteTextView,
+        saved: List<savedLocationData>
+    ) {
         if (position == 0) {
             val intent = Intent(this, CreateSavedLocationActivity::class.java)
                 .putExtra("target", if (isStart) "start" else "end")
-
             addLocationLauncher.launch(intent)
             input.setText("")
             return
         }
-
-        val saved = SavedLocation.load(this)
         val chosen = saved[position - 1]
         input.setText(chosen.name, false)
     }
@@ -351,5 +358,4 @@ class AddEditRouteActivity : AppCompatActivity() {
             binding.notifupdate.isGone = true
         }
     }
-
 }

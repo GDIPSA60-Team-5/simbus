@@ -24,6 +24,7 @@ public class RouteMongo {
     private String busService;
     private String startTime;
     private String arrivalTime;
+	private String notificationNum;
     private List<Boolean> selectedDays;
     
     @CreatedDate
@@ -33,7 +34,7 @@ public class RouteMongo {
     private LocalDateTime updatedAt;
     
     public RouteMongo(String deviceId, String from, String to, String busStop,
-            String busService, String startTime, String arrivalTime, List<Boolean> selectedDays) {
+            String busService, String startTime, String arrivalTime,String notificationNum, List<Boolean> selectedDays) {
 				this.deviceId = deviceId;
 				this.from = from;
 				this.to = to;
@@ -41,6 +42,7 @@ public class RouteMongo {
 				this.busService = busService;
 				this.startTime = startTime;
 				this.arrivalTime = arrivalTime;
+				this.notificationNum = notificationNum;
 				this.selectedDays = selectedDays;
 				this.createdAt = LocalDateTime.now();
 				this.updatedAt = LocalDateTime.now();
@@ -138,13 +140,12 @@ public class RouteMongo {
 		this.updatedAt = updatedAt;
 	}
 
-    
 
+	public String getNotificationNum() {
+		return notificationNum;
+	}
 
-
-
-
-
-
-
+	public void setNotificationNum(String notificationNum) {
+		this.notificationNum = notificationNum;
+	}
 }

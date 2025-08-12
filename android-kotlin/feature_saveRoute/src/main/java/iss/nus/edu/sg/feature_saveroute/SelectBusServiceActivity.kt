@@ -8,13 +8,17 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import iss.nus.edu.sg.feature_saveroute.Data.NusBusServiceAtStop
-import iss.nus.edu.sg.feature_saveroute.Data.SgBusServiceAtStop
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SelectBusServiceActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var routeController: RouteController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.selectbusservice)
@@ -38,69 +42,49 @@ class SelectBusServiceActivity : AppCompatActivity() {
     }
 
     private fun fetchSgBusServices(busStopCode: String, listView: ListView) {
-        RetrofitClient.api.getSgBusServices(busStopCode)
-            .enqueue(object : Callback<List<SgBusServiceAtStop>> {
-                override fun onResponse(
-                    call: Call<List<SgBusServiceAtStop>>,
-                    response: Response<List<SgBusServiceAtStop>>
-                ) {
-                    if (response.isSuccessful) {
-                        val services = response.body() ?: emptyList()
-                        if (services.isEmpty()) {
-                            Toast.makeText(this@SelectBusServiceActivity,
-                                "No SG services found", Toast.LENGTH_SHORT).show()
-                            return
-                        }
-
-                        val serviceNumbers = services.mapNotNull { it.serviceNo }
-                        setAdapter(listView, serviceNumbers)
-                    } else {
+        lifecycleScope.launch {
+            routeController.getSgBusServices(busStopCode).fold(
+                onSuccess = { services ->
+                    if (services.isEmpty()) {
                         Toast.makeText(this@SelectBusServiceActivity,
-                            "SG Fetch failed: ${response.errorBody()?.string()}",
-                            Toast.LENGTH_SHORT).show()
+                            "No SG services found", Toast.LENGTH_SHORT).show()
+                        return@fold
                     }
-                }
 
-                override fun onFailure(call: Call<List<SgBusServiceAtStop>>, t: Throwable) {
+                    val serviceNumbers = services.mapNotNull { it.serviceNo }
+                    setAdapter(listView, serviceNumbers)
+                },
+                onFailure = { error ->
                     Toast.makeText(this@SelectBusServiceActivity,
-                        "Error fetching SG services: ${t.message}", Toast.LENGTH_SHORT).show()
+                        "SG Fetch failed: ${error.message}",
+                        Toast.LENGTH_SHORT).show()
+                    Log.e("BusService", "Error fetching SG services", error)
                 }
-            })
+            )
+        }
     }
 
     private fun fetchNusBusServices(busStopName: String, listView: ListView) {
-        RetrofitClient.api.getNusBusServices(busStopName)
-            .enqueue(object : Callback<List<NusBusServiceAtStop>> {
-                override fun onResponse(
-                    call: Call<List<NusBusServiceAtStop>>,
-                    response: Response<List<NusBusServiceAtStop>>
-                ) {
-                    if (response.isSuccessful) {
-                        val services = response.body() ?: emptyList()
-                        if (services.isEmpty()) {
-                            Toast.makeText(this@SelectBusServiceActivity,
-                                "No NUS services found", Toast.LENGTH_SHORT).show()
-                            return
-                        }
-
-                        val serviceNames = services.mapNotNull { it.name }
-                        Log.d("BusService", ">>> NUS services found: $serviceNames")
-                        setAdapter(listView, serviceNames)
-                    } else {
-                        val errorBody = response.errorBody()?.string()
-                        Log.e("BusService", ">>> NUS Fetch failed: $errorBody")
+        lifecycleScope.launch {
+            routeController.getNusBusServices(busStopName).fold(
+                onSuccess = { services ->
+                    if (services.isEmpty()) {
                         Toast.makeText(this@SelectBusServiceActivity,
-                            "NUS Fetch failed: $errorBody",
-                            Toast.LENGTH_SHORT).show()
+                            "No NUS services found", Toast.LENGTH_SHORT).show()
+                        return@fold
                     }
-                }
 
-                override fun onFailure(call: Call<List<NusBusServiceAtStop>>, t: Throwable) {
-                    Log.e("BusService", ">>> Error fetching NUS services", t)
+                    val serviceNames = services.mapNotNull { it.name }
+                    Log.d("BusService", ">>> NUS services found: $serviceNames")
+                    setAdapter(listView, serviceNames)
+                },
+                onFailure = { error ->
+                    Log.e("BusService", ">>> Error fetching NUS services", error)
                     Toast.makeText(this@SelectBusServiceActivity,
-                        "Error fetching NUS services: ${t.message}", Toast.LENGTH_SHORT).show()
+                        "Error fetching NUS services: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
-            })
+            )
+        }
     }
 
     private fun setAdapter(listView: ListView, items: List<String>) {

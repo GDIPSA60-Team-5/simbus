@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":feature_login"))
     implementation(project(":feature_chatbot"))
     implementation(project(":feature_navigateBar"))
+    implementation(project(":feature_saveRoute"))
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.android)
     implementation(libs.gson)
@@ -58,4 +59,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }

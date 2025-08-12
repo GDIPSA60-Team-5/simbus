@@ -3,13 +3,21 @@ package iss.nus.edu.sg.feature_saveroute
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.feature_saveroute.Data.savedLocationData
 import iss.nus.edu.sg.feature_saveroute.databinding.CreateSavedLocationBinding
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class CreateSavedLocationActivity : AppCompatActivity() {
 
     private lateinit var binding: CreateSavedLocationBinding
+
+    @Inject lateinit var savedLocationStore: SavedLocationStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,27 +42,33 @@ class CreateSavedLocationActivity : AppCompatActivity() {
             } else {
                 binding.postalInput.error = null
             }
-
             if (hasError) return@setOnClickListener
 
-            val lowerCased = name.lowercase()
-            val list = SavedLocation.load(this)
+            lifecycleScope.launch {
+                val existing = savedLocationStore.load()
+                val exists = existing.any { it.name.trim().equals(name, ignoreCase = true) }
+                if (exists) {
+                    binding.nameInput.error = "Name already exists"
+                    return@launch
+                }
 
-            val exists = list.any{it.name.trim().lowercase()==lowerCased}
-            if(exists) {
-                binding.nameInput.error = "Name already exisits"
-                return@setOnClickListener
+                val result = savedLocationStore.add(savedLocationData(name, postal))
+                result.onSuccess {
+                    val data = Intent().apply {
+                        putExtra("target", intent.getStringExtra("target"))
+                        putExtra("savedName", name)
+                        putExtra("savedPostal", postal)
+                    }
+                    setResult(Activity.RESULT_OK, data)
+                    finish()
+                }.onFailure { e ->
+                    Toast.makeText(
+                        this@CreateSavedLocationActivity,
+                        "Failed to save: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
-
-            SavedLocation.add(this, savedLocationData(name, postal))
-            val data = Intent().apply {
-                putExtra("target", intent.getStringExtra("target"))
-                putExtra("savedName", name)
-                putExtra("savedPostal", postal)
-            }
-
-            setResult(Activity.RESULT_OK, data)
-            finish()
         }
     }
 }

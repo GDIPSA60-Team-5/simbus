@@ -4,10 +4,26 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SelectBusStopTypeActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?){
+
+    @Inject
+    lateinit var routeController: RouteController
+
+    private val selectBusStopLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                setResult(Activity.RESULT_OK, result.data)
+                finish()
+            }
+        }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.selectbusstoptype)
 
@@ -15,22 +31,17 @@ class SelectBusStopTypeActivity : AppCompatActivity() {
         val nusStopsButton = findViewById<Button>(R.id.nusBusButton)
 
         sgStopsButton.setOnClickListener {
-            val intent = Intent(this, SelectBusStopActivity::class.java)
-            intent.putExtra("BusStopType", "SG")
-            startActivityForResult(intent, 100)
+            val intent = Intent(this, SelectBusStopActivity::class.java).apply {
+                putExtra("BusStopType", "SG")
+            }
+            selectBusStopLauncher.launch(intent)
         }
-        nusStopsButton.setOnClickListener {
-            val intent = Intent(this, SelectBusStopActivity::class.java)
-            intent.putExtra("BusStopType", "NUS")
-            startActivityForResult(intent, 100)
-        }
-    }
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 100 && resultCode == Activity.RESULT_OK) {
-            setResult(Activity.RESULT_OK, data)
-            finish()
-        }
-    }
 
+        nusStopsButton.setOnClickListener {
+            val intent = Intent(this, SelectBusStopActivity::class.java).apply {
+                putExtra("BusStopType", "NUS")
+            }
+            selectBusStopLauncher.launch(intent)
+        }
+    }
 }

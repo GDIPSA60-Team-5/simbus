@@ -1,13 +1,15 @@
 package iss.nus.edu.sg.appfiles.feature_navigatebar
 
+import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.SchedulesFragment
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.feature_home.ui.HomeFragment
+import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.MenuFragment
-import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.SchedulesFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.databinding.ActivityNavigateBinding
 
+@AndroidEntryPoint
 class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelectedListener {
     private lateinit var binding: ActivityNavigateBinding
 

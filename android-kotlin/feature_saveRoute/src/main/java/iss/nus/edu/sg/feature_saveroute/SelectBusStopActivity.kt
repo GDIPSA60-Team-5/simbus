@@ -9,19 +9,27 @@ import android.widget.ListView
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.feature_saveroute.Data.NusBusStop
 import iss.nus.edu.sg.feature_saveroute.Data.SgBusStop
-import iss.nus.edu.sg.feature_saveroute.Data.UnifiedBusStop
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SelectBusStopActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var routeController: RouteController
 
     private lateinit var busStopAdapter: ArrayAdapter<String>
     private var currentType: String = "SG"
     private var currentSgStops: List<SgBusStop> = emptyList()
     private var currentNusStops: List<NusBusStop> = emptyList()
+
+    private var filteredSgStops: List<SgBusStop> = emptyList()
+    private var filteredNusStops: List<NusBusStop> = emptyList()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,12 +56,12 @@ class SelectBusStopActivity : AppCompatActivity() {
                 applyFilter(query.orEmpty())
                 return true
             }
+
             override fun onQueryTextChange(newText: String?): Boolean {
                 applyFilter(newText.orEmpty())
                 return true
             }
         })
-
     }
 
     private fun fetchAllBusStops(listView: ListView, busStopType: String) {
@@ -61,18 +69,17 @@ class SelectBusStopActivity : AppCompatActivity() {
 
         Toast.makeText(this, "Loading bus stops...", Toast.LENGTH_SHORT).show()
 
-        RetrofitClient.api.searchBusStops("").enqueue(object : Callback<List<UnifiedBusStop>> {
-            override fun onResponse(call: Call<List<UnifiedBusStop>>, response: Response<List<UnifiedBusStop>>) {
-                Log.d("SelectBusStop", "API Response received")
-                Log.d("SelectBusStop", "Response code: ${response.code()}")
-                Log.d("SelectBusStop", "Response success: ${response.isSuccessful}")
-
-                if (response.isSuccessful) {
-                    val allStops = response.body() ?: emptyList()
+        lifecycleScope.launch {
+            routeController.searchBusStops("").fold(
+                onSuccess = { allStops ->
+                    Log.d("SelectBusStop", "API Response received")
                     Log.d("SelectBusStop", "Total stops received: ${allStops.size}")
 
                     allStops.take(3).forEach { stop ->
-                        Log.d("SelectBusStop", "Stop: ${stop.name} (${stop.code}) - API: ${stop.sourceApi}")
+                        Log.d(
+                            "SelectBusStop",
+                            "Stop: ${stop.name} (${stop.code}) - API: ${stop.sourceApi}"
+                        )
                     }
 
                     BusStopCache.allBusStops = allStops
@@ -84,20 +91,16 @@ class SelectBusStopActivity : AppCompatActivity() {
                     Log.d("SelectBusStop", "NUS stops in cache: ${BusStopCache.nusBusStops?.size}")
 
                     displayBusStops(listView, busStopType)
-                } else {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e("SelectBusStop", "API Error: $errorBody")
-                    Toast.makeText(this@SelectBusStopActivity,
-                        "Failed to load bus stops: ${response.code()}", Toast.LENGTH_LONG).show()
+                },
+                onFailure = { error ->
+                    Log.e("SelectBusStop", "API Call Failed", error)
+                    Toast.makeText(
+                        this@SelectBusStopActivity,
+                        "Network error: ${error.message}", Toast.LENGTH_LONG
+                    ).show()
                 }
-            }
-
-            override fun onFailure(call: Call<List<UnifiedBusStop>>, t: Throwable) {
-                Log.e("SelectBusStop", "API Call Failed", t)
-                Toast.makeText(this@SelectBusStopActivity,
-                    "Network error: ${t.message}", Toast.LENGTH_LONG).show()
-            }
-        })
+            )
+        }
     }
 
     private fun displayBusStops(listView: ListView, busStopType: String) {
@@ -116,7 +119,11 @@ class SelectBusStopActivity : AppCompatActivity() {
         currentType = busStopType
     }
 
-    private fun displaySgBusStops(busStops: List<SgBusStop>, listView: ListView, busStopType: String) {
+    private fun displaySgBusStops(
+        busStops: List<SgBusStop>,
+        listView: ListView,
+        busStopType: String
+    ) {
         Log.d("SelectBusStop", "Setting up SG adapter with ${busStops.size} stops")
 
         if (busStops.isEmpty()) {
@@ -124,18 +131,19 @@ class SelectBusStopActivity : AppCompatActivity() {
             return
         }
 
-        val names = busStops.map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
-
         currentSgStops = busStops
-        busStopAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1,
-            busStops.map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
-        )
+        filteredSgStops = busStops
+
+        val labels =
+            filteredSgStops.map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
+
+
+        busStopAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, labels)
         listView.adapter = busStopAdapter
 
-        Log.d("SelectBusStop", "SG Adapter set with ${names.size} items")
-
         listView.setOnItemClickListener { _, _, position, _ ->
-            val selectedStopCode = busStops[position].busStopCode
+            val selected = filteredSgStops[position]
+            val selectedStopCode = selected.busStopCode
             Log.d("SelectBusStop", "Selected SG stop: $selectedStopCode")
             val resultIntent = Intent().apply {
                 putExtra("BusStopCode", selectedStopCode)
@@ -144,29 +152,31 @@ class SelectBusStopActivity : AppCompatActivity() {
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
         }
-
-
     }
 
-    private fun displayNusBusStops(busStops: List<NusBusStop>, listView: ListView, busStopType: String) {
-        Log.d("SelectBusStop", "Setting up NUS adapter with ${busStops.size} stops")
+    private fun displayNusBusStops(
+        busStops: List<NusBusStop>,
+        listView: ListView,
+        busStopType: String
+    ) {
 
         if (busStops.isEmpty()) {
             Toast.makeText(this, "No NUS bus stops found", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val displayItems = busStops.map { "${it.longName} (${it.name})" }
         currentNusStops = busStops
-        busStopAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1,
-            busStops.map { "${it.longName} (${it.name})" }
-        )
+        filteredNusStops = busStops
+
+        val labels = filteredNusStops.map { "${it.longName} (${it.name})" }
+
+        busStopAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, labels)
         listView.adapter = busStopAdapter
 
-        Log.d("SelectBusStop", "NUS Adapter set with ${displayItems.size} items")
 
         listView.setOnItemClickListener { _, _, position, _ ->
-            val selectedStopName = busStops[position].name
+            val selected = filteredNusStops[position]
+            val selectedStopName = selected.name
             Log.d("SelectBusStop", "Selected NUS stop: $selectedStopName")
             val resultIntent = Intent().apply {
                 putExtra("BusStopCode", selectedStopName)
@@ -179,25 +189,29 @@ class SelectBusStopActivity : AppCompatActivity() {
 
     private fun applyFilter(q: String) {
         if (!::busStopAdapter.isInitialized) return
+        if (currentType == "SG") {
 
-        val filtered: List<String> = if (currentType == "SG") {
-            currentSgStops
-                .filter {
-                    (it.description ?: "").contains(q, ignoreCase = true) ||
-                            (it.busStopCode ?: "").contains(q, ignoreCase = true)
-                }
-                .map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
+            filteredSgStops = currentSgStops.filter {
+                (it.description ?: "").contains(q, ignoreCase = true) ||
+                        (it.busStopCode ?: "").contains(q, ignoreCase = true)
+            }
+
+            val labels = filteredSgStops.map {
+                "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})"
+            }
+
+            busStopAdapter.clear()
+            busStopAdapter.addAll(labels)
+            busStopAdapter.notifyDataSetChanged()
         } else {
-            currentNusStops
-                .filter {
-                    (it.longName ?: "").contains(q, ignoreCase = true) ||
-                            (it.name ?: "").contains(q, ignoreCase = true)
-                }
-                .map { "${it.longName} (${it.name})" }
+            filteredNusStops = currentNusStops.filter {
+                (it.longName ?: "").contains(q, ignoreCase = true) ||
+                        (it.name ?: "").contains(q, ignoreCase = true)
+            }
+            val labels = filteredNusStops.map { "${it.longName} (${it.name})" }
+            busStopAdapter.clear()
+            busStopAdapter.addAll(labels)
+            busStopAdapter.notifyDataSetChanged()
         }
-
-        busStopAdapter.clear()
-        busStopAdapter.addAll(filtered)
-        busStopAdapter.notifyDataSetChanged()
     }
 }
