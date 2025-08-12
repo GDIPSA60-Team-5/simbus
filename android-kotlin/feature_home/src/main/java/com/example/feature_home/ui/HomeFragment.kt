@@ -29,7 +29,14 @@ import android.content.Intent
 import com.example.feature_guidemap.MapsNavigationActivity
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.core.api.UserApi
+import com.example.core.api.CommuteApi
+import com.example.feature_chatbot.ui.ChatbotActivity
+import com.example.feature_home.adapter.DailyCommuteAdapter
+import com.example.feature_home.adapter.DayCommutes
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -49,6 +56,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     lateinit var userApi: UserApi
 
     @Inject
+    lateinit var commuteApi: CommuteApi
+
+    @Inject
     lateinit var secureStorageManager: SecureStorageManager
 
     private var _binding: FragmentHomeBinding? = null
@@ -57,6 +67,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var mapView: MapView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var googleMapInstance: GoogleMap? = null
+    private lateinit var dailyCommuteAdapter: DailyCommuteAdapter
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -83,13 +94,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupUI(savedInstanceState)
+        setupOnClickListeners()
         loadUserData()
+        loadCommuteData()
     }
 
     private fun setupUI(savedInstanceState: Bundle?) {
         setupWindowInsets()
         setupLocationClient()
         setupMapView(savedInstanceState)
+        setupCommuteViewPager()
         setupBackPressHandler()
     }
 
@@ -105,11 +119,30 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
     }
 
+    private fun setupOnClickListeners() {
+        binding.micIcon.setOnClickListener {
+            // Your existing mic logic here (if any)
+        }
+        binding.sendIcon.setOnClickListener {
+            val text = binding.messageInput.text.toString().trim()
+            if (text.isNotEmpty()) {
+                val intent = Intent(requireContext(), ChatbotActivity::class.java)
+                intent.putExtra("userMessage", text)
+                startActivity(intent)
+            }
+        }
+    }
+
     private fun setupMapView(savedInstanceState: Bundle?) {
         mapView = binding.mapView.apply {
             onCreate(savedInstanceState)
             getMapAsync(this@HomeFragment)
         }
+    }
+
+    private fun setupCommuteViewPager() {
+        dailyCommuteAdapter = DailyCommuteAdapter()
+        binding.viewPager.adapter = dailyCommuteAdapter
     }
 
     private fun setupBackPressHandler() {
@@ -258,5 +291,59 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun updateWelcomeMessage(username: String) {
         binding.homeTitle.text = "Welcome $username"
+    }
+
+    private fun loadCommuteData() {
+        lifecycleScope.launch {
+            try {
+                val response = commuteApi.getMyCommutes()
+                if (response.isSuccessful) {
+                    response.body()?.let { commutePlans ->
+                        displayCommuteData(commutePlans)
+                    }
+                } else {
+                    Log.e("HomeFragment", "Failed to fetch commute data: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Error fetching commute data", e)
+            }
+        }
+    }
+
+    private fun displayCommuteData(commutePlans: List<com.example.core.api.CommutePlan>) {
+        val dayCommutes = organizeCommutesByDay(commutePlans)
+        dailyCommuteAdapter.updateDays(dayCommutes)
+        
+        // Update subtitle with summary
+        val commuteInfo = if (commutePlans.isEmpty()) {
+            "No commute plans found"
+        } else {
+            "Ready for your journey?"
+        }
+        binding.subTitle.text = commuteInfo
+    }
+
+    private fun organizeCommutesByDay(commutePlans: List<com.example.core.api.CommutePlan>): List<DayCommutes> {
+        val daysOfWeek = listOf("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+        val dayNames = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+        val today = LocalDate.now()
+        
+        return (0..6).map { dayOffset ->
+            val targetDate = today.plusDays(dayOffset.toLong())
+            val dayOfWeekIndex = targetDate.dayOfWeek.value - 1 // Monday = 0
+            val shortDayName = daysOfWeek[dayOfWeekIndex]
+            
+            val dayDisplayName = when (dayOffset) {
+                0 -> "Today"
+                1 -> "Tomorrow"
+                else -> dayNames[dayOfWeekIndex]
+            }
+            
+            val dayCommutes = commutePlans.filter { commutePlan ->
+                commutePlan.commuteRecurrenceDayIds?.contains(shortDayName) == true
+            }
+            
+            DayCommutes(dayDisplayName, dayCommutes)
+        }
     }
 }

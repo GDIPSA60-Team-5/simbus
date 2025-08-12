@@ -12,15 +12,21 @@ import iss.nus.edu.sg.appfiles.feature_navigatebar.databinding.ActivityNavigateB
 @AndroidEntryPoint
 class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelectedListener {
     private lateinit var binding: ActivityNavigateBinding
+    private var currentSelectedNavItemId = R.id.nav_home
+    private var bottomNavFragment: BottomNavFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNavigateBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+// Restore selected nav item if needed
+        currentSelectedNavItemId = savedInstanceState?.getInt("currentSelectedNavItemId") ?: R.id.nav_home
+
         // Add bottom nav fragment
+        bottomNavFragment = BottomNavFragment()
         supportFragmentManager.beginTransaction()
-            .replace(binding.bottomNavContainer.id, BottomNavFragment())
+            .replace(binding.bottomNavContainer.id, bottomNavFragment!!)
             .commit()
 
         // Default fragment is HomeFragment

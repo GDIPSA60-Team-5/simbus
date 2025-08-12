@@ -10,216 +10,220 @@
         android:scaleType="centerCrop"
         android:src="@drawable/main_bg" />
 
-    <LinearLayout
-        android:id="@+id/main"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        android:orientation="vertical"
-        android:paddingBottom="56dp">
+        android:fillViewport="true">
 
         <LinearLayout
+            android:id="@+id/main"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            android:orientation="vertical"
-            android:paddingHorizontal="40dp"
-            android:paddingTop="80dp">
-
-            <TextView
-                android:id="@+id/homeTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingBottom="10sp"
-                android:text="Welcome"
-                android:textColor="@color/black"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/subTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ready for your journey?"
-                android:textColor="@color/half_black"
-                android:textSize="14sp" />
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp"
-                android:background="@drawable/input_bg"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="15dp"
-                android:paddingVertical="12dp">
+                android:background="@android:color/transparent"
+                android:orientation="vertical"
+                android:paddingHorizontal="40dp"
+                android:paddingTop="80dp">
 
-                <ImageView
-                    android:id="@+id/micIcon"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:contentDescription="@string/mic_desc"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_mic" />
-
-                <EditText
-                    android:id="@+id/messageInput"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="20dp"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:hint="Ask me for directions..."
-                    android:inputType="text"
-                    android:paddingHorizontal="8dp"
+                <TextView
+                    android:id="@+id/homeTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10sp"
+                    android:text="Welcome"
                     android:textColor="@color/black"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/subTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ready for your journey?"
+                    android:textColor="@color/half_black"
                     android:textSize="14sp" />
 
-                <ImageView
-                    android:id="@+id/sendIcon"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:contentDescription="@string/send_desc"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_send_outline" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/input_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="15dp"
+                    android:paddingVertical="12dp">
+
+                    <ImageView
+                        android:id="@+id/micIcon"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:contentDescription="@string/mic_desc"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_mic" />
+
+                    <EditText
+                        android:id="@+id/messageInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="Ask me for directions..."
+                        android:inputType="text"
+                        android:paddingHorizontal="8dp"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+
+                    <ImageView
+                        android:id="@+id/sendIcon"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:contentDescription="@string/send_desc"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_send_outline" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:weightSum="3">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <ImageButton
+                            android:id="@+id/button1"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/btn_bg_dark"
+                            android:contentDescription="@string/button1_desc"
+                            android:elevation="4dp"
+                            android:padding="18dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_icon1" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Plan Commute"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <ImageButton
+                            android:id="@+id/button2"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/btn_bg_light"
+                            android:contentDescription="@string/button2_desc"
+                            android:elevation="4dp"
+                            android:padding="18dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_icon2" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Tag Locations"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <ImageButton
+                            android:id="@+id/button3"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/btn_bg_light"
+                            android:contentDescription="@string/button3_desc"
+                            android:elevation="4dp"
+                            android:padding="18dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_icon3" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Trip History"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                </LinearLayout>
             </LinearLayout>
+
+            <com.google.android.gms.maps.MapView
+                android:id="@+id/mapView"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:layout_marginTop="24dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:weightSum="3">
+                android:orientation="vertical"
+                android:paddingHorizontal="40dp">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="8dp">
+                    android:layout_marginTop="20dp"
+                    android:text="Upcoming Commutes"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-                    <ImageButton
-                        android:id="@+id/button1"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/btn_bg_dark"
-                        android:contentDescription="@string/button1_desc"
-                        android:elevation="4dp"
-                        android:padding="18dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_icon1" />
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Plan Commute"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tabLayout"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-
-                    <ImageButton
-                        android:id="@+id/button2"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/btn_bg_light"
-                        android:contentDescription="@string/button2_desc"
-                        android:elevation="4dp"
-                        android:padding="18dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_icon2" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Tag Locations"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="8dp">
-
-                    <ImageButton
-                        android:id="@+id/button3"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/btn_bg_light"
-                        android:contentDescription="@string/button3_desc"
-                        android:elevation="4dp"
-                        android:padding="18dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_icon3" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Trip History"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
+                    android:layout_gravity="center"
+                    app:tabBackground="@drawable/tab_background"
+                    app:tabIndicatorColor="@android:color/transparent"
+                    app:tabIndicatorHeight="0dp"
+                    app:tabSelectedTextColor="@color/black" />
             </LinearLayout>
         </LinearLayout>
-
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/mapView"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="24dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="40dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Upcoming Commutes"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/viewPager"
-                android:layout_width="match_parent"
-                android:layout_height="200dp" />
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                app:tabBackground="@drawable/tab_background"
-                app:tabIndicatorColor="@android:color/transparent"
-                app:tabIndicatorHeight="0dp"
-                app:tabSelectedTextColor="@color/black" />
-        </LinearLayout>
-
-    </LinearLayout>
-
+    </ScrollView>
 </FrameLayout>

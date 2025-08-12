@@ -3,6 +3,7 @@ package com.example.network.di
 import com.example.core.di.SecureStorageManager
 import com.example.network.di.AuthInterceptor
 import com.example.core.api.UserApi
+import com.example.core.api.CommuteApi
 import com.example.feature_chatbot.api.ChatbotApi
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.BotResponseTypeAdapter
@@ -61,6 +62,11 @@ object NetworkProvider {
     @Singleton
     fun provideUserApi(retrofit: Retrofit): UserApi =
         retrofit.create(UserApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCommuteApi(retrofit: Retrofit): CommuteApi =
+        retrofit.create(CommuteApi::class.java)
 
     // Chatbot provider
     @Provides

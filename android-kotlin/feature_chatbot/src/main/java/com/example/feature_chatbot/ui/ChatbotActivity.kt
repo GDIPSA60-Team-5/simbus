@@ -41,7 +41,7 @@ class ChatbotActivity : AppCompatActivity() {
     private var currentLocation: Coordinates? = null
 
     // Permission launchers
-    private val locationPermissionLauncher =
+    private fun locationPermissionLauncherWithCallback(onComplete: () -> Unit) =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 getCurrentLocation()
@@ -52,6 +52,7 @@ class ChatbotActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+            onComplete()
         }
 
     private val audioPermissionLauncher =
@@ -88,28 +89,42 @@ class ChatbotActivity : AppCompatActivity() {
         setupListeners()
         loadUserData()
 
-        binding.chatRecyclerView.post { centerGreeting() }
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        checkLocationPermission()
+
+        checkLocationPermission {
+        binding.chatRecyclerView.post {
+                centerGreeting {
+                    checkExternalIntents()
+                }
+            }
+        }
     }
 
-    private fun checkLocationPermission() {
+    private fun checkExternalIntents() {
+        intent?.getStringExtra("userMessage")?.takeIf { it.isNotBlank() }?.let { message ->
+            handleUserMessage(message)
+        }
+    }
+
+    private fun checkLocationPermission(onComplete: () -> Unit) {
         when {
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
                 getCurrentLocation()
+                onComplete()
             }
 
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
-                // Optionally explain why, then request
-                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                // Explain if needed, then request
+                locationPermissionLauncherWithCallback(onComplete)
+                    .launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
 
             else -> {
-                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                locationPermissionLauncherWithCallback(onComplete)
+                    .launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
@@ -264,7 +279,7 @@ class ChatbotActivity : AppCompatActivity() {
         }
     }
 
-    private fun centerGreeting() {
+    private fun centerGreeting(onComplete: (() -> Unit)? = null) {
         val layoutManager = binding.chatRecyclerView.layoutManager as LinearLayoutManager
         val greetingPosition = 0
 
@@ -272,13 +287,15 @@ class ChatbotActivity : AppCompatActivity() {
             val viewHolder = binding.chatRecyclerView.findViewHolderForAdapterPosition(greetingPosition)
 
             if (viewHolder == null) {
-                binding.chatRecyclerView.post { centerGreeting() }
+                binding.chatRecyclerView.post { centerGreeting(onComplete) }
                 return@post
             }
 
             applyGreetingCentering(viewHolder, layoutManager, greetingPosition)
+            onComplete?.invoke()
         }
     }
+
 
     private fun applyGreetingCentering(
         viewHolder: RecyclerView.ViewHolder,

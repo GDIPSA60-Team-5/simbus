@@ -58,6 +58,8 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":feature_guidemap"))
+    implementation(project(":feature_chatbot"))
+
     implementation(libs.play.services.maps)
     implementation(libs.flexbox)
     implementation(libs.glide)
