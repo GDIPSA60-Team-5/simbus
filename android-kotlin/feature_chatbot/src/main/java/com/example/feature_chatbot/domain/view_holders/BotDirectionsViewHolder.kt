@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.example.feature_chatbot.R
@@ -15,12 +14,11 @@ import com.example.feature_chatbot.data.Route
 import com.example.feature_chatbot.data.RouteLeg
 import com.example.feature_chatbot.databinding.ItemChatBotDirectionsBinding
 import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.example.feature_chatbot.BuildConfig
 import com.example.feature_chatbot.data.Coordinates
 import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.AlignSelf
 import com.google.android.flexbox.FlexboxLayout
+import com.example.feature_guidemap.MapsNavigationActivity
 import java.net.URLEncoder
 
 class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding) :
@@ -46,10 +44,25 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         bindRoutes(directions.suggestedRoutes)
 
         allRoutes = directions.suggestedRoutes ?: emptyList()
-
         selectedRouteIndex = 0
         updateRouteSelection()
         showSelectedRouteOnStaticMap()
+
+        // Set Start Journey button click listener here
+        binding.startJourneyButton.setOnClickListener {
+            sendSelectedRouteToMapsNavigation()
+        }
+    }
+
+    private fun sendSelectedRouteToMapsNavigation() {
+        if (selectedRouteIndex !in allRoutes.indices) return
+
+        val selectedRoute = allRoutes[selectedRouteIndex]
+        val context = itemView.context
+
+        val intent = android.content.Intent(context, MapsNavigationActivity::class.java)
+        intent.putExtra("selected_route", selectedRoute)
+        context.startActivity(intent)
     }
 
 
@@ -72,10 +85,9 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         val weight = 6
         val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
 
-        val colors = listOf("FF0000", "0000FF", "FFA500") // red, blue, orange fully opaque
+        val colors = listOf("FFA500")
 
-        val maxLegsToShow = 3
-        val legsToShow = route.legs.take(maxLegsToShow)
+        val legsToShow = route.legs
 
         val pathParams = legsToShow.mapIndexed { index, leg ->
             val color = colors[index % colors.size]

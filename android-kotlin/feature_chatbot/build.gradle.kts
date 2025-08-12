@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("kotlin-parcelize")
 }
 
 hilt {
@@ -57,6 +58,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":feature_guidemap"))
     implementation(libs.flexbox)
     implementation(libs.glide)
     ksp(libs.compiler)
