@@ -62,7 +62,16 @@ class ProxyChatbotServiceTest {
     void testHandleChatInput_returnsDirectionsResponse() {
         // Prepare a DirectionsResponseDTO
         DirectionsResponseDTO.LegDTO leg = new DirectionsResponseDTO.LegDTO(
-                "bus", 10, "12", "Take bus 12", "encodedPolyline"
+                "bus",
+                15,
+                "123",
+                "Take bus 123",
+                "encodedPolylineData",
+                List.of(new Coordinates(0, 0)),
+                "Start Stop",
+                "End Stop",
+                "08:00",
+                "08:15"
         );
 
         DirectionsResponseDTO.RouteDTO route = new DirectionsResponseDTO.RouteDTO(

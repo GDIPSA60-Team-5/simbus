@@ -5,12 +5,14 @@ import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
@@ -18,6 +20,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.viewpager2.widget.ViewPager2
+import com.example.core.model.Route
+import com.example.core.model.RouteLeg
+import com.example.feature_guidemap.databinding.ActivityMapsNavigationBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -30,71 +36,54 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
 
+    private lateinit var binding: ActivityMapsNavigationBinding
     private lateinit var googleMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocationMarker: Marker? = null
-    private var routePolyline: Polyline? = null
-
-    private lateinit var instructionCard: CardView
-    private lateinit var directionIcon: ImageView
-    private lateinit var distanceText: TextView
-    private lateinit var instructionText: TextView
-    private lateinit var timeRemainingText: TextView
-    private lateinit var distanceRemainingText: TextView
-    private lateinit var speedText: TextView
-    private lateinit var audioButton: FloatingActionButton
-    private lateinit var endButton: MaterialButton
-    private lateinit var compassIcon: ImageView
-
-    private val handler = Handler(Looper.getMainLooper())
-    private var navigationRunnable: Runnable? = null
-    private var currentInstructionIndex = 0
-    private var isAudioEnabled = true
+    private var routePolylines: MutableList<Polyline> = mutableListOf()
+    
+    private var selectedRoute: Route? = null
+    private var currentLegIndex = 0
+    private lateinit var legAdapter: LegInstructionAdapter
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
     }
 
-    private val navigationInstructions = listOf(
-        NavigationInstruction("Turn right onto Main Street", "200m", TurnDirection.RIGHT, R.drawable.ic_turn_right),
-        NavigationInstruction("Continue straight for 1.2km", "1.2km", TurnDirection.STRAIGHT, R.drawable.ic_straight),
-        NavigationInstruction("Turn left onto Oak Avenue", "300m", TurnDirection.LEFT, R.drawable.ic_turn_left),
-        NavigationInstruction("Slight right onto Highway 101", "450m", TurnDirection.RIGHT, R.drawable.ic_turn_right),
-        NavigationInstruction("Take the exit toward Downtown", "800m", TurnDirection.STRAIGHT, R.drawable.ic_straight),
-        NavigationInstruction("Turn left onto Broadway", "150m", TurnDirection.LEFT, R.drawable.ic_turn_left),
-        NavigationInstruction("Destination on your right", "50m", TurnDirection.DESTINATION, R.drawable.ic_destination)
-    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_maps_navigation)
+        binding = ActivityMapsNavigationBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Initialize location services
+        // Initialize selectedRoute properly
+        selectedRoute = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("selected_route", Route::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra("selected_route")
+        }
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        // Initialize map
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map_fragment) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         initViews()
-        setupAnimations()
         supportActionBar?.hide()
-
-        // Check location permissions
         checkLocationPermissions()
     }
+
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-
-        // Configure map
         setupMap()
 
-        // Start navigation simulation
-        startNavigation()
+        selectedRoute?.let {
+            setupViewPager()
+            displayRoute()
+        }
     }
+
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun setupMap() {
@@ -117,41 +106,17 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             // Move camera to default location (Singapore)
             val singapore = LatLng(1.3521, 103.8198)
             moveCamera(CameraUpdateFactory.newLatLngZoom(singapore, 15f))
-
-            // Add sample route
-            addSampleRoute()
         }
 
         // Get current location and center map
         getCurrentLocation()
     }
-
-    private fun addSampleRoute() {
-        // Sample route points (Singapore area)
-        val routePoints = listOf(
-            LatLng(1.3521, 103.8198), // Starting point
-            LatLng(1.3541, 103.8218),
-            LatLng(1.3561, 103.8238),
-            LatLng(1.3581, 103.8258),
-            LatLng(1.3601, 103.8278)  // Destination
-        )
-
-        // Draw route polyline
-        routePolyline = googleMap.addPolyline(
-            PolylineOptions()
-                .addAll(routePoints)
-                .color(ContextCompat.getColor(this, R.color.direction_right))
-                .width(12f)
-                .pattern(listOf(Dash(30f), Gap(20f)))
-        )
-
-        // Add destination marker
-        googleMap.addMarker(
-            MarkerOptions()
-                .position(routePoints.last())
-                .title("Destination")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-        )
+    
+    private fun displayRoute() {
+        selectedRoute?.let {
+            // Show all legs with different colors but initially focus on first leg
+            focusOnLeg(0)
+        }
     }
 
     private fun checkLocationPermissions() {
@@ -217,125 +182,167 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun initViews() {
-        instructionCard = findViewById(R.id.instruction_card)
-        directionIcon = findViewById(R.id.iv_direction_icon)
-        distanceText = findViewById(R.id.tv_distance)
-        instructionText = findViewById(R.id.tv_instruction)
-        timeRemainingText = findViewById(R.id.tv_time_remaining)
-        distanceRemainingText = findViewById(R.id.tv_distance_remaining)
-        speedText = findViewById(R.id.tv_speed)
-        audioButton = findViewById(R.id.fab_audio)
-        endButton = findViewById(R.id.btn_end_journey)
-        compassIcon = findViewById(R.id.iv_compass)
-
-        // Set click listeners
-        audioButton.setOnClickListener { toggleAudio() }
-        endButton.setOnClickListener { endJourney() }
-
-        // Initial instruction
-        updateInstruction(navigationInstructions[0])
+        // Set click listeners using binding
+        binding.btnStartNavigation.setOnClickListener { startNavigation() }
+        binding.fabZoomIn.setOnClickListener { zoomIn() }
+        binding.fabZoomOut.setOnClickListener { zoomOut() }
     }
-
-    private fun setupAnimations() {
-        // Slide down animation for instruction card
-        val slideDown = AnimationUtils.loadAnimation(this, R.anim.slide_down)
-        instructionCard.startAnimation(slideDown)
-
-        // Slide up animation for bottom controls
-        val slideUp = AnimationUtils.loadAnimation(this, R.anim.slide_up)
-        findViewById<View>(R.id.bottom_controls).startAnimation(slideUp)
-
-        // Rotate animation for compass
-        val compassRotation = ObjectAnimator.ofFloat(compassIcon, "rotation", 0f, 360f)
-        compassRotation.duration = 8000
-        compassRotation.repeatCount = ValueAnimator.INFINITE
-        compassRotation.start()
+    
+    private fun setupViewPager() {
+        selectedRoute?.let { route ->
+            legAdapter = LegInstructionAdapter(route.legs) { legIndex ->
+                focusOnLeg(legIndex)
+            }
+            binding.vpLegInstructions.adapter = legAdapter
+            
+            // Set up page change listener
+            binding.vpLegInstructions.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    super.onPageSelected(position)
+                    currentLegIndex = position
+                    focusOnLeg(position)
+                    updatePageIndicators(position)
+                }
+            })
+            
+            // Initial setup
+            setupPageIndicators(route.legs.size)
+            focusOnLeg(0)
+        }
+    }
+    
+    private fun setupPageIndicators(count: Int) {
+        binding.llPageIndicators.removeAllViews()
+        
+        for (i in 0 until count) {
+            val indicator = View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    16, 16
+                ).apply {
+                    setMargins(4, 0, 4, 0)
+                }
+                background = ContextCompat.getDrawable(this@MapsNavigationActivity, R.drawable.direction_icon_background)
+                alpha = if (i == 0) 1.0f else 0.3f
+            }
+            binding.llPageIndicators.addView(indicator)
+        }
+    }
+    
+    private fun updatePageIndicators(selectedIndex: Int) {
+        for (i in 0 until binding.llPageIndicators.childCount) {
+            binding.llPageIndicators.getChildAt(i).alpha = if (i == selectedIndex) 1.0f else 0.3f
+        }
+    }
+    
+    private fun focusOnLeg(legIndex: Int) {
+        selectedRoute?.let { route ->
+            if (legIndex < route.legs.size) {
+                val leg = route.legs[legIndex]
+                
+                routePolylines.forEach { it.remove() }
+                routePolylines.clear()
+                googleMap.clear()
+                
+                // Draw polyline for current leg only
+                leg.routePoints?.let { points ->
+                    if (points.size >= 2) {
+                        val latLngPoints = points.map { LatLng(it.latitude, it.longitude) }
+                        
+                        val color = when (leg.type.uppercase()) {
+                            "WALK" -> ContextCompat.getColor(this, R.color.direction_straight)
+                            "BUS" -> ContextCompat.getColor(this, R.color.direction_right)
+                            else -> ContextCompat.getColor(this, R.color.direction_destination)
+                        }
+                        
+                        val polyline = googleMap.addPolyline(
+                            PolylineOptions()
+                                .addAll(latLngPoints)
+                                .color(color)
+                                .width(12f)
+                        )
+                        routePolylines.add(polyline)
+                        
+                        // Focus camera on this leg
+                        val boundsBuilder = LatLngBounds.Builder()
+                        latLngPoints.forEach { boundsBuilder.include(it) }
+                        val bounds = boundsBuilder.build()
+                        
+                        googleMap.animateCamera(
+                            CameraUpdateFactory.newLatLngBounds(bounds, 100)
+                        )
+                        
+                        // Add markers for start and end of leg
+                        addLegMarkers(leg, latLngPoints.first(), latLngPoints.last())
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun addLegMarkers(leg: RouteLeg, startPos: LatLng, endPos: LatLng) {
+        // Add start marker
+        val startTitle = when (leg.type.uppercase()) {
+            "WALK" -> "Start walking"
+            "BUS" -> leg.fromStopName ?: "Bus stop"
+            else -> "Start"
+        }
+        
+        googleMap.addMarker(
+            MarkerOptions()
+                .position(startPos)
+                .title(startTitle)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+        )
+        
+        // Add end marker
+        val endTitle = when (leg.type.uppercase()) {
+            "WALK" -> leg.toStopName ?: "Destination"
+            "BUS" -> leg.toStopName ?: "Bus stop"
+            else -> "End"
+        }
+        
+        googleMap.addMarker(
+            MarkerOptions()
+                .position(endPos)
+                .title(endTitle)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        )
     }
 
     private fun startNavigation() {
-        navigationRunnable = object : Runnable {
-            override fun run() {
-                updateNavigation()
-                handler.postDelayed(this, 4000) // Update every 4 seconds
-            }
-        }
-        handler.postDelayed(navigationRunnable!!, 4000)
+        binding.btnStartNavigation.visibility = View.GONE
+        
     }
 
-    private fun updateNavigation() {
-        currentInstructionIndex = (currentInstructionIndex + 1) % navigationInstructions.size
-        val instruction = navigationInstructions[currentInstructionIndex]
 
-        updateInstruction(instruction)
-        updateJourneyProgress()
-        updateSpeed()
-    }
-
-    private fun updateInstruction(instruction: NavigationInstruction) {
-        // Fade out current instruction
-        instructionCard.animate()
-            .alpha(0f)
-            .setDuration(200)
+    private fun zoomIn() {
+        googleMap.animateCamera(CameraUpdateFactory.zoomIn())
+        
+        // Add bounce animation to the button
+        binding.fabZoomIn.animate()
+            .scaleX(0.8f)
+            .scaleY(0.8f)
+            .setDuration(100)
             .withEndAction {
-                // Update content
-                directionIcon.setImageResource(instruction.iconResId)
-                directionIcon.backgroundTintList = ContextCompat.getColorStateList(
-                    this@MapsNavigationActivity,
-                    getDirectionColor(instruction.direction)
-                )
-                distanceText.text = instruction.distance
-                instructionText.text = instruction.text
-
-                // Fade in with new content
-                instructionCard.animate()
-                    .alpha(1f)
-                    .setDuration(200)
+                binding.fabZoomIn.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(100)
                     .start()
             }
             .start()
     }
 
-    private fun getDirectionColor(direction: TurnDirection): Int {
-        return when (direction) {
-            TurnDirection.RIGHT -> R.color.direction_right
-            TurnDirection.LEFT -> R.color.direction_left
-            TurnDirection.STRAIGHT -> R.color.direction_straight
-            TurnDirection.DESTINATION -> R.color.direction_destination
-        }
-    }
-
-    private fun updateJourneyProgress() {
-        val timeRemaining = maxOf(1, 12 - currentInstructionIndex * 2)
-        val distanceRemaining = maxOf(0.1, 3.2 - currentInstructionIndex * 0.5)
-
-        timeRemainingText.text = "${timeRemaining} min"
-        distanceRemainingText.text = String.format("%.1f km remaining", distanceRemaining)
-    }
-
-    private fun updateSpeed() {
-        val speeds = listOf(42, 45, 38, 50, 35, 48, 41)
-        val randomSpeed = speeds.random()
-        speedText.text = randomSpeed.toString()
-    }
-
-    private fun toggleAudio() {
-        isAudioEnabled = !isAudioEnabled
-
-        if (isAudioEnabled) {
-            audioButton.setImageResource(R.drawable.ic_volume_up)
-            audioButton.backgroundTintList = ContextCompat.getColorStateList(this, R.color.audio_enabled)
-        } else {
-            audioButton.setImageResource(R.drawable.ic_volume_off)
-            audioButton.backgroundTintList = ContextCompat.getColorStateList(this, R.color.audio_disabled)
-        }
-
-        // Add bounce animation
-        audioButton.animate()
+    private fun zoomOut() {
+        googleMap.animateCamera(CameraUpdateFactory.zoomOut())
+        
+        // Add bounce animation to the button
+        binding.fabZoomOut.animate()
             .scaleX(0.8f)
             .scaleY(0.8f)
             .setDuration(100)
             .withEndAction {
-                audioButton.animate()
+                binding.fabZoomOut.animate()
                     .scaleX(1f)
                     .scaleY(1f)
                     .setDuration(100)
@@ -345,13 +352,6 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun endJourney() {
-        navigationRunnable?.let { handler.removeCallbacks(it) }
         finish()
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        navigationRunnable?.let { handler.removeCallbacks(it) }
     }
 }

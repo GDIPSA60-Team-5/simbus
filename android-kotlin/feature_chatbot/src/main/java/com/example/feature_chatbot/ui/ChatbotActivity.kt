@@ -18,7 +18,7 @@ import com.example.core.api.UserApi
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.databinding.ActivityChatbotBinding
 import com.example.feature_chatbot.data.ChatAdapter
-import com.example.feature_chatbot.data.Coordinates
+import com.example.core.model.Coordinates
 import com.example.feature_chatbot.api.ChatController
 import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.domain.SpeechManager

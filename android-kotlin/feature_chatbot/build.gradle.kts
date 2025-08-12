@@ -58,8 +58,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":feature_guidemap"))
     implementation(project(":core"))
+    implementation(project(":feature_guidemap"))
     implementation(libs.flexbox)
     implementation(libs.glide)
     ksp(libs.compiler)

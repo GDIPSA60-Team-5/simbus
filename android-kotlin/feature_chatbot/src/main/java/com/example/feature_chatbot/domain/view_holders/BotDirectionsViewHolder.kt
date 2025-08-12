@@ -10,12 +10,12 @@ import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.data.BotResponse
-import com.example.feature_chatbot.data.Route
-import com.example.feature_chatbot.data.RouteLeg
+import com.example.core.model.Route
+import com.example.core.model.RouteLeg
+import com.example.core.model.Coordinates
 import com.example.feature_chatbot.databinding.ItemChatBotDirectionsBinding
 import com.google.android.material.chip.Chip
 import com.example.feature_chatbot.BuildConfig
-import com.example.feature_chatbot.data.Coordinates
 import com.google.android.flexbox.AlignItems
 import com.google.android.flexbox.FlexboxLayout
 import com.example.feature_guidemap.MapsNavigationActivity
@@ -77,34 +77,94 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
             .placeholder(R.drawable.placeholder_map) // your placeholder drawable
             .error(R.drawable.error_map) // your error drawable
             .into(staticMapImageView)
+            
+        // Add click listener to navigate to full map view
+        staticMapImageView.setOnClickListener {
+            sendSelectedRouteToMapsNavigation()
+        }
     }
 
     private fun buildStaticMapUrl(route: Route): String {
         val baseUrl = "https://maps.googleapis.com/maps/api/staticmap"
-        val size = "600x300"
-        val weight = 6
+        val size = "800x400" // Larger size for better visibility
         val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
-
-        val colors = listOf("FFA500")
-
+        
+        // Modern color scheme for different transport modes
+        val walkColor = "4285F4" // Google Blue for walking
+        val busColor = "34A853" // Google Green for bus
+        val defaultColor = "EA4335" // Google Red for other modes
+        
         val legsToShow = route.legs
+        val allMarkers = mutableListOf<String>()
+        val allPaths = mutableListOf<String>()
 
-        val pathParams = legsToShow.mapIndexed { index, leg ->
-            val color = colors[index % colors.size]
-            val safePolyline = URLEncoder.encode(leg.legGeometry, "UTF-8")
-            "path=color:0x$color|weight:$weight|enc:$safePolyline"
-        }.joinToString("&")
-
+        // Add start marker with custom styling
         val startLat = startCoordinates?.latitude ?: 0.0
         val startLng = startCoordinates?.longitude ?: 0.0
+        allMarkers.add("markers=color:0x4285F4|size:mid|label:S|$startLat,$startLng")
+
+        // Process each leg for paths and bus stop markers
+        legsToShow.forEachIndexed { index, leg ->
+            val color = when (leg.type.uppercase()) {
+                "WALK" -> walkColor
+                "BUS" -> busColor
+                else -> defaultColor
+            }
+            
+            val weight = if (leg.type.uppercase() == "BUS") 8 else 6 // Thicker lines for bus routes
+            
+            // Create path for this leg
+            val routePoints = leg.routePoints
+            if (routePoints != null && routePoints.isNotEmpty()) {
+                val pathString = routePoints.joinToString("|") { "${it.latitude},${it.longitude}" }
+                allPaths.add("path=color:0x$color|weight:$weight|$pathString")
+                
+                // Add bus stop markers for transit legs
+                if (leg.type.uppercase() == "BUS" && routePoints.size > 2) {
+                    // Add markers for intermediate bus stops (excluding start and end points of the leg)
+                    routePoints.drop(1).dropLast(1).forEachIndexed { stopIndex, point ->
+                        val busStopLabel = leg.busServiceNumber?.take(2) ?: "B" // Use bus number or "B"
+                        allMarkers.add("markers=color:0x34A853|size:small|label:$busStopLabel|${point.latitude},${point.longitude}")
+                    }
+                }
+            } else {
+                // Fallback to polyline with modern styling
+                val safePolyline = URLEncoder.encode(leg.legGeometry, "UTF-8")
+                allPaths.add("path=color:0x$color|weight:$weight|enc:$safePolyline")
+            }
+        }
+
+        // Add end marker with custom styling
         val endLat = endCoordinates?.latitude ?: 0.0
         val endLng = endCoordinates?.longitude ?: 0.0
+        allMarkers.add("markers=color:0xEA4335|size:mid|label:E|$endLat,$endLng")
+        
+        // Add transfer points markers for multi-leg routes
+        if (legsToShow.size > 1) {
+            for (i in 0 until legsToShow.size - 1) {
+                val currentLeg = legsToShow[i]
+                val nextLeg = legsToShow[i + 1]
+                
+                // Get the end point of current leg (transfer point)
+                val transferPoint = currentLeg.routePoints?.lastOrNull()
+                if (transferPoint != null && 
+                    currentLeg.type.uppercase() != "WALK" && 
+                    nextLeg.type.uppercase() != "WALK") {
+                    allMarkers.add("markers=color:0xFBBC04|size:small|label:T|${transferPoint.latitude},${transferPoint.longitude}")
+                }
+            }
+        }
 
-        val markers =
-            "markers=color:green|label:S|$startLat,$startLng&" +
-                    "markers=color:red|label:E|$endLat,$endLng"
+        // Combine all components
+        val pathParams = allPaths.joinToString("&")
+        val markerParams = allMarkers.joinToString("&")
+        
+        // Add map styling for modern look
+        val style = "style=feature:all|element:geometry|color:0xf5f5f5&" +
+                   "style=feature:water|element:all|color:0xc9c9c9&" +
+                   "style=feature:road|element:all|color:0xffffff"
 
-        return "$baseUrl?size=$size&$pathParams&$markers&key=$apiKey"
+        return "$baseUrl?size=$size&$pathParams&$markerParams&$style&key=$apiKey"
     }
 
 
