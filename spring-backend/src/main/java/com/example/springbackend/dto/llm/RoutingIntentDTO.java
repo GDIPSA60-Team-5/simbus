@@ -9,5 +9,7 @@ public record RoutingIntentDTO(
         String startLocation,
         String endLocation,
         @JsonFormat(pattern = "HH:mm")
-        LocalTime arrivalTime
+        LocalTime arrivalTime,
+        @JsonFormat(pattern = "HH:mm")
+        LocalTime startTime
 ) {}

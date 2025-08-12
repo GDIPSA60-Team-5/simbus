@@ -15,7 +15,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +45,8 @@ public class LocalChatbotService implements ChatbotService {
     @Override
     public Mono<BotResponseDTO> handleChatInput(ChatRequest request, HttpHeaders incomingHeaders) {
         String input = safeTrim(request.userInput());
-
+        LocalDateTime scheduledTime = TimeParser.parseTomorrowAt(input);
+        LocalTime scheduledLocalTime = scheduledTime != null ? scheduledTime.toLocalTime() : null;
         if (input.isEmpty()) {
             return Mono.just(new MessageResponseDTO("Empty input. Please tell me where you want to go, e.g., 'from Bishan to Orchard'."));
         }
@@ -93,7 +97,7 @@ public class LocalChatbotService implements ChatbotService {
                     String startCoordsStr = startLoc.coordinates().toString();
                     String endCoordsStr = endLoc.coordinates().toString();
 
-                    return routingService.getBusRoutes(startCoordsStr, endCoordsStr, null)
+                    return routingService.getBusRoutes(startCoordsStr, endCoordsStr, null, scheduledLocalTime)
                             .map(routes -> (BotResponseDTO) new DirectionsResponseDTO(
                                     startLoc.displayName(),
                                     endLoc.displayName(),
@@ -120,5 +124,46 @@ public class LocalChatbotService implements ChatbotService {
 
     private static String safeTrim(String s) {
         return s == null ? "" : s.trim();
+    }
+}
+class TimeParser {
+
+    private static final Pattern TOMORROW_AT_PATTERN = Pattern.compile(
+            "(?i)\\btomorrow\\s+at\\s+([0-9]{1,2}(:[0-9]{2})?\\s*(am|pm)?)\\b");
+
+    /**
+     * Parses a string for "tomorrow at <time>" and returns the corresponding LocalDateTime.
+     * If pattern not found or time invalid, returns null.
+     */
+    public static LocalDateTime parseTomorrowAt(String input) {
+        Matcher matcher = TOMORROW_AT_PATTERN.matcher(input);
+        if (matcher.find()) {
+            String timePart = matcher.group(1).toLowerCase().replaceAll("\\s+", "");
+            try {
+                // Try am/pm format first
+                DateTimeFormatter formatter12h = DateTimeFormatter.ofPattern("h[:mm]a");
+                LocalTime time;
+                if (timePart.endsWith("am") || timePart.endsWith("pm")) {
+                    time = LocalTime.parse(timePart, formatter12h);
+                } else {
+                    // 24-hour format fallback
+                    DateTimeFormatter formatter24h = DateTimeFormatter.ofPattern("H[:mm]");
+                    time = LocalTime.parse(timePart, formatter24h);
+                }
+
+                // Calculate tomorrow's date + time
+                return LocalDateTime.now()
+                        .plusDays(1)
+                        .withHour(time.getHour())
+                        .withMinute(time.getMinute())
+                        .withSecond(0)
+                        .withNano(0);
+
+            } catch (DateTimeParseException e) {
+                // Invalid time format
+                return null;
+            }
+        }
+        return null;
     }
 }

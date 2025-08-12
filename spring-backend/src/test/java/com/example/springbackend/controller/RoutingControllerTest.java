@@ -69,13 +69,28 @@ class RoutingControllerTest {
     void testGetDirectionsWithProvidedLocations() {
         // Arrange mock response
         List<LegDTO> legs = List.of(
-                new LegDTO("bus", 15, "123", "Take bus 123", "encodedPolylineData")
+                new LegDTO(
+                        "bus",
+                        15,
+                        "123",
+                        "Take bus 123",
+                        "encodedPolylineData",
+                        List.of(new Coordinates(0, 0)),
+                        "Start Stop",
+                        "End Stop",
+                        "08:00",
+                        "08:15"
+                )
         );
         List<RouteDTO> routes = List.of(
-                new RouteDTO(15, legs, "Bus 123 to destination")
+                new RouteDTO(
+                        15,
+                        legs,
+                        "Bus 123 to destination"
+                )
         );
 
-        when(routingService.getBusRoutes(anyString(), anyString(), any()))
+        when(routingService.getBusRoutes(anyString(), anyString(), any(), any()))
                 .thenReturn(Mono.just(routes));
 
         RoutingIntentDTO requestDto = new RoutingIntentDTO(
@@ -83,7 +98,8 @@ class RoutingControllerTest {
                 "3.0,4.0",
                 "Custom Origin",
                 "Custom Destination",
-                LocalTime.of(9, 30)
+                LocalTime.of(8, 30),
+                LocalTime.of(12, 0)
         );
 
         // Act & Assert
@@ -96,7 +112,6 @@ class RoutingControllerTest {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody(DirectionsResponseDTO.class)
                 .value(response -> {
-                    // Validate mapping
                     org.assertj.core.api.Assertions.assertThat(response.startLocation()).isEqualTo("Custom Origin");
                     org.assertj.core.api.Assertions.assertThat(response.endLocation()).isEqualTo("Custom Destination");
                     org.assertj.core.api.Assertions.assertThat(response.startCoordinates())
@@ -115,7 +130,7 @@ class RoutingControllerTest {
                 new RouteDTO(10, List.of(), "No legs")
         );
 
-        when(routingService.getBusRoutes(anyString(), anyString(), any()))
+        when(routingService.getBusRoutes(anyString(), anyString(), any(), any()))
                 .thenReturn(Mono.just(routes));
 
         // startLocation and endLocation are blank -> should default
@@ -124,6 +139,7 @@ class RoutingControllerTest {
                 "7.0,8.0",
                 "   ",   // blank
                 null,   // null
+                LocalTime.of(12, 0),
                 LocalTime.of(12, 0)
         );
 

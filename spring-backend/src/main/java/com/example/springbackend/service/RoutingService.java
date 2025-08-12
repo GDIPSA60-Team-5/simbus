@@ -38,15 +38,15 @@ public class RoutingService {
         this.webClient = webClient;
     }
 
-    public Mono<List<DirectionsResponseDTO.RouteDTO>> getBusRoutes(String start, String end, LocalTime arrivalTime) {
+    public Mono<List<DirectionsResponseDTO.RouteDTO>> getBusRoutes(String start, String end, LocalTime arrivalTime, LocalTime startTime) {
         return validateCoordinates(start, end)
                 .then(
                         webClient.get()
                                 .uri(uriBuilder -> {
                                     LocalDate today = LocalDate.now(SINGAPORE);
-                                    LocalTime now = LocalTime.now(SINGAPORE);
+                                    LocalTime timeParam = startTime != null ? startTime : LocalTime.now(SINGAPORE);
                                     String dateParam = today.format(DATE_FMT);
-                                    String timeParam = now.format(TIME_FMT);
+                                    String timeStr = timeParam.format(TIME_FMT);
                                     return uriBuilder
                                             .path("/api/public/routingsvc/route")
                                             .queryParam("start", start)
@@ -54,7 +54,7 @@ public class RoutingService {
                                             .queryParam("routeType", "pt")
                                             .queryParam("mode", "BUS")
                                             .queryParam("date", dateParam)
-                                            .queryParam("time", timeParam)
+                                            .queryParam("time", timeStr)
                                             .queryParam("numItineraries", MAX_ITINERARIES)
                                             .build();
                                 })
@@ -71,9 +71,20 @@ public class RoutingService {
                     LocalDateTime nowDateTime = LocalDateTime.of(LocalDate.now(SINGAPORE), LocalTime.now(SINGAPORE));
                     LocalDateTime deadline = LocalDateTime.of(LocalDate.now(SINGAPORE), arrivalTime);
 
-                    return routes.stream()
-                            .filter(route -> !nowDateTime.plusMinutes(route.durationInMinutes()).isAfter(deadline))
+                    // Filter routes that arrive before the deadline
+                    List<DirectionsResponseDTO.RouteDTO> filteredRoutes = routes.stream()
+                            .filter(route -> {
+                                LocalDateTime arrivalDateTime = nowDateTime.plusMinutes(route.durationInMinutes());
+                                return !arrivalDateTime.isAfter(deadline);
+                            })
                             .collect(Collectors.toList());
+                    
+                    // Log for debugging
+                    log.debug("Original routes: {}, Filtered routes: {}, Deadline: {}", 
+                             routes.size(), filteredRoutes.size(), deadline);
+                    
+                    // If no routes meet the deadline, return all routes anyway
+                    return filteredRoutes.isEmpty() ? routes : filteredRoutes;
                 });
     }
 
@@ -83,13 +94,21 @@ public class RoutingService {
             JsonNode planNode = root.path("plan");
 
             if (planNode.isMissingNode() || planNode.isNull()) {
+                log.warn("No plan node found in OneMap response");
                 return Collections.emptyList();
             }
 
-            Coordinates dummyStartCoordinates = new Coordinates(0.0, 0.0);
-            Coordinates dummyEndCoordinates = new Coordinates(0.0, 0.0);
-
-            return parseRoutes(planNode.path("itineraries"), dummyStartCoordinates, dummyEndCoordinates);
+            JsonNode itinerariesNode = planNode.path("itineraries");
+            if (!itinerariesNode.isArray()) {
+                log.warn("No itineraries array found in OneMap response");
+                return Collections.emptyList();
+            }
+            
+            log.debug("Found {} itineraries in OneMap response", itinerariesNode.size());
+            List<DirectionsResponseDTO.RouteDTO> routes = parseRoutes(itinerariesNode);
+            log.debug("Parsed {} routes from itineraries", routes.size());
+            
+            return routes;
 
         } catch (Exception e) {
             log.error("Failed to parse routing JSON response", e);
@@ -97,7 +116,7 @@ public class RoutingService {
         }
     }
 
-    private List<DirectionsResponseDTO.RouteDTO> parseRoutes(JsonNode itinerariesNode, Coordinates startCoordinates, Coordinates endCoordinates) {
+    private List<DirectionsResponseDTO.RouteDTO> parseRoutes(JsonNode itinerariesNode) {
         if (!itinerariesNode.isArray()) return Collections.emptyList();
 
         List<DirectionsResponseDTO.RouteDTO> routes = new ArrayList<>();
@@ -107,11 +126,21 @@ public class RoutingService {
             int durationInMinutes = itineraryNode.path("duration").asInt(0) / 60;
             List<DirectionsResponseDTO.LegDTO> legs = parseLegs(itineraryNode.path("legs"));
 
-            String summary = legs.stream()
+            // Create a comprehensive summary showing all bus services
+            List<String> busServices = legs.stream()
                     .filter(leg -> "BUS".equalsIgnoreCase(leg.type()) && leg.busServiceNumber() != null)
-                    .findFirst()
-                    .map(leg -> "Bus Service " + leg.busServiceNumber())
-                    .orElse("");
+                    .map(DirectionsResponseDTO.LegDTO::busServiceNumber)
+                    .distinct()
+                    .collect(Collectors.toList());
+            
+            String summary;
+            if (busServices.isEmpty()) {
+                summary = "Walking route";
+            } else if (busServices.size() == 1) {
+                summary = "Bus " + busServices.get(0);
+            } else {
+                summary = "Bus " + String.join(" → ", busServices);
+            }
 
             routes.add(new DirectionsResponseDTO.RouteDTO(
                     durationInMinutes,
@@ -137,10 +166,56 @@ public class RoutingService {
             String instruction = String.format("%s from %s to %s", type, fromName, toName);
 
             String legGeometry = legNode.path("legGeometry").path("points").asText(null);
+            List<Coordinates> routePoints = extractRoutePoints(legNode);
+            
+            // Extract bus stop details
+            String fromStopName = legNode.path("from").path("name").asText(null);
+            String fromStopCode = legNode.path("from").path("stopCode").asText(null);
+            String toStopName = legNode.path("to").path("name").asText(null);
+            String toStopCode = legNode.path("to").path("stopCode").asText(null);
 
-            legs.add(new DirectionsResponseDTO.LegDTO(type, legDuration, busServiceNumber, instruction, legGeometry));
+            legs.add(new DirectionsResponseDTO.LegDTO(type, legDuration, busServiceNumber, instruction, legGeometry, routePoints,
+                    fromStopName, fromStopCode, toStopName, toStopCode));
         }
         return legs;
+    }
+
+    private List<Coordinates> extractRoutePoints(JsonNode legNode) {
+        List<Coordinates> routePoints = new ArrayList<>();
+        
+        // Add starting point
+        JsonNode fromNode = legNode.path("from");
+        if (!fromNode.isMissingNode()) {
+            double lat = fromNode.path("lat").asDouble(0.0);
+            double lon = fromNode.path("lon").asDouble(0.0);
+            if (lat != 0.0 || lon != 0.0) {
+                routePoints.add(new Coordinates(lat, lon));
+            }
+        }
+        
+        // Add intermediate stops for transit legs
+        JsonNode intermediateStops = legNode.path("intermediateStops");
+        if (intermediateStops.isArray()) {
+            for (JsonNode stop : intermediateStops) {
+                double lat = stop.path("lat").asDouble(0.0);
+                double lon = stop.path("lon").asDouble(0.0);
+                if (lat != 0.0 || lon != 0.0) {
+                    routePoints.add(new Coordinates(lat, lon));
+                }
+            }
+        }
+        
+        // Add ending point
+        JsonNode toNode = legNode.path("to");
+        if (!toNode.isMissingNode()) {
+            double lat = toNode.path("lat").asDouble(0.0);
+            double lon = toNode.path("lon").asDouble(0.0);
+            if (lat != 0.0 || lon != 0.0) {
+                routePoints.add(new Coordinates(lat, lon));
+            }
+        }
+        
+        return routePoints;
     }
 
     private Mono<Void> validateCoordinates(String start, String end) {
