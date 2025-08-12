@@ -1,6 +1,8 @@
 package com.example.springbackend.controller;
 
+import com.example.springbackend.model.NotificationJobMongo;
 import com.example.springbackend.model.RouteMongo;
+import com.example.springbackend.repository.NotificationJobMongoRepository;
 import com.example.springbackend.repository.RouteMongoRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +18,11 @@ import java.util.Map;
 public class RoutesController {
 
     private final RouteMongoRepository routeRepository;
+    private final NotificationJobMongoRepository notificationRepository;
 
-    public RoutesController(RouteMongoRepository routeRepository) {
+    public RoutesController(RouteMongoRepository routeRepository, NotificationJobMongoRepository notificationRepository) {
         this.routeRepository = routeRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     @GetMapping("/routes")
@@ -43,7 +47,22 @@ public class RoutesController {
                 (List<Boolean>) routeData.get("selectedDays")
         );
 
-        return routeRepository.save(route);
+        return routeRepository.save(route)
+            .flatMap(savedRoute -> {
+                NotificationJobMongo job = new NotificationJobMongo();
+                job.setRouteId(savedRoute.getId());
+                job.setFcmToken(deviceId); // Or look up FCM token from user/device registry
+                job.setScheduledTime(savedRoute.getStartTime());
+                job.setSelectedDays(savedRoute.getSelectedDays());
+                job.setTimezone("Asia/Singapore");
+                job.setMessageTitle("Bus Reminder");
+                job.setMessageBody("Your bus from " + savedRoute.getFrom() +
+                        " to " + savedRoute.getTo() +
+                        " is arriving soon.");
+                job.setStatus("PENDING");
+
+                return notificationRepository.save(job).thenReturn(savedRoute);
+            });
     }
 
     @DeleteMapping("/routes/{routeId}")
@@ -52,7 +71,11 @@ public class RoutesController {
             @PathVariable String routeId) {
 
         return routeRepository.findByDeviceIdAndId(deviceId, routeId)
-                .flatMap(existing -> routeRepository.delete(existing).thenReturn(ResponseEntity.noContent().<Void>build()))
+                .flatMap(existing -> notificationRepository.findByRouteId(routeId)
+                    .flatMap(notificationRepository::delete)
+                    .then(routeRepository.delete(existing))
+                    .thenReturn(ResponseEntity.noContent().<Void>build())
+                )
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
@@ -78,10 +101,33 @@ public class RoutesController {
                         existing.setSelectedDays(list);
                     }
                     existing.setUpdatedAt(LocalDateTime.now());
-                    return routeRepository.save(existing);
+                    return routeRepository.save(existing)
+                        .flatMap(updatedRoute ->
+                                notificationRepository.findByRouteId(routeId)
+                                    .flatMap(notificationRepository::delete) // remove old jobs
+                                    .then(notificationRepository.save(createJobFromRoute(updatedRoute)))
+                                    .thenReturn(updatedRoute)
+                        );
                 })
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    private NotificationJobMongo createJobFromRoute(RouteMongo route) {
+        NotificationJobMongo job = new NotificationJobMongo();
+        job.setRouteId(route.getId());
+        job.setFcmToken(route.getDeviceId()); // or fetch from token registry
+        job.setScheduledTime(route.getStartTime());
+        job.setSelectedDays(route.getSelectedDays());
+        job.setTimezone("Asia/Singapore");
+        job.setMessageTitle("Bus Reminder");
+        job.setMessageBody("Your bus from " + route.getFrom() +
+                " to " + route.getTo() +
+                " is arriving soon.");
+        job.setStatus("PENDING");
+        job.setCreatedAt(LocalDateTime.now());
+        job.setUpdatedAt(LocalDateTime.now());
+        return job;
     }
 }
 
