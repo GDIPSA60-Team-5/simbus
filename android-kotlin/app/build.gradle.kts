@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 
@@ -63,4 +64,6 @@ dependencies {
     implementation(project(":feature_navigateBar"))
     implementation(project(":feature_notification"))
     implementation(project(":feature_saveRoute"))
+    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
+    implementation("com.google.firebase:firebase-analytics")
 }
