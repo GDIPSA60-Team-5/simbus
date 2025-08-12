@@ -20,7 +20,7 @@ public class UserNotification {
 	@Id
 	private String id;
 
-	private String userId;
+	private Long userId;
 	private String type;
 	private String title;
 	private String message;

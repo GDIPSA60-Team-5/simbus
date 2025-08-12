@@ -26,7 +26,7 @@ public class CommutePlan {
 
 	private String startLocationId;  // reference to Location.id
 	private String endLocationId;    // reference to Location.id
-	private String userId;           // reference to User.id
+	private Long userId;           // reference to User.id
 
 	// IDs for related entities, loaded separately if needed
 	private List<String> commuteHistoryIds;

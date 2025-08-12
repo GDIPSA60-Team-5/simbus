@@ -20,7 +20,7 @@ public class Feedback {
 	private String id;
 
 	private String userName;
-	private String userId;
+	private Long userId;
 	private String feedbackText;
 	private Integer rating;
 	private String tagList;
