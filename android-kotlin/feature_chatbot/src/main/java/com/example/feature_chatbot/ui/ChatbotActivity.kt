@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.lifecycle.lifecycleScope
+import androidx.activity.viewModels
 import com.example.core.api.UserApi
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.databinding.ActivityChatbotBinding
@@ -74,9 +75,12 @@ class ChatbotActivity : AppCompatActivity() {
     // UI Components
     private lateinit var chatAdapter: ChatAdapter
 
+    // ViewModel
+    private val chatViewModel: ChatViewModel by viewModels()
+
     // State
     private var isAutoScrolling = false
-    private var isGreetingPaddingRemoved = false
+    private var isGreetingPaddingRemoved = true // Start with padding removed
     private var username: String = "User"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,16 +91,13 @@ class ChatbotActivity : AppCompatActivity() {
         setupUI()
         initializeComponents()
         setupListeners()
+        observeViewModel()
         loadUserData()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         checkLocationPermission {
-        binding.chatRecyclerView.post {
-                centerGreeting {
-                    checkExternalIntents()
-                }
-            }
+            checkExternalIntents()
         }
     }
 
@@ -165,12 +166,33 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         chatAdapter = ChatAdapter { scrollToBottom() }
-        chatAdapter.replaceAll(emptyList())
 
         with(binding.chatRecyclerView) {
             adapter = chatAdapter
             layoutManager = LinearLayoutManager(this@ChatbotActivity)
             addOnScrollListener(createScrollListener())
+        }
+    }
+
+    private fun observeViewModel() {
+        chatViewModel.chatMessages.observe(this) { messages ->
+            chatAdapter.updateMessages(messages)
+            
+            // Check if we have messages beyond just the greeting
+            val hasRealMessages = messages.size > 1
+            if (hasRealMessages) {
+                // If we have messages, scroll to bottom
+                binding.chatRecyclerView.post {
+                    scrollToBottom()
+                }
+            } else {
+                // Only center greeting if no messages exist
+                binding.chatRecyclerView.post {
+                    centerGreeting {
+                        isGreetingPaddingRemoved = false // Mark that we've applied centering
+                    }
+                }
+            }
         }
     }
 
@@ -186,7 +208,7 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun updateScrollToBottomButtonVisibility() {
         binding.chatRecyclerView.post {
-            val itemCount = chatAdapter.itemCount
+            val itemCount = chatViewModel.getMessageCount()
             val canScrollFurther = binding.chatRecyclerView.canScrollVertically(1)
             val shouldShow = canScrollFurther && itemCount > 1
             binding.scrollToBottomButton.visibility = if (shouldShow) View.VISIBLE else View.GONE
@@ -249,17 +271,17 @@ class ChatbotActivity : AppCompatActivity() {
         binding.scrollToBottomButton.visibility = View.GONE
         val userChatItem = ChatItem.UserMessage(UUID.randomUUID().toString(), message)
         val typingIndicator = ChatItem.TypingIndicator()
-        chatAdapter.addChatItem(userChatItem)
-        chatAdapter.addChatItem(typingIndicator)
+        chatViewModel.addMessage(userChatItem)
+        chatViewModel.addMessage(typingIndicator)
 
         chatController.sendMessage(
             userInput = message,
             currentLocation = currentLocation,
             onResult = { botMessage ->
-                chatAdapter.replaceLastChatItem(botMessage)
+                chatViewModel.replaceLastMessage(botMessage)
             },
             onError = { errorMessage ->
-                chatAdapter.replaceLastChatItem(errorMessage)
+                chatViewModel.replaceLastMessage(errorMessage)
             },
             onNewBotMessage = {
                 // Optional: show toast, log, or do nothing
@@ -268,15 +290,13 @@ class ChatbotActivity : AppCompatActivity() {
     }
 
     private fun removeGreetingPaddingIfNeeded() {
-        if (!isGreetingPaddingRemoved) {
-            binding.chatRecyclerView.setPadding(
-                binding.chatRecyclerView.paddingLeft,
-                0,
-                binding.chatRecyclerView.paddingRight,
-                binding.chatRecyclerView.paddingBottom
-            )
-            isGreetingPaddingRemoved = true
-        }
+        binding.chatRecyclerView.setPadding(
+            binding.chatRecyclerView.paddingLeft,
+            0,
+            binding.chatRecyclerView.paddingRight,
+            binding.chatRecyclerView.paddingBottom
+        )
+        isGreetingPaddingRemoved = true
     }
 
     private fun centerGreeting(onComplete: (() -> Unit)? = null) {
@@ -319,10 +339,11 @@ class ChatbotActivity : AppCompatActivity() {
     private fun scrollToBottom() {
         binding.scrollToBottomButton.visibility = View.GONE
 
-        if (chatAdapter.itemCount > 0) {
+        val messageCount = chatViewModel.getMessageCount()
+        if (messageCount > 0) {
             binding.chatRecyclerView.post {
                 isAutoScrolling = true
-                binding.chatRecyclerView.smoothScrollToPosition(chatAdapter.itemCount - 1)
+                binding.chatRecyclerView.smoothScrollToPosition(messageCount - 1)
                 binding.chatRecyclerView.postDelayed(
                     { isAutoScrolling = false },
                     SCROLL_ANIMATION_DELAY

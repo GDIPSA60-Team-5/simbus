@@ -13,7 +13,6 @@ class ChatAdapter(
     onMessageAdded: (() -> Unit)? = null
 ) : ListAdapter<ChatItem, RecyclerView.ViewHolder>(ChatItemDiffCallback()) {
 
-    private val items = mutableListOf<ChatItem>()
     private val onMessageAddedCallback = onMessageAdded
     var username: String = "User"
 
@@ -70,24 +69,7 @@ class ChatAdapter(
         }
     }
 
-    fun addChatItem(item: ChatItem) {
-        items.add(item)
-        submitList(items.toList()) { onMessageAddedCallback?.invoke() }
-    }
-
-    fun replaceLastChatItem(newItem: ChatItem) {
-        if (items.isNotEmpty()) {
-            items[items.lastIndex] = newItem
-        } else {
-            items.add(newItem)
-        }
-        submitList(items.toList()) { onMessageAddedCallback?.invoke() }
-    }
-
-    fun replaceAll(newChatItems: List<ChatItem>) {
-        items.clear()
-        items.add(ChatItem.Greeting)
-        items.addAll(newChatItems)
-        submitList(items.toList())
+    fun updateMessages(newMessages: List<ChatItem>) {
+        submitList(newMessages) { onMessageAddedCallback?.invoke() }
     }
 }
