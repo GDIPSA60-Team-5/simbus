@@ -3,6 +3,7 @@ package com.example.core.service
 import com.example.core.api.StartTripRequest
 import com.example.core.api.TripApi
 import com.example.core.api.UpdateProgressRequest
+import com.example.core.model.Coordinates
 import com.example.core.model.Route
 import com.example.core.model.Trip
 import javax.inject.Inject
@@ -17,6 +18,8 @@ class TripService @Inject constructor(
         username: String,
         startLocation: String,
         endLocation: String,
+        startCoordinates: Coordinates?,
+        endCoordinates: Coordinates?,
         route: Route
     ): Result<Trip> {
         return try {
@@ -24,6 +27,8 @@ class TripService @Inject constructor(
                 username = username,
                 startLocation = startLocation,
                 endLocation = endLocation,
+                startCoordinates = startCoordinates,
+                endCoordinates = endCoordinates,
                 route = route
             )
             

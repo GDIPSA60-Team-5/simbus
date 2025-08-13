@@ -35,10 +35,14 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
     private var allRoutes: List<Route> = emptyList()
     private var startCoordinates: Coordinates? = null
     private var endCoordinates: Coordinates? = null
+    private var startLocation: String = ""
+    private var endLocation: String = ""
 
     fun bind(directions: BotResponse.Directions) {
         startCoordinates = directions.startCoordinates
         endCoordinates = directions.endCoordinates
+        startLocation = directions.startLocation
+        endLocation = directions.endLocation
 
         bindLocationInfo(directions)
         bindRoutes(directions.suggestedRoutes)
@@ -62,6 +66,21 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
 
         val intent = android.content.Intent(context, MapsNavigationActivity::class.java)
         intent.putExtra("selected_route", selectedRoute)
+        
+        // Pass location information
+        intent.putExtra("start_location", startLocation)
+        intent.putExtra("end_location", endLocation)
+        
+        // Pass coordinates if available
+        startCoordinates?.let { coords ->
+            intent.putExtra("start_latitude", coords.latitude)
+            intent.putExtra("start_longitude", coords.longitude)
+        }
+        endCoordinates?.let { coords ->
+            intent.putExtra("end_latitude", coords.latitude)
+            intent.putExtra("end_longitude", coords.longitude)
+        }
+        
         context.startActivity(intent)
     }
 

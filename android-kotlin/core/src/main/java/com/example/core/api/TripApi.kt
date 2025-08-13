@@ -1,5 +1,6 @@
 package com.example.core.api
 
+import com.example.core.model.Coordinates
 import com.example.core.model.Route
 import com.example.core.model.Trip
 import retrofit2.Response
@@ -33,6 +34,8 @@ data class StartTripRequest(
     val username: String,
     val startLocation: String,
     val endLocation: String,
+    val startCoordinates: Coordinates?,
+    val endCoordinates: Coordinates?,
     val route: Route
 )
 

@@ -355,7 +355,12 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             
             // Initial setup
             setupPageIndicators(route.legs.size)
+            
+            // Set ViewPager to current leg (important for when returning to activity)
+            binding.vpLegInstructions.setCurrentItem(currentLegIndex, false)
+            
             focusOnLeg(currentLegIndex)
+            updatePageIndicators(currentLegIndex)
             
             // Show bus arrivals for the initial leg in active mode
             if (isActiveMode) {
@@ -552,10 +557,27 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     val startLocation = intent.getStringExtra("start_location") ?: "Unknown Start"
                     val endLocation = intent.getStringExtra("end_location") ?: "Unknown End"
                     
+                    // Get coordinates from intent if available
+                    val startCoordinates = if (intent.hasExtra("start_latitude") && intent.hasExtra("start_longitude")) {
+                        com.example.core.model.Coordinates(
+                            intent.getDoubleExtra("start_latitude", 0.0),
+                            intent.getDoubleExtra("start_longitude", 0.0)
+                        )
+                    } else null
+                    
+                    val endCoordinates = if (intent.hasExtra("end_latitude") && intent.hasExtra("end_longitude")) {
+                        com.example.core.model.Coordinates(
+                            intent.getDoubleExtra("end_latitude", 0.0),
+                            intent.getDoubleExtra("end_longitude", 0.0)
+                        )
+                    } else null
+                    
                     val result = tripService.startTrip(
                         username = username,
                         startLocation = startLocation,
                         endLocation = endLocation,
+                        startCoordinates = startCoordinates,
+                        endCoordinates = endCoordinates,
                         route = selectedRoute!!
                     )
                     
@@ -1016,7 +1038,13 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     currentLegIndex = newLegIndex
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            tripService.updateTripProgress(trip.id, newLegIndex)
+                            val result = tripService.updateTripProgress(trip.id, newLegIndex)
+                            result.onSuccess { updatedTrip ->
+                                withContext(Dispatchers.Main) {
+                                    // Update the local trip object to reflect the new state
+                                    currentTrip = updatedTrip
+                                }
+                            }
                         } catch (e: Exception) {
                             android.util.Log.e("MapsNavigation", "Error updating trip progress", e)
                         }

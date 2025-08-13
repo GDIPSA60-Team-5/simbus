@@ -143,7 +143,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             val intent = Intent(requireContext(), MapsNavigationActivity::class.java)
             startActivity(intent)
         }
-        
+
+        binding.button3.setOnClickListener {
+            val intent = Intent(requireContext(), TripHistoryActivity::class.java)
+            startActivity(intent)
+        }
         // Active trip overlay click listener
         binding.layoutActiveTrip.setOnClickListener {
             val intent = Intent(requireContext(), MapsNavigationActivity::class.java)
