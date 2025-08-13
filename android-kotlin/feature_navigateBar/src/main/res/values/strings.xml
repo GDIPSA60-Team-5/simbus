@@ -26,4 +26,5 @@
         "Is there a delay on my usual commute?"\n
     </string>
     <string name="switch_label">Mute</string>
+    <string name="spinner_prompt_tag">Choose Label</string>
 </resources>

@@ -280,6 +280,41 @@
                     app:tint="#FFFFFF" />
             </LinearLayout>
 
+            <!-- Feedback -->
+            <LinearLayout
+                android:id="@+id/feedbackRow"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp"
+                android:layout_marginTop="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/rounded_brown_bg">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_feedback"
+                    app:tint="#FFFFFF" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:text="Feedback"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_arrow_right"
+                    app:tint="#FFFFFF" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/logoutRow"
                 android:layout_width="match_parent"

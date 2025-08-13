@@ -1,4 +1,4 @@
-package com.example.network.di
+package com.example.core.di
 
 import com.example.core.di.SecureStorageManager
 import com.example.network.di.AuthInterceptor
@@ -23,6 +23,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Named
 import javax.inject.Singleton
 import com.example.network.BuildConfig
+import iss.nus.edu.sg.appfiles.feature_navigatebar.FeedbackApi
 import java.util.concurrent.TimeUnit
 
 @Module
@@ -106,6 +107,11 @@ object NetworkProvider {
     @Named("chatbot")
     fun provideChatbotApi(@Named("chatbot") retrofit: Retrofit): ChatbotApi =
         retrofit.create(ChatbotApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideFeedbackApi(retrofit: Retrofit): FeedbackApi =
+        retrofit.create(FeedbackApi::class.java)
 }
 
 
