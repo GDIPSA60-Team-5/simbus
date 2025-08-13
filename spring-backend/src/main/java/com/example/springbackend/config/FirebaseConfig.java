@@ -26,8 +26,11 @@ public class FirebaseConfig {
             if (serviceAccount == null) {
                 throw new RuntimeException("Firebase service account file not found: " + serviceAccountPath);
             }
+            GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount)
+                    .createScoped("https://www.googleapis.com/auth/firebase.messaging");
+
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setCredentials(credentials)
                     .build();
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
