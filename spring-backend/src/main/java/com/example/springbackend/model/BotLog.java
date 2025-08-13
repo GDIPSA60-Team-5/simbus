@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class BotLog {
     @Id
-    private Long id;
+    private String id;
     private String userId;
     private Instant requestTime;
     private Instant responseTime;

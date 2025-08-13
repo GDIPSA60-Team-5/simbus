@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
-public interface BotLogRepository extends ReactiveCrudRepository<BotLog, Long> {
+public interface BotLogRepository extends ReactiveCrudRepository<BotLog, String> {
     @Query("SELECT COUNT(*) FROM botlog")
     Mono<Long> countRequest();
 

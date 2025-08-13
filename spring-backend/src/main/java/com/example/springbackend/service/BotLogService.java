@@ -27,10 +27,27 @@ public class BotLogService {
     public Mono<BotLog> updateResponse(BotLog log, Instant responseTime, String responseType, boolean success) {
         log.setResponseTime(responseTime);
         log.setResponseType(responseType);
-        if (!responseType.equals("error")) {
+        if (!"error".equals(responseType)) {
             log.setSuccess(success);
         }
         return botLogRepository.save(log);
     }
+
+    public Mono<BotLog> updateResponseSafe(BotLog log, Instant responseTime, String responseType, boolean success) {
+        if (log == null) {
+            return Mono.empty();
+        }
+        log.setResponseTime(responseTime);
+        log.setResponseType(responseType);
+        if (!"error".equals(responseType)) {
+            log.setSuccess(success);
+        }
+        return botLogRepository.save(log)
+                .onErrorResume(e -> {
+                    e.printStackTrace();
+                    return Mono.empty();
+                });
+    }
+
 }
 

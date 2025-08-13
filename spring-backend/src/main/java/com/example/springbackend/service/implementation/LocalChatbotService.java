@@ -127,8 +127,7 @@ public class LocalChatbotService implements ChatbotService {
                 })
                 .onErrorResume(e -> {
                     Instant errorTime = Instant.now();
-                    return botLogService.updateResponse(null, errorTime, "error", false)
-                            .onErrorResume(err -> Mono.empty())
+                    return botLogService.updateResponseSafe(null, errorTime, "error", false)
                             .thenReturn(new ErrorResponseDTO("Internal error: " + e.getMessage()));
                 });
     }
