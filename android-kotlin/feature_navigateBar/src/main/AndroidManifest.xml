@@ -14,6 +14,8 @@
         <activity
             android:name=".menu.FAQActivity"
             android:exported="false" />
+        <activity android:name=".menu.FeedbackActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

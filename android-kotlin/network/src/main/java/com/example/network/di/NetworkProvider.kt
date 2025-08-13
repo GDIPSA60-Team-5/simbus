@@ -17,6 +17,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Named
 import javax.inject.Singleton
 import com.example.network.BuildConfig
+import iss.nus.edu.sg.appfiles.feature_navigatebar.FeedbackApi
 import iss.nus.edu.sg.appfiles.feature_navigatebar.UserApi
 import java.util.concurrent.TimeUnit
 
@@ -87,6 +88,11 @@ object NetworkProvider {
     @Singleton
     fun provideUserApi(retrofit: Retrofit): UserApi =
         retrofit.create(UserApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideFeedbackApi(retrofit: Retrofit): FeedbackApi =
+        retrofit.create(FeedbackApi::class.java)
 }
 
 

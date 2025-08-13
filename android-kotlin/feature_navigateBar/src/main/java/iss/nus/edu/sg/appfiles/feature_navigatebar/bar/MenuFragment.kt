@@ -17,6 +17,7 @@ import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.AboutUsActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.ChangePasswordActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.FAQActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.R
+import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.FeedbackActivity
 
 class MenuFragment : Fragment() {
 
@@ -48,6 +49,11 @@ class MenuFragment : Fragment() {
         // init FAQRow
         view.findViewById<LinearLayout>(R.id.faqRow).setOnClickListener {
             startActivity(Intent(requireContext(), FAQActivity::class.java))
+        }
+
+        //init FeedbackRow
+        view.findViewById<LinearLayout>(R.id.feedbackRow).setOnClickListener {
+            startActivity(Intent(requireContext(), FeedbackActivity::class.java))
         }
 
         // init logout
