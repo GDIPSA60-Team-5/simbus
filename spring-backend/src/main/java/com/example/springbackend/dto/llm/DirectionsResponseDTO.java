@@ -27,6 +27,11 @@ public record DirectionsResponseDTO(
             int durationInMinutes,
             String busServiceNumber,
             String instruction,
-            String legGeometry
+            String legGeometry,
+            List<Coordinates> routePoints,
+            String fromStopName,
+            String fromStopCode,
+            String toStopName,
+            String toStopCode
     ) {}
 }

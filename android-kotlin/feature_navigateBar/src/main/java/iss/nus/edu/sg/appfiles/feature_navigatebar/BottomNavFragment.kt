@@ -5,11 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.core.content.ContextCompat
+import iss.nus.edu.sg.appfiles.feature_navigatebar.databinding.FragmentBottomNavBinding
 
 class BottomNavFragment : Fragment() {
 
@@ -18,85 +17,97 @@ class BottomNavFragment : Fragment() {
     }
 
     private var listener: OnNavItemSelectedListener? = null
+    private var _binding: FragmentBottomNavBinding? = null
+    private val binding get() = _binding!!
+
+    private val defaultTextColor by lazy {
+        ContextCompat.getColor(requireContext(), R.color.default_text)
+    }
+    private val selectedTextColor by lazy {
+        ContextCompat.getColor(requireContext(), R.color.selected_text)
+    }
+
+    private val defaultIcons = mapOf(
+        R.id.btnHome to R.drawable.ic_home,
+        R.id.btnAssistant to R.drawable.ic_assistant,
+        R.id.btnSchedules to R.drawable.ic_schedule,
+        R.id.btnMenu to R.drawable.ic_menu,
+    )
+
+    private val selectedIcons = mapOf(
+        R.id.btnHome to R.drawable.ic_home_click,
+        R.id.btnAssistant to R.drawable.ic_assistant_click,
+        R.id.btnSchedules to R.drawable.ic_schedule_click,
+        R.id.btnMenu to R.drawable.ic_menu_click,
+    )
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is OnNavItemSelectedListener) {
-            listener = context
-        }
+        listener = context as? OnNavItemSelectedListener
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_bottom_nav, container, false)
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = FragmentBottomNavBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val btnHome = view.findViewById<LinearLayout>(R.id.btnHome)
-        val btnAssistant = view.findViewById<LinearLayout>(R.id.btnAssistant)
-        val btnSchedules = view.findViewById<LinearLayout>(R.id.btnSchedules)
-        val btnMenu = view.findViewById<LinearLayout>(R.id.btnMenu)
-        val btnMic = view.findViewById<ImageView>(R.id.btnMic)
+        val navButtons = listOf(
+            binding.btnHome,
+            binding.btnAssistant,
+            binding.btnSchedules,
+            binding.btnMenu,
+        )
 
-        val navButtons = listOf(btnHome, btnAssistant, btnSchedules, btnMenu)
-
-        fun resetIconsAndText() {
-            for (button in navButtons) {
-                val icon = button.getChildAt(0) as ImageView
-                val label = button.getChildAt(1) as TextView
-
-                when (button.id) {
-                    R.id.btnHome -> icon.setImageResource(R.drawable.ic_home)
-                    R.id.btnAssistant -> icon.setImageResource(R.drawable.ic_assistant)
-                    R.id.btnSchedules -> icon.setImageResource(R.drawable.ic_schedule)
-                    R.id.btnMenu -> icon.setImageResource(R.drawable.ic_menu)
-                }
-                label.setTextColor(resources.getColor(R.color.default_text, null))
+        fun resetNav() {
+            navButtons.forEach { button ->
+                val icon = button.getChildAt(0) as? android.widget.ImageView
+                val label = button.getChildAt(1) as? android.widget.TextView
+                icon?.setImageResource(defaultIcons[button.id] ?: 0)
+                label?.setTextColor(defaultTextColor)
             }
         }
 
-        fun activateButton(button: LinearLayout, iconRes: Int) {
-            val icon = button.getChildAt(0) as ImageView
-            val label = button.getChildAt(1) as TextView
-            icon.setImageResource(iconRes)
-            label.setTextColor(resources.getColor(R.color.selected_text, null))
+        fun activateButton(button: android.widget.LinearLayout) {
+            val icon = button.getChildAt(0) as? android.widget.ImageView
+            val label = button.getChildAt(1) as? android.widget.TextView
+            icon?.setImageResource(selectedIcons[button.id] ?: 0)
+            label?.setTextColor(selectedTextColor)
         }
 
-        resetIconsAndText()
-        activateButton(btnHome, R.drawable.ic_home_click)
-        listener?.onNavItemSelected(R.id.nav_home)
-
-        btnHome.setOnClickListener {
-            resetIconsAndText()
-            activateButton(btnHome, R.drawable.ic_home_click)
-            listener?.onNavItemSelected(R.id.nav_home)
+        fun onNavClicked(button: android.widget.LinearLayout, navId: Int) {
+            resetNav()
+            activateButton(button)
+            listener?.onNavItemSelected(navId)
         }
 
-        btnAssistant.setOnClickListener {
-            resetIconsAndText()
-            activateButton(btnAssistant, R.drawable.ic_assistant_click)
-            listener?.onNavItemSelected(R.id.nav_assistant)
+        resetNav()
+        onNavClicked(binding.btnHome, R.id.nav_home)
+
+        navButtons.forEach { button ->
+            button.setOnClickListener {
+                val navId = when (button.id) {
+                    R.id.btnHome -> R.id.nav_home
+                    R.id.btnAssistant -> R.id.nav_assistant
+                    R.id.btnSchedules -> R.id.nav_schedules
+                    R.id.btnMenu -> R.id.nav_menu
+                    else -> 0
+                }
+                if (navId != 0) onNavClicked(button, navId)
+            }
         }
 
-        btnSchedules.setOnClickListener {
-            resetIconsAndText()
-            activateButton(btnSchedules, R.drawable.ic_schedule_click)
-            listener?.onNavItemSelected(R.id.nav_schedules)
-        }
-
-        btnMenu.setOnClickListener {
-            resetIconsAndText()
-            activateButton(btnMenu, R.drawable.ic_menu_click)
-            listener?.onNavItemSelected(R.id.nav_menu)
-        }
-
-        btnMic.setOnClickListener {
+        binding.btnMic.setOnClickListener {
             Toast.makeText(requireContext(), "Mic Clicked", Toast.LENGTH_SHORT).show()
         }
     }
 
-}
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
+}
