@@ -21,5 +21,5 @@ public class Announcement {
     private Instant createdAt;
     private Instant expiresAt;
 
-    private Long userId;  // who created or made this announcement
+    private String userId;  // who created or made this announcement
 }

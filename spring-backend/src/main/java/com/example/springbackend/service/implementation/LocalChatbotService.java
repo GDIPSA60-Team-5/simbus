@@ -152,21 +152,21 @@ public class LocalChatbotService implements ChatbotService {
         return s == null ? "" : s.trim();
     }
 
-    private Mono<Long> extractUserId(HttpHeaders headers) {
+    private Mono<String> extractUserId(HttpHeaders headers) {
         String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return Mono.just(0L);
+            return Mono.just("0L");
         }
         String token = authHeader.substring(7);
         if (!jwtTokenProvider.validateToken(token)) {
-            return Mono.just(0L);
+            return Mono.just("0L");
         }
         String username = jwtTokenProvider.getUsernameFromToken(token);
         if (username == null || username.isBlank()) {
-            return Mono.just(0L);
+            return Mono.just("0L");
         }
         return userRepository.findByUserName(username)
                 .map(User::getId)
-                .defaultIfEmpty(0L);
+                .defaultIfEmpty("0L");
     }
 }

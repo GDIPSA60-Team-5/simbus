@@ -4,7 +4,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.*;
-import java.time.Instant;
 import java.util.Date;
 @Document("users")
 @Data
@@ -13,7 +12,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class User {
 	@Id
-	private Long id;
+	private String id;
 
 	private String userName;
 	private String userType;

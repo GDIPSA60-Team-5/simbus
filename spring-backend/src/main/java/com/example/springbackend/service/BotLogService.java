@@ -14,7 +14,7 @@ public class BotLogService {
 
     private final BotLogRepository botLogRepository;
 
-    public Mono<BotLog> logRequest(Long userId, Instant requestTime, String userInput) {
+    public Mono<BotLog> logRequest(String userId, Instant requestTime, String userInput) {
         BotLog log = BotLog.builder()
                 .userId(userId)
                 .requestTime(requestTime)

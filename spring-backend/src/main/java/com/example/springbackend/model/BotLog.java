@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class BotLog {
     @Id
     private Long id;
-    private Long userId;
+    private String userId;
     private Instant requestTime;
     private Instant responseTime;
     private String userInput;
