@@ -158,8 +158,7 @@ class ChatbotActivity : AppCompatActivity() {
             .addOnSuccessListener { location: android.location.Location? ->
                 location?.let {
                     this.currentLocation = Coordinates(it.latitude, it.longitude)
-                    Toast.makeText(this, "Location is ready!", Toast.LENGTH_SHORT).show()
-                    
+
                     // Process any pending intent message now that we have location
                     processPendingIntentMessage()
                 }

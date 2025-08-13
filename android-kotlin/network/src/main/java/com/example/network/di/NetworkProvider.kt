@@ -1,6 +1,5 @@
 package com.example.core.di
 
-import com.example.core.di.SecureStorageManager
 import com.example.network.di.AuthInterceptor
 import com.example.core.api.UserApi
 import com.example.core.api.CommuteApi

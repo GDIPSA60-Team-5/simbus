@@ -1,14 +1,9 @@
 "use client";
-import { apiPost } from "@/lib/apiClient";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, User, Lock, ArrowRight, Bus, Route, Clock, MapPin } from "lucide-react";
-
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "/api";
-
-type LoginResponse = {
-  token: string;
-};
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, User, Lock, ArrowRight, Bus, Users, MessageSquare, Star } from "lucide-react";
+import { AuthLayout } from "@/components/layout/AuthLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -17,6 +12,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -28,24 +32,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await apiPost<LoginResponse>(
-        `${backendUrl}/auth/login`,
-        {
-          username,
-          password,
-        }
-      );
-
-      console.log("Login successful", data.token);
-
-      // Store the token (you might want to use a more secure method)
-      localStorage.setItem("authToken", data.token);
-
-      // Navigate to dashboard
-      router.push("/dashboard");
-
+      await login(username, password);
+      
+      // Get redirect URL from search params or default to dashboard
+      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      router.push(redirectTo);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -57,185 +50,138 @@ export default function LoginPage() {
     }
   };
 
+  const features = [
+    {
+      icon: Users,
+      title: "User Analytics",
+      description: "Track active users and engagement",
+      iconColor: "bg-orange-100 text-orange-600"
+    },
+    {
+      icon: MessageSquare,
+      title: "Chatbot Performance", 
+      description: "Monitor AI interactions and success rates",
+      iconColor: "bg-blue-100 text-blue-600"
+    },
+    {
+      icon: Star,
+      title: "User Feedback",
+      description: "Real-time ratings and reviews",
+      iconColor: "bg-yellow-100 text-yellow-600"
+    }
+  ];
+
+  // Show loading spinner while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex relative overflow-hidden">
-      {/* Morning Sun Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-100">
-        {/* Sun rays effect */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-radial from-yellow-200 via-orange-200 to-transparent opacity-60 rounded-full filter blur-3xl animate-pulse"></div>
-          <div className="absolute top-20 right-1/3 w-80 h-80 bg-gradient-radial from-amber-200 via-yellow-100 to-transparent opacity-40 rounded-full filter blur-2xl animate-pulse"></div>
-          <div className="absolute bottom-10 left-1/2 w-72 h-72 bg-gradient-radial from-orange-200 via-amber-100 to-transparent opacity-50 rounded-full filter blur-3xl animate-pulse"></div>
-        </div>
-
-        {/* Warm light rays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-orange-50 to-amber-50 opacity-30"></div>
-
-        {/* Subtle texture */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(251,191,36,0.3) 1px, transparent 0)`,
-            backgroundSize: '50px 50px'
-          }}></div>
-        </div>
+    <AuthLayout
+      title="Admin Portal"
+      subtitle="Monitor, analyze, and optimize your Nimbus app ecosystem."
+      features={features}
+    >
+      <div className="text-center mb-8">
+        <p className="text-gray-700 text-lg">Access your product dashboard</p>
       </div>
 
-      {/* Left side - Bus App Branding */}
-      <div className="hidden lg:flex flex-1 relative z-10 flex-col justify-center items-center p-12">
-        <div className="max-w-md text-center">
-          {/* Logo placeholder and branding */}
-          <div className="mb-12">
-            {/* Your Logo Goes Here */}
-            <div className="w-50 h-50 backdrop-blur-xl rounded-3xl flex items-center justify-center mb-8 mx-auto border shadow-2xl shadow-orange-200">
-              <div className="w-full h-full rounded-2xl flex items-center justify-center bg-opacity-50">
-                <div className="text-center">
-                  <img src="/logo.png" alt="Nimbus" className="w-full h-full object-contain" />
-                </div>
-              </div>
-            </div>
-            <p className="text-xl text-gray-700 leading-relaxed">
-              Your journey starts here. Smart, reliable, and always on time.
-            </p>
+      <div className="space-y-6">
+        {/* Username Input */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <User className="h-6 w-6 text-gray-500 group-focus-within:text-orange-600 transition-colors" />
           </div>
-
-          {/* Bus-related features */}
-          <div className="space-y-6 text-left bg-white bg-opacity-20 backdrop-blur-xl rounded-2xl p-6 border border-white border-opacity-40 shadow-xl">
-            <div className="flex items-center space-x-4 text-gray-800">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <Route className="w-6 h-6 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Real-time Routes</h3>
-                <p className="text-sm text-gray-600">Live tracking and updates</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4 text-gray-800">
-              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Smart Scheduling</h3>
-                <p className="text-sm text-gray-600">Optimized departure times</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4 text-gray-800">
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">GPS Navigation</h3>
-                <p className="text-sm text-gray-600">Precise location services</p>
-              </div>
-            </div>
-          </div>
+          <input
+            type="text"
+            placeholder="Admin Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="w-full pl-12 pr-4 py-4 bg-white bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
+            required
+          />
         </div>
-      </div>
 
-      {/* Right side - Login Form */}
-      <div className="flex flex-1 items-center justify-center relative z-10 p-4">
-        <div className="w-full max-w-md">
-          {/* Glass login card */}
-          <div className="bg-white bg-opacity-25 backdrop-blur-2xl rounded-3xl border border-white border-opacity-50 p-8 shadow-2xl shadow-orange-200">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-              <p className="text-gray-700 text-lg">Sign in to your transit dashboard</p>
-            </div>
+        {/* Password Input */}
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Lock className="h-6 w-6 text-gray-500 group-focus-within:text-orange-600 transition-colors" />
+          </div>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="w-full pl-12 pr-14 py-4 bg-white bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-orange-600 transition-colors"
+          >
+            {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+          </button>
+        </div>
 
-            <div className="space-y-6">
-              {/* Username Input */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-6 w-6 text-gray-500 group-focus-within:text-orange-600 transition-colors" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Username or Email"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full pl-12 pr-4 py-4 bg-white bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
-                  required
-                />
-              </div>
+        {/* Remember Me & Forgot Password */}
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
+            <input type="checkbox" className="mr-3 rounded border-gray-300 bg-white bg-opacity-60 text-orange-600 focus:ring-orange-500" />
+            Remember me
+          </label>
+          <button className="text-gray-700 hover:text-orange-600 transition-colors font-medium">
+            Forgot password?
+          </button>
+        </div>
 
-              {/* Password Input */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-6 w-6 text-gray-500 group-focus-within:text-orange-600 transition-colors" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="w-full pl-12 pr-14 py-4 bg-white bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-orange-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
-                </button>
-              </div>
-
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
-                  <input type="checkbox" className="mr-3 rounded border-gray-300 bg-white bg-opacity-60 text-orange-600 focus:ring-orange-500" />
-                  Remember me
-                </label>
-                <button className="text-gray-700 hover:text-orange-600 transition-colors font-medium">
-                  Forgot password?
-                </button>
-              </div>
-
-              {/* Login Button - Captivating CTA */}
-              <button
-                onClick={handleLogin}
-                disabled={loading}
-                className="w-full group relative py-5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-2xl font-bold text-white shadow-2xl shadow-orange-300 hover:shadow-3xl hover:shadow-orange-400 transition-all duration-500 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden transform hover:-translate-y-1"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute inset-0 bg-white bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center justify-center">
-                  {loading ? (
-                    <div className="w-7 h-7 border-3 border-white border-opacity-30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <div className="flex items-center">
-                      <Bus className="mr-3 h-6 w-6 transition-transform group-hover:scale-110" />
-                      <span className="text-xl">Start Your Journey</span>
-                      <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
-                    </div>
-                  )}
-                </div>
-              </button>
-
-
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mt-6 p-4 bg-red-100 bg-opacity-60 backdrop-blur-xl border border-red-200 border-opacity-50 rounded-2xl shadow-lg">
-                <p className="text-red-800 text-center font-medium">{error}</p>
+        {/* Login Button */}
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full group relative py-5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-2xl font-bold text-white shadow-2xl shadow-orange-300 hover:shadow-3xl hover:shadow-orange-400 transition-all duration-500 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden transform hover:-translate-y-1"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute inset-0 bg-white bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="relative flex items-center justify-center">
+            {loading ? (
+              <div className="w-7 h-7 border-3 border-white border-opacity-30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <div className="flex items-center">
+                <Bus className="mr-3 h-6 w-6 transition-transform group-hover:scale-110" />
+                <span className="text-xl">View Analytics</span>
+                <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
               </div>
             )}
-
-
-            {/* Sign Up Link */}
-            <div className="mt-8 text-center">
-              <p className="text-gray-700">
-                New to transit management?{' '}
-                <button className="text-orange-600 font-bold hover:text-orange-700 transition-colors">
-                  Create account
-                </button>
-              </p>
-            </div>
           </div>
-        </div>
+        </button>
       </div>
-    </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-6 p-4 bg-red-100 bg-opacity-60 backdrop-blur-xl border border-red-200 border-opacity-50 rounded-2xl shadow-lg">
+          <p className="text-red-800 text-center font-medium">{error}</p>
+        </div>
+      )}
+
+      {/* Sign Up Link */}
+      <div className="mt-8 text-center">
+        <p className="text-gray-700">
+          Need admin access?{' '}
+          <button className="text-orange-600 font-bold hover:text-orange-700 transition-colors">
+            Contact Support
+          </button>
+        </p>
+      </div>
+    </AuthLayout>
   );
 }

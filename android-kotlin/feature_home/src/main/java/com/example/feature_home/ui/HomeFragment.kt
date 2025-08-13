@@ -36,6 +36,7 @@ import com.example.feature_chatbot.ui.ChatbotActivity
 import com.example.feature_home.adapter.DailyCommuteAdapter
 import com.example.feature_home.adapter.DayCommutes
 import com.example.feature_home.R
+import iss.nus.edu.sg.feature_saveroute.AddEditRouteActivity
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -144,6 +145,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             startActivity(intent)
         }
 
+        binding.button1.setOnClickListener {
+            val intent = Intent(requireContext(), AddEditRouteActivity::class.java)
+            startActivity(intent)
+        }
         binding.button3.setOnClickListener {
             val intent = Intent(requireContext(), TripHistoryActivity::class.java)
             startActivity(intent)

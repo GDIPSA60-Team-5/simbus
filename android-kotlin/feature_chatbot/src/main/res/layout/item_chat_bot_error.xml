@@ -1,19 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginTop="4dp"
     android:layout_marginEnd="64dp"
     android:layout_marginBottom="4dp"
-    android:orientation="vertical"
-    android:padding="10dp">
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:background="@drawable/error_background"
+    android:gravity="center_vertical">
 
+    <!-- Error Icon -->
+    <ImageView
+        android:id="@+id/errorIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_error"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- Error Message -->
     <TextView
         android:id="@+id/errorText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Error message"
-        android:textColor="#FFFFFF"
-         />
+        android:textColor="#FFEBEE"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:maxLines="3"/>
 </LinearLayout>

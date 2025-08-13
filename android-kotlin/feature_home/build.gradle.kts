@@ -58,6 +58,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":feature_guidemap"))
+    implementation(project(":feature_saveRoute"))
     implementation(project(":feature_chatbot"))
 
     implementation(libs.play.services.maps)

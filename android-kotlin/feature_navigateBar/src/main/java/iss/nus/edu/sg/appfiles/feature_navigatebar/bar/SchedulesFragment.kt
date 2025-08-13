@@ -191,8 +191,6 @@ class SchedulesFragment : Fragment() {
                         routes.addAll(res.body()!!.map { it.toUi() })
                         adapter.notifyDataSetChanged()
                         binding.activeRoutesNumber.text = routes.size.toString()
-                    } else {
-                        Toast.makeText(requireContext(), "Failed to load routes", Toast.LENGTH_SHORT).show()
                     }
                 }
 
