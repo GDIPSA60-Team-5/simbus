@@ -20,7 +20,7 @@ import javax.inject.Inject
 class SelectBusStopActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var routeController: RouteController
+    lateinit var commutePlanController: CommutePlanController
 
     private lateinit var busStopAdapter: ArrayAdapter<String>
     private var currentType: String = "SG"
@@ -29,7 +29,6 @@ class SelectBusStopActivity : AppCompatActivity() {
 
     private var filteredSgStops: List<SgBusStop> = emptyList()
     private var filteredNusStops: List<NusBusStop> = emptyList()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +55,6 @@ class SelectBusStopActivity : AppCompatActivity() {
                 applyFilter(query.orEmpty())
                 return true
             }
-
             override fun onQueryTextChange(newText: String?): Boolean {
                 applyFilter(newText.orEmpty())
                 return true
@@ -66,24 +64,19 @@ class SelectBusStopActivity : AppCompatActivity() {
 
     private fun fetchAllBusStops(listView: ListView, busStopType: String) {
         Log.d("SelectBusStop", "Making API call to search bus stops...")
-
         Toast.makeText(this, "Loading bus stops...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
-            routeController.searchBusStops("").fold(
+            commutePlanController.searchBusStops("").fold(
                 onSuccess = { allStops ->
                     Log.d("SelectBusStop", "API Response received")
                     Log.d("SelectBusStop", "Total stops received: ${allStops.size}")
 
                     allStops.take(3).forEach { stop ->
-                        Log.d(
-                            "SelectBusStop",
-                            "Stop: ${stop.name} (${stop.code}) - API: ${stop.sourceApi}"
-                        )
+                        Log.d("SelectBusStop", "Stop: ${stop.name} (${stop.code}) - API: ${stop.sourceApi}")
                     }
 
                     BusStopCache.allBusStops = allStops
-
                     BusStopCache.sgBusStops = BusStopCache.getSgBusStopsFromUnified()
                     BusStopCache.nusBusStops = BusStopCache.getNusBusStopsFromUnified()
 
@@ -94,10 +87,7 @@ class SelectBusStopActivity : AppCompatActivity() {
                 },
                 onFailure = { error ->
                     Log.e("SelectBusStop", "API Call Failed", error)
-                    Toast.makeText(
-                        this@SelectBusStopActivity,
-                        "Network error: ${error.message}", Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this@SelectBusStopActivity, "Network error: ${error.message}", Toast.LENGTH_LONG).show()
                 }
             )
         }
@@ -105,7 +95,6 @@ class SelectBusStopActivity : AppCompatActivity() {
 
     private fun displayBusStops(listView: ListView, busStopType: String) {
         Log.d("SelectBusStop", "Displaying bus stops for type: $busStopType")
-
         if (busStopType == "SG") {
             val sgStops = BusStopCache.getSgBusStopsFromUnified()
             Log.d("SelectBusStop", "Displaying ${sgStops.size} SG stops")
@@ -115,29 +104,19 @@ class SelectBusStopActivity : AppCompatActivity() {
             Log.d("SelectBusStop", "Displaying ${nusStops.size} NUS stops")
             displayNusBusStops(nusStops, listView, busStopType)
         }
-
         currentType = busStopType
     }
 
-    private fun displaySgBusStops(
-        busStops: List<SgBusStop>,
-        listView: ListView,
-        busStopType: String
-    ) {
+    private fun displaySgBusStops(busStops: List<SgBusStop>, listView: ListView, busStopType: String) {
         Log.d("SelectBusStop", "Setting up SG adapter with ${busStops.size} stops")
-
         if (busStops.isEmpty()) {
             Toast.makeText(this, "No SG bus stops found", Toast.LENGTH_SHORT).show()
             return
         }
-
         currentSgStops = busStops
         filteredSgStops = busStops
 
-        val labels =
-            filteredSgStops.map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
-
-
+        val labels = filteredSgStops.map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
         busStopAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, labels)
         listView.adapter = busStopAdapter
 
@@ -154,25 +133,17 @@ class SelectBusStopActivity : AppCompatActivity() {
         }
     }
 
-    private fun displayNusBusStops(
-        busStops: List<NusBusStop>,
-        listView: ListView,
-        busStopType: String
-    ) {
-
+    private fun displayNusBusStops(busStops: List<NusBusStop>, listView: ListView, busStopType: String) {
         if (busStops.isEmpty()) {
             Toast.makeText(this, "No NUS bus stops found", Toast.LENGTH_SHORT).show()
             return
         }
-
         currentNusStops = busStops
         filteredNusStops = busStops
 
         val labels = filteredNusStops.map { "${it.longName} (${it.name})" }
-
         busStopAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, labels)
         listView.adapter = busStopAdapter
-
 
         listView.setOnItemClickListener { _, _, position, _ ->
             val selected = filteredNusStops[position]
@@ -190,16 +161,11 @@ class SelectBusStopActivity : AppCompatActivity() {
     private fun applyFilter(q: String) {
         if (!::busStopAdapter.isInitialized) return
         if (currentType == "SG") {
-
             filteredSgStops = currentSgStops.filter {
                 (it.description ?: "").contains(q, ignoreCase = true) ||
                         (it.busStopCode ?: "").contains(q, ignoreCase = true)
             }
-
-            val labels = filteredSgStops.map {
-                "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})"
-            }
-
+            val labels = filteredSgStops.map { "${it.description ?: "Unnamed Stop"} (${it.busStopCode ?: "NoCode"})" }
             busStopAdapter.clear()
             busStopAdapter.addAll(labels)
             busStopAdapter.notifyDataSetChanged()

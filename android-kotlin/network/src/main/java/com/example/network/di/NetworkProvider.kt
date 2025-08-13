@@ -18,7 +18,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 import com.example.network.BuildConfig
 import iss.nus.edu.sg.appfiles.feature_navigatebar.UserApi
-import iss.nus.edu.sg.feature_saveroute.RouteApi
+import iss.nus.edu.sg.feature_saveroute.CommutePlanApi
 import java.util.concurrent.TimeUnit
 
 @Module
@@ -91,9 +91,8 @@ object NetworkProvider {
 
     @Provides
     @Singleton
-    fun provideRouteApi(retrofit: Retrofit): RouteApi =
-        retrofit.create(RouteApi::class.java)
-
+    fun provideCommutePlanApi(retrofit: Retrofit): CommutePlanApi =
+        retrofit.create(CommutePlanApi::class.java)
 
 }
 

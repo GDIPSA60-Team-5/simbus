@@ -21,8 +21,10 @@ public class CommutePlan {
 	private String commutePlanName;
 	private LocalTime notifyAt;
 	private LocalTime arrivalTime;
-	private Integer reminderOffsetMin;
+	private Integer notificationNum;
 	private Boolean recurrence;
+	private String busStopCode;
+	private String busServiceNo;
 
 	private String startLocationId;  // reference to Location.id
 	private String endLocationId;    // reference to Location.id

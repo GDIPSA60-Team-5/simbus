@@ -17,7 +17,7 @@ import javax.inject.Inject
 class SelectBusServiceActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var routeController: RouteController
+    lateinit var commutePlanController: CommutePlanController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,14 +43,13 @@ class SelectBusServiceActivity : AppCompatActivity() {
 
     private fun fetchSgBusServices(busStopCode: String, listView: ListView) {
         lifecycleScope.launch {
-            routeController.getSgBusServices(busStopCode).fold(
+            commutePlanController.getSgBusServices(busStopCode).fold(
                 onSuccess = { services ->
                     if (services.isEmpty()) {
                         Toast.makeText(this@SelectBusServiceActivity,
                             "No SG services found", Toast.LENGTH_SHORT).show()
                         return@fold
                     }
-
                     val serviceNumbers = services.mapNotNull { it.serviceNo }
                     setAdapter(listView, serviceNumbers)
                 },
@@ -66,14 +65,13 @@ class SelectBusServiceActivity : AppCompatActivity() {
 
     private fun fetchNusBusServices(busStopName: String, listView: ListView) {
         lifecycleScope.launch {
-            routeController.getNusBusServices(busStopName).fold(
+            commutePlanController.getNusBusServices(busStopName).fold(
                 onSuccess = { services ->
                     if (services.isEmpty()) {
                         Toast.makeText(this@SelectBusServiceActivity,
                             "No NUS services found", Toast.LENGTH_SHORT).show()
                         return@fold
                     }
-
                     val serviceNames = services.mapNotNull { it.name }
                     Log.d("BusService", ">>> NUS services found: $serviceNames")
                     setAdapter(listView, serviceNames)

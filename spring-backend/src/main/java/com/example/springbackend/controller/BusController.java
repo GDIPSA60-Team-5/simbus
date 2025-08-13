@@ -3,9 +3,9 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.model.BusArrival;
 import com.example.springbackend.model.BusStop;
-import com.example.springbackend.model.RouteMongo;
+//import com.example.springbackend.model.RouteMongo;
 import com.example.springbackend.model.SavedLocationMongo;
-import com.example.springbackend.repository.RouteMongoRepository;
+//import com.example.springbackend.repository.RouteMongoRepository;
 import com.example.springbackend.repository.SavedLocationMongoRepository;
 import com.example.springbackend.service.implementation.BusService;
 import com.example.springbackend.service.implementation.NusService;
@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 @RestController
 @RequestMapping("/api/bus") // All endpoints in this controller will start with /api/bus
 public class BusController {
@@ -29,16 +32,14 @@ public class BusController {
     private final BusService busService;
     private final NusService nusService;
     private final SavedLocationMongoRepository savedLocationRepository;
-    private final RouteMongoRepository routeRepository;
+
 
     // Spring injects the single BusService bean here
     public BusController(BusService busService, NusService nusService, 
-            SavedLocationMongoRepository savedLocationRepository,
-            RouteMongoRepository routeRepository) {
+            SavedLocationMongoRepository savedLocationRepository) {
 			this.busService = busService;
 			this.nusService = nusService;
 			this.savedLocationRepository = savedLocationRepository;
-			this.routeRepository = routeRepository;
 }
 
     @GetMapping("/arrivals")
@@ -157,32 +158,6 @@ public class BusController {
             });
             
     }
-    
-    @PostMapping("/sync/location")
-    public Mono<SavedLocationMongo> syncLocation(
-        @RequestHeader("Device-ID") String deviceId,
-        @RequestBody Map<String, String> locationData) {
 
-        SavedLocationMongo location = new SavedLocationMongo(
-            deviceId,
-            locationData.get("name"),
-            locationData.get("postalCode")
-        );
-
-        return savedLocationRepository.save(location);
-    }
-    
-    @GetMapping("/locations")
-    public Flux<SavedLocationMongo> getSavedLocations(@RequestHeader("Device-ID") String deviceId) {
-        return savedLocationRepository.findByDeviceId(deviceId);
-    }
-
-    
-    @DeleteMapping("/locations/{locationId}")
-    public Mono<Void> deleteLocation(
-            @RequestHeader("Device-ID") String deviceId,
-            @PathVariable String locationId) {
-        return savedLocationRepository.deleteByDeviceIdAndId(deviceId, locationId);
-    }
 
 }

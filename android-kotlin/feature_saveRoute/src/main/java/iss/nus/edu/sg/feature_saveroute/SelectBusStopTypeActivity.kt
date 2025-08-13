@@ -13,7 +13,7 @@ import javax.inject.Inject
 class SelectBusStopTypeActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var routeController: RouteController
+    lateinit var commutePlanController: CommutePlanController
 
     private val selectBusStopLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

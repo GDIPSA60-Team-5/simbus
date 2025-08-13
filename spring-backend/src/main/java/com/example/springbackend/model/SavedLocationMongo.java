@@ -16,22 +16,14 @@ public class SavedLocationMongo {
     @Id
     private String id;
 
-    private String deviceId; // Simple device identification
+    private String userId;
     private String name;
     private String postalCode;
 
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
-    public SavedLocationMongo(String deviceId, String name, String postalCode) {
-        this.deviceId = deviceId;
+    public SavedLocationMongo(String userId, String name, String postalCode) {
+        this.userId = userId;
         this.name = name;
         this.postalCode = postalCode;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public SavedLocationMongo() {}
@@ -44,12 +36,12 @@ public class SavedLocationMongo {
 		this.id = id;
 	}
 
-	public String getDeviceId() {
-		return deviceId;
+	public String getUserId() {
+		return userId;
 	}
 
-	public void setDeviceId(String deviceId) {
-		this.deviceId = deviceId;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
 	public String getName() {
@@ -67,24 +59,5 @@ public class SavedLocationMongo {
 	public void setPostalCode(String postalCode) {
 		this.postalCode = postalCode;
 	}
-
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
-	}
-
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
-
-
-
 
 }

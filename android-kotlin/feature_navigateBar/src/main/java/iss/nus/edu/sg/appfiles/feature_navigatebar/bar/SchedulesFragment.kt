@@ -12,17 +12,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.feature_saveroute.AddEditRouteActivity
-import iss.nus.edu.sg.feature_saveroute.Data.Route
+import iss.nus.edu.sg.feature_saveroute.CommutePlanController
+import iss.nus.edu.sg.feature_saveroute.Data.CommutePlan
 import iss.nus.edu.sg.feature_saveroute.Data.toRequest
 import iss.nus.edu.sg.feature_saveroute.Data.toUi
-import iss.nus.edu.sg.feature_saveroute.DeviceIdUtil
 import iss.nus.edu.sg.feature_saveroute.MyCustomAdapter
-import iss.nus.edu.sg.feature_saveroute.RouteController
 import iss.nus.edu.sg.feature_saveroute.databinding.SavedRoutesBinding
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class SchedulesFragment : Fragment() {
@@ -31,32 +30,32 @@ class SchedulesFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var adapter: MyCustomAdapter
-    private val routes = mutableListOf<Route>()
+    private val plans = mutableListOf<CommutePlan>()
 
     @Inject
-    lateinit var routeController: RouteController
+    lateinit var commutePlanController: CommutePlanController
 
-    private val editRouteLauncher =
+    private val editPlanLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data = result.data
-                val updatedRoute = data?.getParcelableExtra<Route>("Edit_Route")
+                val updatedPlan = data?.getParcelableExtra<CommutePlan>("Edit_CommutePlan")
                 val position = data?.getIntExtra("Position", -1) ?: -1
-                if (updatedRoute != null && position >= 0) {
-                    updateRouteOnServer(updatedRoute, position)
+                if (updatedPlan != null && position >= 0) {
+                    updatePlanOnServer(updatedPlan, position)
                 }
             }
         }
 
-    private val addRouteLauncher =
+    private val addPlanLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data = result.data
-                val newRoute = data?.getParcelableExtra<Route>("New_Route")
-                if (newRoute != null) {
-                    routes.add(newRoute)
-                    adapter.notifyItemInserted(routes.lastIndex)
-                    binding.activeRoutesNumber.text = routes.size.toString()
+                val newPlan = data?.getParcelableExtra<CommutePlan>("New_CommutePlan")
+                if (newPlan != null) {
+                    plans.add(newPlan)
+                    adapter.notifyItemInserted(plans.lastIndex)
+                    binding.activeRoutesNumber.text = plans.size.toString()
                 }
             }
         }
@@ -73,14 +72,14 @@ class SchedulesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         adapter = MyCustomAdapter(
-            routes,
-            onEditClick = { route, position ->
+            plans,
+            onEditClick = { plan, position ->
                 val intent = Intent(requireContext(), AddEditRouteActivity::class.java).apply {
                     putExtra("isEdit", true)
-                    putExtra("Edit_Route", route)
+                    putExtra("Edit_CommutePlan", plan)
                     putExtra("Position", position)
                 }
-                editRouteLauncher.launch(intent)
+                editPlanLauncher.launch(intent)
             },
             onDeleteClick = { position ->
                 confirmDelete(position)
@@ -89,125 +88,100 @@ class SchedulesFragment : Fragment() {
 
         binding.routesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.routesRecyclerView.adapter = adapter
-        binding.activeRoutesNumber.text = routes.size.toString()
+        binding.activeRoutesNumber.text = plans.size.toString()
 
         binding.addRouteButton.setOnClickListener {
             val intent = Intent(requireContext(), AddEditRouteActivity::class.java).apply {
                 putExtra("isEdit", false)
             }
-            addRouteLauncher.launch(intent)
+            addPlanLauncher.launch(intent)
         }
 
-        fetchSavedRoutes()
+        fetchSavedCommutePlans()
     }
 
     private fun confirmDelete(position: Int) {
-        val route = routes[position]
-        val title = "Delete route?"
-        val message = "Remove \"${route.from} → ${route.to}\"?"
+        val plan = plans[position]
+        val label = plan.commutePlanName ?: "${plan.startLocationId} → ${plan.endLocationId}"
+        val title = "Delete commute plan?"
+        val message = "Remove \"$label\"?"
 
         AlertDialog.Builder(requireContext())
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton("Delete") { _, _ ->
-                deleteRouteFromServer(position)
+                deletePlanFromServer(position)
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun updateRouteOnServer(updated: Route, position: Int) {
-        val deviceId = DeviceIdUtil.getDeviceId(requireContext())
-        val routeId = updated.id ?: run {
-            Toast.makeText(requireContext(), "Missing route id to update", Toast.LENGTH_SHORT).show()
+    private fun updatePlanOnServer(updated: CommutePlan, position: Int) {
+        val planId = updated.id ?: run {
+            Toast.makeText(requireContext(), "Missing commute plan id to update", Toast.LENGTH_SHORT).show()
             return
         }
 
         val body = updated.toRequest()
 
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = routeController.updateRoute(deviceId, routeId, body)
-
-                result.fold(
-                    onSuccess = { routeMongo ->
-                        if (!isAdded) return@fold
-                        val serverRouteUi = routeMongo.toUi()
-                        routes[position] = serverRouteUi
-                        adapter.notifyItemChanged(position)
-                        Toast.makeText(requireContext(), "Route updated", Toast.LENGTH_SHORT).show()
-                    },
-                    onFailure = { exception ->
-                        if (!isAdded) return@fold
-                        Toast.makeText(requireContext(), "Update failed: ${exception.message}", Toast.LENGTH_SHORT).show()
-                    }
-                )
-            } catch (e: Exception) {
-                if (!isAdded) return@launch
-                Toast.makeText(requireContext(), "Network error: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+            commutePlanController.updateCommutePlan(planId, body).fold(
+                onSuccess = { serverPlan ->
+                    if (!isAdded) return@fold
+                    val serverUi = serverPlan.toUi()
+                    plans[position] = serverUi
+                    adapter.notifyItemChanged(position)
+                    Toast.makeText(requireContext(), "Plan updated", Toast.LENGTH_SHORT).show()
+                },
+                onFailure = { exception ->
+                    if (!isAdded) return@fold
+                    Toast.makeText(requireContext(), "Update failed: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
     }
 
-    private fun deleteRouteFromServer(position: Int) {
-        val route = routes[position]
-        val routeId = route.id ?: run {
-            Toast.makeText(requireContext(), "Missing route id to delete", Toast.LENGTH_SHORT).show()
+    private fun deletePlanFromServer(position: Int) {
+        val plan = plans[position]
+        val planId = plan.id ?: run {
+            Toast.makeText(requireContext(), "Missing commute plan id to delete", Toast.LENGTH_SHORT).show()
             return
         }
-        val deviceId = DeviceIdUtil.getDeviceId(requireContext())
-
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = routeController.deleteRoute(deviceId, routeId)
-
-                result.fold(
-                    onSuccess = {
-                        if (!isAdded) return@fold
-                        routes.removeAt(position)
-                        adapter.notifyItemRemoved(position)
-                        if (position < routes.size) {
-                            adapter.notifyItemRangeChanged(position, routes.size - position)
-                        }
-                        binding.activeRoutesNumber.text = routes.size.toString()
-                        Toast.makeText(requireContext(), "Route deleted", Toast.LENGTH_SHORT).show()
-                    },
-                    onFailure = { exception ->
-                        if (!isAdded) return@fold
-                        Toast.makeText(requireContext(), "Delete failed: ${exception.message}", Toast.LENGTH_SHORT).show()
+            commutePlanController.deleteCommutePlan(planId).fold(
+                onSuccess = {
+                    if (!isAdded) return@fold
+                    plans.removeAt(position)
+                    adapter.notifyItemRemoved(position)
+                    if (position < plans.size) {
+                        adapter.notifyItemRangeChanged(position, plans.size - position)
                     }
-                )
-            } catch (e: Exception) {
-                if (!isAdded) return@launch
-                Toast.makeText(requireContext(), "Network error: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+                    binding.activeRoutesNumber.text = plans.size.toString()
+                    Toast.makeText(requireContext(), "Plan deleted", Toast.LENGTH_SHORT).show()
+                },
+                onFailure = { exception ->
+                    if (!isAdded) return@fold
+                    Toast.makeText(requireContext(), "Delete failed: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
     }
 
-    private fun fetchSavedRoutes() {
-        val deviceId = DeviceIdUtil.getDeviceId(requireContext())
-
+    private fun fetchSavedCommutePlans() {
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = routeController.getSavedRoutes(deviceId)
-
-                result.fold(
-                    onSuccess = { routeMongoList ->
-                        if (!isAdded) return@fold
-                        routes.clear()
-                        routes.addAll(routeMongoList.map { it.toUi() })
-                        adapter.notifyDataSetChanged()
-                        binding.activeRoutesNumber.text = routes.size.toString()
-                    },
-                    onFailure = { exception ->
-                        if (!isAdded) return@fold
-                        Toast.makeText(requireContext(), "Failed to load routes: ${exception.message}", Toast.LENGTH_SHORT).show()
-                    }
-                )
-            } catch (e: Exception) {
-                if (!isAdded) return@launch
-                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+            commutePlanController.getSavedCommutePlans().fold(
+                onSuccess = { mongoList ->
+                    if (!isAdded) return@fold
+                    plans.clear()
+                    plans.addAll(mongoList.map { it.toUi() })
+                    adapter.notifyDataSetChanged()
+                    binding.activeRoutesNumber.text = plans.size.toString()
+                },
+                onFailure = { exception ->
+                    if (!isAdded) return@fold
+                    Toast.makeText(requireContext(), "Failed to load plans: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
     }
 

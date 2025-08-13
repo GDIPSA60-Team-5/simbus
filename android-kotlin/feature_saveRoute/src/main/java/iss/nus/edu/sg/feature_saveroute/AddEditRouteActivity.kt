@@ -16,7 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import dagger.hilt.android.AndroidEntryPoint
-import iss.nus.edu.sg.feature_saveroute.Data.Route
+import iss.nus.edu.sg.feature_saveroute.Data.CommutePlan
 import iss.nus.edu.sg.feature_saveroute.Data.savedLocationData
 import iss.nus.edu.sg.feature_saveroute.Data.toRequest
 import iss.nus.edu.sg.feature_saveroute.databinding.AddeditRouteBinding
@@ -34,7 +34,7 @@ class AddEditRouteActivity : AppCompatActivity() {
     private val ADD_NEW = "+Add new location…"
 
     @Inject
-    lateinit var routeController: RouteController
+    lateinit var commutePlanController: CommutePlanController
     @Inject
     lateinit var savedLocationStore: SavedLocationStore
 
@@ -70,33 +70,34 @@ class AddEditRouteActivity : AppCompatActivity() {
         position = intent.getIntExtra("Position", -1)
 
         if (isEdit) {
-            val route = intent.getParcelableExtra<Route>("Edit_Route")
-            binding.RoutePageTitle.text = "Edit Route"
-            route?.let {
-                binding.FromEdit.setText(it.from)
-                binding.ToEdit.setText(it.to)
+            val plan = intent.getParcelableExtra<CommutePlan>("Edit_CommutePlan")
+            binding.RoutePageTitle.text = "Edit Commute Plan"
+            plan?.let {
+                binding.FromEdit.setText(it.startLocationId)
+                binding.ToEdit.setText(it.endLocationId)
                 binding.BusStopEdit.setText(it.busStop)
                 binding.BusServiceEdit.setText(it.busService)
-                binding.StartTimeEdit.setText(it.startTime)
+                binding.StartTimeEdit.setText(it.notifyAt)     // notifyAt == “start time”
                 binding.ArrivalTimeEdit.setText(it.arrivalTime)
-                binding.NotfiEdit.setText((it.notificationNum))
+
+                binding.NotfiEdit.setText((it.notificationNum ?: 0).toString())
+
                 it.selectedDays?.let { days ->
-                    binding.MonCheck.isChecked = days[0]
-                    binding.TuesCheck.isChecked = days[1]
-                    binding.WedCheck.isChecked = days[2]
-                    binding.ThursCheck.isChecked = days[3]
-                    binding.FriCheck.isChecked = days[4]
-                    binding.SatCheck.isChecked = days[5]
-                    binding.SunCheck.isChecked = days[6]
+                    if (days.size >= 7) {
+                        binding.MonCheck.isChecked = days[0]
+                        binding.TuesCheck.isChecked = days[1]
+                        binding.WedCheck.isChecked = days[2]
+                        binding.ThursCheck.isChecked = days[3]
+                        binding.FriCheck.isChecked = days[4]
+                        binding.SatCheck.isChecked = days[5]
+                        binding.SunCheck.isChecked = days[6]
+                    }
                 }
                 updateSummary()
             }
         }
 
-        binding.RouteSaveButton.setOnClickListener {
-            saveRoute()
-        }
-
+        binding.RouteSaveButton.setOnClickListener { savePlan() }
         binding.RouteCancelButton.setOnClickListener { finish() }
 
         binding.BusStopButton.setOnClickListener {
@@ -105,18 +106,19 @@ class AddEditRouteActivity : AppCompatActivity() {
         }
 
         binding.BusServiceButton.setOnClickListener {
-            val busStopCode = binding.BusStopEdit.text.toString().trim()
-            if (busStopCode.isEmpty()) {
+            val busStopCodeOrName = binding.BusStopEdit.text.toString().trim()
+            if (busStopCodeOrName.isEmpty()) {
                 Toast.makeText(this, "Please select a bus stop first", Toast.LENGTH_SHORT).show()
             } else {
                 val intent = Intent(this, SelectBusServiceActivity::class.java)
-                intent.putExtra("BusStopCode", busStopCode)
+                intent.putExtra("BusStopCode", busStopCodeOrName)
                 busServiceSelectorLauncher.launch(intent)
             }
         }
 
         binding.StartTimeEdit.setOnClickListener { showStartTimeClock() }
         binding.ArrivalTimeEdit.setOnClickListener { showArrivalTimeClock() }
+
         val numbers = (1..10).map { it.toString() }.toTypedArray()
         binding.NotfiEdit.setOnClickListener {
             AlertDialog.Builder(this)
@@ -129,7 +131,7 @@ class AddEditRouteActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveRoute() {
+    private fun savePlan() {
         var hasError = false
 
         if (binding.FromEdit.text.toString().trim().isEmpty()) {
@@ -184,59 +186,58 @@ class AddEditRouteActivity : AppCompatActivity() {
             binding.SunCheck.isChecked
         )
 
-        val newRoute = Route(
-            from = binding.FromEdit.text.toString(),
-            to = binding.ToEdit.text.toString(),
+        val newPlan = CommutePlan(
+            startLocationId = binding.FromEdit.text.toString(),
+            endLocationId = binding.ToEdit.text.toString(),
             busStop = binding.BusStopEdit.text.toString(),
             busService = binding.BusServiceEdit.text.toString(),
-            startTime = binding.StartTimeEdit.text.toString(),
+            notifyAt = binding.StartTimeEdit.text.toString(),   // "HH:mm"
             arrivalTime = binding.ArrivalTimeEdit.text.toString(),
-            notificationNum = binding.NotfiEdit.text.toString(),
+            notificationNum = binding.NotfiEdit.text.toString().toIntOrNull() ?: 0,
+            recurrence = true,
             selectedDays = frequency
         )
 
-        val deviceId = DeviceIdUtil.getDeviceId(this)
-
         if (isEdit) {
-            val existingRoute = intent.getParcelableExtra<Route>("Edit_Route")
-            newRoute.id = existingRoute?.id
+            val existing = intent.getParcelableExtra<CommutePlan>("Edit_CommutePlan")
+            newPlan.id = existing?.id
 
-            val routeId = newRoute.id ?: run {
-                Toast.makeText(this, "Missing route ID for update", Toast.LENGTH_SHORT).show()
+            val planId = newPlan.id ?: run {
+                Toast.makeText(this, "Missing commute plan ID for update", Toast.LENGTH_SHORT).show()
                 return
             }
 
             lifecycleScope.launch {
-                routeController.updateRoute(deviceId, routeId, newRoute.toRequest()).fold(
-                    onSuccess = { serverRoute ->
-                        Toast.makeText(this@AddEditRouteActivity, "Route updated successfully", Toast.LENGTH_SHORT).show()
-                        finishWithResult(newRoute)
+                commutePlanController.updateCommutePlan(planId, newPlan.toRequest()).fold(
+                    onSuccess = {
+                        Toast.makeText(this@AddEditRouteActivity, "Plan updated successfully", Toast.LENGTH_SHORT).show()
+                        finishWithResult(newPlan)
                     },
                     onFailure = { error ->
-                        Toast.makeText(this@AddEditRouteActivity, "Failed to update route: ${error.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@AddEditRouteActivity, "Failed to update plan: ${error.message}", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
         } else {
             lifecycleScope.launch {
-                routeController.syncRoute(deviceId, newRoute.toRequest()).fold(
-                    onSuccess = { serverRoute ->
-                        newRoute.id = serverRoute.id
-                        Toast.makeText(this@AddEditRouteActivity, "Route saved successfully", Toast.LENGTH_SHORT).show()
-                        finishWithResult(newRoute)
+                commutePlanController.createCommutePlan(newPlan.toRequest()).fold(
+                    onSuccess = { serverPlan ->
+                        newPlan.id = serverPlan.id
+                        Toast.makeText(this@AddEditRouteActivity, "Plan saved successfully", Toast.LENGTH_SHORT).show()
+                        finishWithResult(newPlan)
                     },
                     onFailure = { error ->
-                        Toast.makeText(this@AddEditRouteActivity, "Failed to save route: ${error.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@AddEditRouteActivity, "Failed to save plan: ${error.message}", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
         }
     }
 
-    private fun finishWithResult(route: Route) {
+    private fun finishWithResult(plan: CommutePlan) {
         val resultIntent = Intent().apply {
-            if (isEdit) putExtra("Edit_Route", route)
-            else putExtra("New_Route", route)
+            if (isEdit) putExtra("Edit_CommutePlan", plan)
+            else putExtra("New_CommutePlan", plan)
             putExtra("Position", position)
         }
         setResult(Activity.RESULT_OK, resultIntent)
@@ -300,13 +301,24 @@ class AddEditRouteActivity : AppCompatActivity() {
 
     private fun setupLocationAdapters() {
         lifecycleScope.launch {
-            val saved = savedLocationStore.load()           // suspend
+
+            val result = commutePlanController.getStoredLocations()
+            val saved = result.getOrElse {
+                emptyList()
+            }
+
             val display = mutableListOf(ADD_NEW) + saved.map { it.name }
 
-            startAdapter = ArrayAdapter(this@AddEditRouteActivity,
-                android.R.layout.simple_dropdown_item_1line, display)
-            endAdapter = ArrayAdapter(this@AddEditRouteActivity,
-                android.R.layout.simple_dropdown_item_1line, display)
+            startAdapter = ArrayAdapter(
+                this@AddEditRouteActivity,
+                android.R.layout.simple_dropdown_item_1line,
+                display
+            )
+            endAdapter = ArrayAdapter(
+                this@AddEditRouteActivity,
+                android.R.layout.simple_dropdown_item_1line,
+                display
+            )
 
             binding.FromEdit.setAdapter(startAdapter)
             binding.ToEdit.setAdapter(endAdapter)
@@ -322,10 +334,20 @@ class AddEditRouteActivity : AppCompatActivity() {
             binding.ToEdit.enableDropdown()
 
             binding.FromEdit.setOnItemClickListener { _, _, position, _ ->
-                handleLocationPick(isStart = true, position = position, input = binding.FromEdit, saved = saved)
+                handleLocationPick(
+                    isStart = true,
+                    position = position,
+                    input = binding.FromEdit,
+                    saved = saved.map { savedLocationData(it.name, it.postalCode) }
+                )
             }
             binding.ToEdit.setOnItemClickListener { _, _, position, _ ->
-                handleLocationPick(isStart = false, position = position, input = binding.ToEdit, saved = saved)
+                handleLocationPick(
+                    isStart = false,
+                    position = position,
+                    input = binding.ToEdit,
+                    saved = saved.map { savedLocationData(it.name, it.postalCode) }
+                )
             }
         }
     }

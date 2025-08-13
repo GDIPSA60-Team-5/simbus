@@ -7,6 +7,8 @@ import com.example.springbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -51,6 +53,11 @@ public class AuthController {
                             .status(500)
                             .body(new MessageResponse("An unexpected error occurred")));
                 });
+    }
+
+    @GetMapping("/me")
+    public Mono<UserDetails> getCurrentUser(@AuthenticationPrincipal Mono<UserDetails> userDetailsMono) {
+        return userDetailsMono;
     }
 
 }

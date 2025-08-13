@@ -93,6 +93,11 @@
             <scope>runtime</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
         <!-- Embedded MongoDB for Testing -->
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
