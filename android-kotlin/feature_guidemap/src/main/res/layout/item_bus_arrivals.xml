@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginStart="44dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/route_card_bg"
+    android:padding="12dp">
+
+    <!-- Bus Arrivals Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bus Arrivals"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/direction_right"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Bus Services Container -->
+    <LinearLayout
+        android:id="@+id/ll_bus_services"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <!-- Loading indicator -->
+    <ProgressBar
+        android:id="@+id/pb_loading"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+</LinearLayout>

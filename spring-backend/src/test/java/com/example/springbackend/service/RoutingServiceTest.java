@@ -87,7 +87,7 @@ class RoutingServiceTest {
             """;
         when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(jsonResponse));
 
-        StepVerifier.create(routingService.getBusRoutes("1.3521,103.8198", "1.290270,103.851959", null))
+        StepVerifier.create(routingService.getBusRoutes("1.3521,103.8198", "1.290270,103.851959", null, null))
                 .expectNextCount(1)
                 .verifyComplete();
 
@@ -446,7 +446,7 @@ class RoutingServiceTest {
 
     @Test
     void testGetBusRoutes_invalidStartCoordinateFormat() {
-        StepVerifier.create(routingService.getBusRoutes("invalid", "1.0,2.0", null))
+        StepVerifier.create(routingService.getBusRoutes("invalid", "1.0,2.0", null, null))
                 .expectErrorMatches(e -> e instanceof IllegalArgumentException &&
                         e.getMessage().contains("Invalid start coordinate format"))
                 .verify();
@@ -454,7 +454,7 @@ class RoutingServiceTest {
 
     @Test
     void testGetBusRoutes_nullStartCoordinate() {
-        StepVerifier.create(routingService.getBusRoutes(null, "1.0,2.0", null))
+        StepVerifier.create(routingService.getBusRoutes(null, "1.0,2.0", null, null))
                 .expectErrorMatches(e -> e instanceof IllegalArgumentException &&
                         e.getMessage().contains("Start coordinate is required"))
                 .verify();
@@ -462,7 +462,7 @@ class RoutingServiceTest {
 
     @Test
     void testGetBusRoutes_invalidEndCoordinateFormat() {
-        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", "invalid-format", null))
+        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", "invalid-format", null, null))
                 .expectErrorMatches(e -> e instanceof IllegalArgumentException &&
                         e.getMessage().contains("Invalid end coordinate format"))
                 .verify();
@@ -470,7 +470,7 @@ class RoutingServiceTest {
 
     @Test
     void testGetBusRoutes_nullEndCoordinate() {
-        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", null, null))
+        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", null, null, null))
                 .expectErrorMatches(e -> e instanceof IllegalArgumentException &&
                         e.getMessage().contains("End coordinate is required"))
                 .verify();
@@ -498,14 +498,14 @@ class RoutingServiceTest {
 
         when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(jsonResponse));
 
-        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", "3.0,4.0", null))
+        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", "3.0,4.0", null, null))
                 .expectNextMatches(List::isEmpty)
                 .verifyComplete();
     }
 
     @Test
     void testGetBusRoutes_invalidStartCoordinate() {
-        StepVerifier.create(routingService.getBusRoutes("invalid", "1.0,2.0", null))
+        StepVerifier.create(routingService.getBusRoutes("invalid", "1.0,2.0", null, null))
                 .expectErrorMatches(e -> e instanceof IllegalArgumentException &&
                         e.getMessage().contains("Invalid start coordinate format"))
                 .verify();
@@ -513,7 +513,7 @@ class RoutingServiceTest {
 
     @Test
     void testGetBusRoutes_invalidEndCoordinate() {
-        StepVerifier.create(routingService.getBusRoutes("1.0,2.0", "invalid", null))
+        StepVerifier.create(routingService.getBusRoutes("invalid", "1.0,2.0", null, null))
                 .expectErrorMatches(e -> e instanceof IllegalArgumentException &&
                         e.getMessage().contains("Invalid end coordinate format"))
                 .verify();
@@ -523,7 +523,7 @@ class RoutingServiceTest {
     void testGetBusRoutes_apiError() {
         when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.error(new RuntimeException("API error")));
 
-        StepVerifier.create(routingService.getBusRoutes("1.3521,103.8198", "1.290270,103.851959", null))
+        StepVerifier.create(routingService.getBusRoutes("1.3521,103.8198", "1.290270,103.851959", null, null))
                 .expectError()
                 .verify();
     }

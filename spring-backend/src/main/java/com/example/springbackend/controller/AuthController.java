@@ -59,5 +59,4 @@ public class AuthController {
     public Mono<UserDetails> getCurrentUser(@AuthenticationPrincipal Mono<UserDetails> userDetailsMono) {
         return userDetailsMono;
     }
-
 }

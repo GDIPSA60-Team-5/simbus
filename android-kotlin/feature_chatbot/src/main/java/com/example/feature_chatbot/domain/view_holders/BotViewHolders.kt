@@ -26,8 +26,8 @@ class BotErrorViewHolder(private val binding: ItemChatBotErrorBinding) :
 
 class GreetingViewHolder(private val binding: ItemGreetingBinding) :
     RecyclerView.ViewHolder(binding.root) {
-    fun bind() {
-        binding.greetingTitle.text = itemView.context.getString(R.string.greeting_title, "Aung")
+    fun bind(username: String = "User") {
+        binding.greetingTitle.text = itemView.context.getString(R.string.greeting_title, username)
         binding.greetingSubtitle.text = itemView.context.getString(R.string.greeting_subtitle)
     }
 }
