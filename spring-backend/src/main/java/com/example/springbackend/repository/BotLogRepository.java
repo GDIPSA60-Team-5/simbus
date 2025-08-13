@@ -6,9 +6,12 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 public interface BotLogRepository extends ReactiveCrudRepository<BotLog, String> {
-    @Query("SELECT COUNT(*) FROM botlog")
+
+    // Count all bot logs
+    @Query(value = "{}", count = true)
     Mono<Long> countRequest();
 
-    @Query("SELECT COUNT(*) FROM botlog WHERE success = true")
+    // Count successful bot logs
+    @Query(value = "{ 'success': true }", count = true)
     Mono<Long> countSuccessfulResponses();
 }

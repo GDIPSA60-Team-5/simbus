@@ -9,13 +9,15 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 
 public interface FeedbackRepository extends ReactiveCrudRepository<Feedback, String> {
+
     Flux<Feedback> findByUserId(String userId);
     Flux<Feedback> findByUserName(String userName);
 
-    @Query("SELECT COUNT(*) FROM feedback")
+    // Count all feedback
+    @Query(value = "{}", count = true)
     Mono<Long> countFeedback();
 
-    @Query("SELECT COUNT(*) FROM feedback WHERE created_at >= $1")
+    // Count feedback since a certain date
+    @Query(value = "{ 'createdAt': { $gte: ?0 } }", count = true)
     Mono<Long> countFeedbackSince(LocalDateTime since);
 }
-
