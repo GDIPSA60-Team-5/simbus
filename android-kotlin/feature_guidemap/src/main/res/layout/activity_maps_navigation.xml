@@ -11,6 +11,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Back Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_arrow_back"
+        app:backgroundTint="@color/white"
+        app:tint="@android:color/black"
+        app:fabSize="normal"
+        app:elevation="8dp" />
+
     <!-- Start Button Overlay -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_start_navigation"
@@ -24,7 +38,43 @@
         android:textColor="@android:color/white"
         android:textStyle="bold"
         app:cornerRadius="24dp"
-        android:visibility="visible" />
+        android:visibility="gone" />
+
+    <!-- Active Mode Buttons Container -->
+    <LinearLayout
+        android:id="@+id/ll_active_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="24dp"
+        android:layout_marginBottom="240dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <!-- End Trip Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_end_trip"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@android:color/holo_red_dark"
+            android:text="END TRIP"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:cornerRadius="24dp" />
+
+        <!-- Simulate Next Leg Button (for testing) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_simulate_next"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:backgroundTint="@color/direction_right"
+            android:text="SIMULATE NEXT"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:cornerRadius="24dp" />
+
+    </LinearLayout>
 
     <!-- Zoom Controls -->
     <LinearLayout
@@ -63,33 +113,58 @@
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:layout_gravity="bottom"
+        android:visibility="gone"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="20dp"
         app:cardElevation="12dp">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="match_parent">
 
-            <!-- ViewPager for leg instructions -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/vp_leg_instructions"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <!-- Page indicators -->
+            <!-- Active mode: ViewPager with step-by-step instructions -->
             <LinearLayout
-                android:id="@+id/ll_page_indicators"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal" />
+                android:id="@+id/layout_active_mode"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        </LinearLayout>
+                <!-- ViewPager for leg instructions -->
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/vp_leg_instructions"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Bus arrivals container for active mode -->
+                <LinearLayout
+                    android:id="@+id/ll_active_bus_arrivals"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
+
+                <!-- Page indicators -->
+                <LinearLayout
+                    android:id="@+id/ll_page_indicators"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal" />
+
+            </LinearLayout>
+
+            <!-- Inactive mode: All directions in one view -->
+            <include
+                android:id="@+id/layout_inactive_mode"
+                layout="@layout/card_all_directions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
     </androidx.cardview.widget.CardView>
 

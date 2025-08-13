@@ -82,6 +82,7 @@ class ChatbotActivity : AppCompatActivity() {
     private var isAutoScrolling = false
     private var isGreetingPaddingRemoved = true // Start with padding removed
     private var username: String = "User"
+    private var pendingIntentMessage: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +104,23 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun checkExternalIntents() {
         intent?.getStringExtra("userMessage")?.takeIf { it.isNotBlank() }?.let { message ->
-            handleUserMessage(message)
+            // Store the message but don't process it yet - wait for location to be ready
+            pendingIntentMessage = message
+            
+            // Remove greeting padding immediately since we know we'll have a message
+            removeGreetingPaddingIfNeeded()
+            
+            processPendingIntentMessage()
+        }
+    }
+    
+    private fun processPendingIntentMessage() {
+        pendingIntentMessage?.let { message ->
+            // Only process if we have location or after a reasonable timeout
+            if (currentLocation != null) {
+                handleUserMessage(message)
+                pendingIntentMessage = null
+            }
         }
     }
 
@@ -142,7 +159,16 @@ class ChatbotActivity : AppCompatActivity() {
                 location?.let {
                     this.currentLocation = Coordinates(it.latitude, it.longitude)
                     Toast.makeText(this, "Location is ready!", Toast.LENGTH_SHORT).show()
+                    
+                    // Process any pending intent message now that we have location
+                    processPendingIntentMessage()
                 }
+            }
+            .addOnFailureListener {
+                // Even if location fails, process the intent message after a short delay
+                binding.root.postDelayed({
+                    processPendingIntentMessage()
+                }, 2000) // 2 second timeout
             }
     }
 
@@ -186,10 +212,12 @@ class ChatbotActivity : AppCompatActivity() {
                     scrollToBottom()
                 }
             } else {
-                // Only center greeting if no messages exist
-                binding.chatRecyclerView.post {
-                    centerGreeting {
-                        isGreetingPaddingRemoved = false // Mark that we've applied centering
+                // Only center greeting if no messages exist AND no pending intent message
+                if (pendingIntentMessage == null) {
+                    binding.chatRecyclerView.post {
+                        centerGreeting {
+                            isGreetingPaddingRemoved = false // Mark that we've applied centering
+                        }
                     }
                 }
             }

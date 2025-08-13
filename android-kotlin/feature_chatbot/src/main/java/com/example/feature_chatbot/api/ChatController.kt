@@ -31,10 +31,20 @@ class ChatController @Inject constructor(
                     currentLocation = currentLocation,
                     currentTimestamp = System.currentTimeMillis()
                 )
-                val botResponse = api.getResponseFor(request)
-                val botItem = ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
-                onResult(botItem)
-                onNewBotMessage(botResponse.toDisplayString())
+                val response = api.getResponseFor(request)
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val botResponse = response.body()!!
+                    val botItem = ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
+                    onResult(botItem)
+                    onNewBotMessage(botResponse.toDisplayString())
+                } else {
+                    // Handle empty or error response
+                    val errorMessage = "Sorry, I couldn't process your request. Please try again."
+                    val errorItem = ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))
+                    onError(errorItem)
+                    onNewBotMessage(errorMessage)
+                }
             } catch (e: Exception) {
                 val errorMessage = getErrorMessage(e)
                 val errorItem = ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))

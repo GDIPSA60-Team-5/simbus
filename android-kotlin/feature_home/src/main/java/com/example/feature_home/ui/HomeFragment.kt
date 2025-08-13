@@ -17,26 +17,27 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.core.di.SecureStorageManager
+import com.example.core.service.TripService
+import com.example.core.model.Trip
 import com.example.feature_home.databinding.FragmentHomeBinding
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import android.content.Intent
 import com.example.feature_guidemap.MapsNavigationActivity
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.core.api.UserApi
 import com.example.core.api.CommuteApi
+import com.example.core.model.RouteLeg
 import com.example.feature_chatbot.ui.ChatbotActivity
 import com.example.feature_home.adapter.DailyCommuteAdapter
 import com.example.feature_home.adapter.DayCommutes
+import com.example.feature_home.R
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -61,6 +62,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     @Inject
     lateinit var secureStorageManager: SecureStorageManager
 
+    @Inject
+    lateinit var tripService: TripService
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
@@ -68,6 +72,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var googleMapInstance: GoogleMap? = null
     private lateinit var dailyCommuteAdapter: DailyCommuteAdapter
+    private var currentTrip: Trip? = null
+    private var routePolylines: MutableList<Polyline> = mutableListOf()
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -131,6 +137,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 startActivity(intent)
             }
         }
+        
+        // Navigation FAB click listener
+        binding.fabNavigation.setOnClickListener {
+            val intent = Intent(requireContext(), MapsNavigationActivity::class.java)
+            startActivity(intent)
+        }
+        
+        // Active trip overlay click listener
+        binding.layoutActiveTrip.setOnClickListener {
+            val intent = Intent(requireContext(), MapsNavigationActivity::class.java)
+            startActivity(intent)
+        }
+        
+        // Collapse button for active trip overlay
+        binding.ivCollapse.setOnClickListener {
+            collapseActiveTripOverlay()
+        }
     }
 
     private fun setupMapView(savedInstanceState: Bundle?) {
@@ -142,7 +165,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun setupCommuteViewPager() {
         dailyCommuteAdapter = DailyCommuteAdapter()
-        binding.viewPager.adapter = dailyCommuteAdapter
+        binding.apply {
+            viewPager.adapter = dailyCommuteAdapter
+            viewPager.setOffscreenPageLimit(2);
+        }
     }
 
     private fun setupBackPressHandler() {
@@ -159,6 +185,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         googleMapInstance = googleMap
         handleLocationPermissionAndSetup()
+        checkForActiveTrip()
 
         googleMap.setOnMapClickListener {
             val context = requireContext()
@@ -236,10 +263,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         mapView.onStart()
     }
 
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-    }
 
     override fun onPause() {
         mapView.onPause()
@@ -344,6 +367,136 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             }
             
             DayCommutes(dayDisplayName, dayCommutes)
+        }
+    }
+
+    private fun checkForActiveTrip() {
+        lifecycleScope.launch {
+            try {
+                // Get current user first
+                val userResponse = userApi.getCurrentUser()
+                if (!userResponse.isSuccessful || userResponse.body() == null) {
+                    Log.w("HomeFragment", "Failed to get user info for active trip check")
+                    return@launch
+                }
+                
+                val username = userResponse.body()!!.username
+                val result = tripService.getActiveTrip(username)
+                result.fold(
+                    onSuccess = { activeTrip ->
+                        currentTrip = activeTrip
+                        activeTrip?.let { trip ->
+                            displayActiveTrip(trip)
+                        }
+                    },
+                    onFailure = { error ->
+                        Log.d("HomeFragment", "No active trip found: ${error.message}")
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Error checking active trip", e)
+            }
+        }
+    }
+
+    private fun displayActiveTrip(trip: Trip) {
+        googleMapInstance?.let { map ->
+            // Clear existing polylines
+            routePolylines.forEach { it.remove() }
+            routePolylines.clear()
+
+            // Display current leg with highlighted polyline
+            val currentLeg = trip.route.legs.getOrNull(trip.currentLegIndex)
+            currentLeg?.routePoints?.let { points ->
+                if (points.size >= 2) {
+                    val latLngPoints = points.map { LatLng(it.latitude, it.longitude) }
+                    
+                    // Use different colors for different leg types
+                    val color = when (currentLeg.type.uppercase()) {
+                        "WALK" -> android.graphics.Color.BLUE
+                        "BUS" -> android.graphics.Color.RED
+                        else -> android.graphics.Color.GREEN
+                    }
+                    
+                    val polyline = map.addPolyline(
+                        PolylineOptions()
+                            .addAll(latLngPoints)
+                            .color(color)
+                            .width(8f)
+                    )
+                    routePolylines.add(polyline)
+                    
+                    // Show remaining legs with lighter color
+                    trip.route.legs.drop(trip.currentLegIndex + 1).forEach { leg ->
+                        leg.routePoints?.let { legPoints ->
+                            if (legPoints.size >= 2) {
+                                val legLatLngPoints = legPoints.map { LatLng(it.latitude, it.longitude) }
+                                val remainingPolyline = map.addPolyline(
+                                    PolylineOptions()
+                                        .addAll(legLatLngPoints)
+                                        .color(android.graphics.Color.GRAY)
+                                        .width(4f)
+                                )
+                                routePolylines.add(remainingPolyline)
+                            }
+                        }
+                    }
+                    
+                    // Focus camera on current leg
+                    val boundsBuilder = LatLngBounds.Builder()
+                    latLngPoints.forEach { boundsBuilder.include(it) }
+                    val bounds = boundsBuilder.build()
+                    
+                    try {
+                        map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100))
+                    } catch (e: Exception) {
+                        Log.e("HomeFragment", "Error updating camera bounds", e)
+                    }
+                }
+            }
+            
+            // Show active trip overlay with current leg instruction
+            showActiveTripOverlay(trip, currentLeg)
+        }
+    }
+
+    private fun showActiveTripOverlay(trip: Trip, currentLeg: RouteLeg?) {
+        if (!isAdded || _binding == null) return // Prevent crash if view is gone
+
+        // Instruction for current leg
+        val instruction = when (currentLeg?.type?.uppercase()) {
+            "WALK" -> "Walk to ${currentLeg.toStopName ?: "destination"}"
+            "BUS" -> "Take Bus ${currentLeg.busServiceNumber ?: "N/A"} to ${currentLeg.toStopName ?: "destination"}"
+            else -> currentLeg?.instruction ?: "Continue your journey"
+        }
+        binding.tvCurrentInstruction.text = instruction
+
+        // Progress info
+        val currentStep = trip.currentLegIndex + 1
+        val totalSteps = trip.route.legs.size
+        binding.tvLegProgress.text = "Step $currentStep of $totalSteps"
+
+        // Duration
+        binding.tvDuration.text = currentLeg?.durationInMinutes?.let { "$it min" } ?: ""
+
+        // Show overlay
+        binding.layoutActiveTrip.visibility = View.VISIBLE
+
+        // Subtitle
+        binding.subTitle.text = "Ready for your journey?"
+    }
+
+
+    private fun collapseActiveTripOverlay() {
+        binding.layoutActiveTrip.visibility = View.GONE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
+        // Check for trip updates when returning to the fragment
+        if (::tripService.isInitialized) {
+            checkForActiveTrip()
         }
     }
 }

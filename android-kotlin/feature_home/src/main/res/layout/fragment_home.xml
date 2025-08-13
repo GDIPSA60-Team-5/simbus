@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Background Image -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -10,10 +11,12 @@
         android:scaleType="centerCrop"
         android:src="@drawable/main_bg" />
 
+    <!-- Main Content Scroll -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
+        android:clipToPadding="false"
         android:fillViewport="true">
 
         <LinearLayout
@@ -21,8 +24,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
 
+            <!-- Title Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -35,7 +40,7 @@
                     android:id="@+id/homeTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingBottom="10sp"
+                    android:paddingBottom="10dp"
                     android:text="Welcome"
                     android:textColor="@color/black"
                     android:textSize="24sp"
@@ -49,6 +54,7 @@
                     android:textColor="@color/half_black"
                     android:textSize="14sp" />
 
+                <!-- Input Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -90,6 +96,7 @@
                         android:src="@drawable/ic_send_outline" />
                 </LinearLayout>
 
+                <!-- Shortcut Buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -98,6 +105,7 @@
                     android:orientation="horizontal"
                     android:weightSum="3">
 
+                    <!-- Button 1 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -127,6 +135,7 @@
                             android:textStyle="bold" />
                     </LinearLayout>
 
+                    <!-- Button 2 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -156,6 +165,7 @@
                             android:textStyle="bold" />
                     </LinearLayout>
 
+                    <!-- Button 3 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -184,45 +194,164 @@
                             android:textSize="14sp"
                             android:textStyle="bold" />
                     </LinearLayout>
-
                 </LinearLayout>
             </LinearLayout>
 
-            <com.google.android.gms.maps.MapView
-                android:id="@+id/mapView"
+            <!-- Map Container -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginTop="24dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="24dp">
 
+                <!-- Map -->
+                <com.google.android.gms.maps.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp" />
+
+                <!-- Navigation Button -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab_navigation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:src="@drawable/ic_arrow_forward"
+                    app:backgroundTint="@android:color/black"
+                    app:tint="@android:color/white"
+                    app:fabSize="normal"
+                    app:elevation="8dp" />
+
+                <!-- Active Trip Overlay -->
+                <LinearLayout
+                    android:id="@+id/layout_active_trip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/active_trip_overlay_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:elevation="12dp"
+                    android:visibility="gone"
+                    android:translationY="0dp">
+
+                    <!-- Trip Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_navigation"
+                            android:layout_marginEnd="8dp"
+                            app:tint="@android:color/white" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Active Journey"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/iv_collapse"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_expand_less"
+                            android:padding="4dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="@android:color/white" />
+                    </LinearLayout>
+
+                    <!-- Current Instruction -->
+                    <TextView
+                        android:id="@+id/tv_current_instruction"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Walk to University Bus Stop"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Progress Info -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_leg_progress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Step 1 of 3"
+                            android:textColor="@color/half_white"
+                            android:textSize="12sp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tv_duration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2 min"
+                            android:textColor="@color/half_white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <!-- ViewPager Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="40dp">
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:paddingBottom="60dp"
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginVertical="32dp"
+                    android:paddingHorizontal="40dp"
                     android:text="Upcoming Commutes"
                     android:textColor="@color/black"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-
-                <androidx.viewpager2.widget.ViewPager2
-                    android:id="@+id/viewPager"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp" />
 
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/tabLayout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    app:tabBackground="@drawable/tab_background"
+                    android:layout_marginTop="12dp"
                     app:tabIndicatorColor="@android:color/transparent"
                     app:tabIndicatorHeight="0dp"
                     app:tabSelectedTextColor="@color/black" />
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="240dp"
+                    android:layout_marginHorizontal="-48dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingHorizontal="40dp"
+                    android:layout_marginBottom="80dp"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

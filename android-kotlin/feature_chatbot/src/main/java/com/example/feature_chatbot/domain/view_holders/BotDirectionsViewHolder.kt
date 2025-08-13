@@ -103,7 +103,7 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         val startLng = startCoordinates?.longitude ?: 0.0
         allMarkers.add("markers=color:0x4285F4|size:mid|label:S|$startLat,$startLng")
 
-        // Process each leg for paths and bus stop markers
+        // Process each leg for paths only (no intermediate markers)
         legsToShow.forEachIndexed { index, leg ->
             val color = when (leg.type.uppercase()) {
                 "WALK" -> walkColor
@@ -118,15 +118,6 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
             if (routePoints != null && routePoints.isNotEmpty()) {
                 val pathString = routePoints.joinToString("|") { "${it.latitude},${it.longitude}" }
                 allPaths.add("path=color:0x$color|weight:$weight|$pathString")
-                
-                // Add bus stop markers for transit legs
-                if (leg.type.uppercase() == "BUS" && routePoints.size > 2) {
-                    // Add markers for intermediate bus stops (excluding start and end points of the leg)
-                    routePoints.drop(1).dropLast(1).forEachIndexed { stopIndex, point ->
-                        val busStopLabel = leg.busServiceNumber?.take(2) ?: "B" // Use bus number or "B"
-                        allMarkers.add("markers=color:0x34A853|size:small|label:$busStopLabel|${point.latitude},${point.longitude}")
-                    }
-                }
             } else {
                 // Fallback to polyline with modern styling
                 val safePolyline = URLEncoder.encode(leg.legGeometry, "UTF-8")
@@ -139,21 +130,6 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
         val endLng = endCoordinates?.longitude ?: 0.0
         allMarkers.add("markers=color:0xEA4335|size:mid|label:E|$endLat,$endLng")
         
-        // Add transfer points markers for multi-leg routes
-        if (legsToShow.size > 1) {
-            for (i in 0 until legsToShow.size - 1) {
-                val currentLeg = legsToShow[i]
-                val nextLeg = legsToShow[i + 1]
-                
-                // Get the end point of current leg (transfer point)
-                val transferPoint = currentLeg.routePoints?.lastOrNull()
-                if (transferPoint != null && 
-                    currentLeg.type.uppercase() != "WALK" && 
-                    nextLeg.type.uppercase() != "WALK") {
-                    allMarkers.add("markers=color:0xFBBC04|size:small|label:T|${transferPoint.latitude},${transferPoint.longitude}")
-                }
-            }
-        }
 
         // Combine all components
         val pathParams = allPaths.joinToString("&")
