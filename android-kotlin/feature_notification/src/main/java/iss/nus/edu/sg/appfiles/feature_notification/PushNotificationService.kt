@@ -8,18 +8,17 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_notification.api.DeviceTokenController
-import iss.nus.edu.sg.feature_notification.R
-import iss.nus.edu.sg.feature_saveroute.DeviceIdUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import androidx.core.content.edit
+import javax.inject.Inject
+import dagger.hilt.android.AndroidEntryPoint
+import iss.nus.edu.sg.feature_saveroute.DeviceIdUtil
 
 @AndroidEntryPoint
-class PushNotificationService: FirebaseMessagingService() {
+class PushNotificationService : FirebaseMessagingService() {
 
     @Inject
     lateinit var deviceTokenController: DeviceTokenController
@@ -27,46 +26,30 @@ class PushNotificationService: FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         Log.d("FCM", "Refreshed token: $token")
-        // Save or send this token to your backend server
         sendTokenToServer(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-
         Log.d("FCM", "Message data payload: ${message.data}")
-        Log.d("FCM", "Message notification payload: ${message.notification}")
-
         val notification = message.notification
-        if (notification != null) {
-            // Notification message payload (title/body)
-            sendNotification(notification.title, notification.body)
-        } else if (message.data.isNotEmpty()) {
-            // Data message payload
-            val title = message.data["title"]
-            val body = message.data["body"]
-            sendNotification(title, body)
-        }
+        val title = notification?.title ?: message.data["title"]
+        val body = notification?.body ?: message.data["body"]
+        sendNotification(title, body)
     }
 
     @SuppressLint("ServiceCast")
     private fun sendNotification(title: String?, body: String?) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "default_channel_id"
         val channelName = "Default Channel"
-
-        val channel =
-            NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-        notificationManager.createNotificationChannel(channel)
-
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // your app icon here
+        manager.createNotificationChannel(NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH))
+        val builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title ?: "Notification")
             .setContentText(body ?: "")
             .setAutoCancel(true)
-
-        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
+        manager.notify(System.currentTimeMillis().toInt(), builder.build())
     }
 
     private fun sendTokenToServer(token: String) {
@@ -76,42 +59,49 @@ class PushNotificationService: FirebaseMessagingService() {
                 val result = deviceTokenController.updateDeviceToken(deviceId, token)
                 result.onSuccess {
                     Log.d("PushNotificationService", "Token sent successfully: ${it.message}")
-                    savePendingToken(null) // clear saved token
+                    savePendingToken(applicationContext, null)
                 }.onFailure {
                     Log.e("PushNotificationService", "Failed to send token", it)
-                    savePendingToken(token) // save token for retry
+                    savePendingToken(applicationContext, token)
                 }
             } catch (e: Exception) {
                 Log.e("PushNotificationService", "Exception sending token", e)
-                savePendingToken(token) // save token for retry
+                savePendingToken(applicationContext, token)
             }
         }
     }
 
-    private fun savePendingToken(token: String?) {
-        val prefs = getSharedPreferences("push_prefs", MODE_PRIVATE)
-        prefs.edit { putString("pending_token", token) }
-    }
+    companion object {
+        fun savePendingToken(context: Context, token: String?) {
+            val prefs = context.getSharedPreferences("push_prefs", Context.MODE_PRIVATE)
+            prefs.edit { putString("pending_token", token) }
+        }
 
-    // Call this at app startup to retry
-    fun retryPendingToken(context: Context) {
-        val prefs = context.getSharedPreferences("push_prefs", Context.MODE_PRIVATE)
-        val pending = prefs.getString("pending_token", null)
-        if (!pending.isNullOrEmpty()) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val deviceId = DeviceIdUtil.getDeviceId(context)
-                    val result = deviceTokenController.updateDeviceToken(deviceId, pending)
-                    result.onSuccess {
-                        Log.d("DeviceTokenManager", "Token sent successfully: ${it.message}")
-                        prefs.edit { remove("pending_token") }
-                    }.onFailure {
-                        Log.e("DeviceTokenManager", "Failed to send token", it)
+        fun retryPendingToken(context: Context, controller: DeviceTokenController) {
+            val prefs = context.getSharedPreferences("push_prefs", Context.MODE_PRIVATE)
+            val pending = prefs.getString("pending_token", null)
+            if (!pending.isNullOrEmpty()) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val deviceId = DeviceIdUtil.getDeviceId(context)
+                        val result = controller.updateDeviceToken(deviceId, pending)
+                        result.onSuccess {
+                            Log.d("PushNotificationService", "Pending token sent: ${it.message}")
+                            prefs.edit { remove("pending_token") }
+                        }.onFailure {
+                            Log.e("PushNotificationService", "Failed to send pending token", it)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("PushNotificationService", "Exception sending pending token", e)
                     }
-                } catch (e: Exception) {
-                    Log.e("DeviceTokenManager", "Exception sending token", e)
                 }
             }
+        }
+
+        fun logSavedToken(context: Context) {
+            val prefs = context.getSharedPreferences("push_prefs", Context.MODE_PRIVATE)
+            val pending = prefs.getString("pending_token", null)
+            Log.d("FCM", "Saved pending token: $pending")
         }
     }
 }
