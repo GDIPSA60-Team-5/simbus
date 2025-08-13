@@ -9,11 +9,16 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 
 public interface UserRepository extends ReactiveCrudRepository<User, String> {
+
     Mono<User> findByUserName(String userName);
+
     Flux<User> findAllByOrderByCreatedAtDesc();
-    @Query("SELECT COUNT(*) FROM users")
+
+    // Count all users
+    @Query(value = "{}", count = true)
     Mono<Long> countUsers();
 
-    @Query("SELECT COUNT(*) FROM users WHERE created_at >= $1")
+    // Count users created since a given time
+    @Query(value = "{ 'createdAt': { $gte: ?0 } }", count = true)
     Mono<Long> countUsersSince(LocalDateTime since);
 }
