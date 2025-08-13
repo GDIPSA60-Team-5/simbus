@@ -17,6 +17,7 @@ import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.AboutUsActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.ChangePasswordActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.menu.FAQActivity
 import iss.nus.edu.sg.appfiles.feature_navigatebar.R
+import iss.nus.edu.sg.appfiles.feature_navigatebar.location.ShowSavedLocationsActivity
 
 class MenuFragment : Fragment() {
 
@@ -53,6 +54,10 @@ class MenuFragment : Fragment() {
         // init logout
         view.findViewById<LinearLayout>(R.id.logoutRow).setOnClickListener {
             handleLogout(storageManager)
+        }
+
+        view.findViewById<LinearLayout>(R.id.btnLocation).setOnClickListener {
+            startActivity(Intent(requireContext(), ShowSavedLocationsActivity::class.java))
         }
 
         //init mute notification
