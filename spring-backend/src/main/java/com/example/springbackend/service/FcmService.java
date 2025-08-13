@@ -5,27 +5,22 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class FcmService {
 
-    public void sendNotification(String fcmToken, String title, String body) {
+    public void sendNotification(String fcmToken, Map<String,String> data) {
         Message message = Message.builder()
-            .setToken(fcmToken)
-            .putData("title", title)
-            .putData("body", body)
-            .build();
-
-        // Log details explicitly
-        System.out.println("Sending FCM message with token: " + fcmToken);
-        System.out.println("Title: " + title);
-        System.out.println("Body: " + body);
+                .setToken(fcmToken)
+                .putAllData(data)  // send the map as FCM data payload
+                .build();
 
         try {
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Sent message: " + response);
+            FirebaseMessaging.getInstance().send(message);
         } catch (FirebaseMessagingException e) {
             e.printStackTrace();
         }
-            // Handle failure, retry, logging, etc.
     }
+
 }

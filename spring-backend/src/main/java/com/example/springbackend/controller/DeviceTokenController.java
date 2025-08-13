@@ -42,7 +42,10 @@ public class DeviceTokenController {
                 )
                 .doOnSuccess(saved -> {
                     // Send a test notification after saving
-                    fcmService.sendNotification(fcmToken, "Welcome!", "Device token registered successfully.");
+                    fcmService.sendNotification(fcmToken, Map.of(
+                            "title", "Welcome!",
+                            "body", "Device token registered successfully."
+                    ));
                 })
                 .map(saved -> ResponseEntity.ok(Map.of("message", "Device token saved/updated and test notification sent")));
     }

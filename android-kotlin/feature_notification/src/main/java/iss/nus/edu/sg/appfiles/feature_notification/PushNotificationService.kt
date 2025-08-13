@@ -15,7 +15,10 @@ import kotlinx.coroutines.launch
 import androidx.core.content.edit
 import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
+import iss.nus.edu.sg.feature_notification.R
 import iss.nus.edu.sg.feature_saveroute.DeviceIdUtil
+import java.time.Duration
+import java.time.ZonedDateTime
 
 @AndroidEntryPoint
 class PushNotificationService : FirebaseMessagingService() {
@@ -32,24 +35,59 @@ class PushNotificationService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         Log.d("FCM", "Message data payload: ${message.data}")
-        val notification = message.notification
-        val title = notification?.title ?: message.data["title"]
-        val body = notification?.body ?: message.data["body"]
-        sendNotification(title, body)
+
+        val busJson = message.data["nextBus"] ?: "[]"
+        Log.d("FCM", "busJson=$busJson")
+
+        val nextBusInfo = try {
+            val busList = org.json.JSONArray(busJson)
+            if (busList.length() == 0) "" else {
+                val firstBus = busList.getJSONObject(0)
+                val serviceName = firstBus.getString("serviceName")
+                val arrivals = firstBus.getJSONArray("arrivals")
+                val now = ZonedDateTime.now()
+
+                (0 until minOf(3, arrivals.length())).joinToString("\n") { index ->
+                    val isoStr = arrivals.getString(index)
+                    val arrivalTime = ZonedDateTime.parse(isoStr)
+                    val minutesDiff = Duration.between(now, arrivalTime).toMinutes()
+                    val timeText = if (minutesDiff <= 0) "Arriving now" else "In $minutesDiff min"
+                    "$serviceName: $timeText"
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("FCM", "Failed parsing bus arrivals", e)
+            ""
+        }.trim()
+        Log.d("FCM", "NextBusInfo=$nextBusInfo")
+
+        if (nextBusInfo.isNotEmpty()) {
+            sendNotification(nextBusInfo)
+        }
     }
 
     @SuppressLint("ServiceCast")
-    private fun sendNotification(title: String?, body: String?) {
+    private fun sendNotification(nextBusInfo: String) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "default_channel_id"
-        val channelName = "Default Channel"
-        manager.createNotificationChannel(NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH))
+        val channelId = "bus_alert_channel_v2"
+        val channelName = "Bus Alert Channel"
+
+        if (manager.getNotificationChannel(channelId) == null) {
+            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+            manager.createNotificationChannel(channel)
+        }
+
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(title ?: "Notification")
-            .setContentText(body ?: "")
+            .setSmallIcon(android.R.drawable.ic_dialog_info) // must be valid
+            .setContentTitle("Bus Alert")
+            .setContentText(nextBusInfo.take(50)) // optional short text for lock screen
+            .setStyle(NotificationCompat.BigTextStyle().bigText(nextBusInfo))
             .setAutoCancel(true)
-        manager.notify(System.currentTimeMillis().toInt(), builder.build())
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        val notificationId = System.currentTimeMillis().toInt()
+        Log.d("FCM", "Sending notification with ID $notificationId")
+        manager.notify(notificationId, builder.build())
     }
 
     private fun sendTokenToServer(token: String) {
