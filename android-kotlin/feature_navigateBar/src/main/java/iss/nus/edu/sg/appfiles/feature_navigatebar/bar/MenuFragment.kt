@@ -1,5 +1,6 @@
 package iss.nus.edu.sg.appfiles.feature_navigatebar.bar
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -68,17 +69,23 @@ class MenuFragment : Fragment() {
     }
 
     private fun handleMuteNotification(switch1: SwitchMaterial) {
+        val prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        //init button
+        switch1.isChecked = prefs.getBoolean("isMuted", false)
+
         switch1.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 Toast.makeText(this@MenuFragment.requireContext(), "mute", Toast.LENGTH_SHORT)
                     .show()
                 switch1.thumbTintList = ColorStateList.valueOf("#D17A4B".toColorInt())
-                // TODO: 开启静音逻辑
+                // mute mode
+                prefs.edit().putBoolean("isMuted", true).apply()
             } else {
                 Toast.makeText(this@MenuFragment.requireContext(), "not mute", Toast.LENGTH_SHORT)
                     .show()
                 switch1.thumbTintList = ColorStateList.valueOf("#AA9D96".toColorInt())
-                // TODO: 关闭静音逻辑
+                // not mute mode
+                prefs.edit().putBoolean("isMuted", false).apply()
             }
         }
     }
