@@ -1,15 +1,21 @@
 package com.example.core.di
 
+import com.example.core.di.SecureStorageManager
+import com.example.network.di.AuthInterceptor
+import com.example.core.api.UserApi
+import com.example.core.api.CommuteApi
+import com.example.core.api.TripApi
+import com.example.core.api.BusApi
 import com.example.feature_chatbot.api.ChatbotApi
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.BotResponseTypeAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import iss.nus.edu.sg.appfiles.feature_login.api.AuthApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import iss.nus.edu.sg.appfiles.feature_login.api.AuthApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -17,7 +23,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Named
 import javax.inject.Singleton
 import com.example.network.BuildConfig
-import iss.nus.edu.sg.appfiles.feature_navigatebar.UserApi
+import iss.nus.edu.sg.appfiles.feature_navigatebar.FeedbackApi
 import java.util.concurrent.TimeUnit
 
 @Module
@@ -55,6 +61,26 @@ object NetworkProvider {
     fun provideAuthApi(retrofit: Retrofit): AuthApi =
         retrofit.create(AuthApi::class.java)
 
+    @Provides
+    @Singleton
+    fun provideUserApi(retrofit: Retrofit): UserApi =
+        retrofit.create(UserApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCommuteApi(retrofit: Retrofit): CommuteApi =
+        retrofit.create(CommuteApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTripApi(retrofit: Retrofit): TripApi =
+        retrofit.create(TripApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideBusApi(retrofit: Retrofit): BusApi =
+        retrofit.create(BusApi::class.java)
+
     // Chatbot provider
     @Provides
     @Singleton
@@ -76,7 +102,6 @@ object NetworkProvider {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
-
     @Provides
     @Singleton
     @Named("chatbot")
@@ -85,8 +110,8 @@ object NetworkProvider {
 
     @Provides
     @Singleton
-    fun provideUserApi(retrofit: Retrofit): UserApi =
-        retrofit.create(UserApi::class.java)
+    fun provideFeedbackApi(retrofit: Retrofit): FeedbackApi =
+        retrofit.create(FeedbackApi::class.java)
 }
 
 

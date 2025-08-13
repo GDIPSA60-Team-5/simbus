@@ -25,7 +25,8 @@ public class RoutingController {
         return routingService.getBusRoutes(
                         intent.startCoordinates(),
                         intent.endCoordinates(),
-                        intent.arrivalTime()
+                        intent.arrivalTime(),
+                        intent.startTime()
                 )
                 .map(routes -> new DirectionsResponseDTO(
                         intent.startLocation() != null && !intent.startLocation().isBlank()

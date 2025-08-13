@@ -3,7 +3,8 @@ import javax.inject.Inject
 import com.example.feature_chatbot.data.BotResponse
 import com.example.feature_chatbot.data.ChatItem
 import com.example.feature_chatbot.data.ChatRequest
-import com.example.feature_chatbot.data.Coordinates // <-- Import Coordinates
+import com.example.core.model.Coordinates // <-- Import Coordinates
+import com.example.core.model.Route
 import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +12,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
 import javax.inject.Named
+import java.util.ArrayList
 
 class ChatController @Inject constructor(
     @Named("chatbot") private val api: ChatbotApi
@@ -29,10 +31,20 @@ class ChatController @Inject constructor(
                     currentLocation = currentLocation,
                     currentTimestamp = System.currentTimeMillis()
                 )
-                val botResponse = api.getResponseFor(request)
-                val botItem = ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
-                onResult(botItem)
-                onNewBotMessage(botResponse.toDisplayString())
+                val response = api.getResponseFor(request)
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val botResponse = response.body()!!
+                    val botItem = ChatItem.BotMessage(UUID.randomUUID().toString(), botResponse)
+                    onResult(botItem)
+                    onNewBotMessage(botResponse.toDisplayString())
+                } else {
+                    // Handle empty or error response
+                    val errorMessage = "Sorry, I couldn't process your request. Please try again."
+                    val errorItem = ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))
+                    onError(errorItem)
+                    onNewBotMessage(errorMessage)
+                }
             } catch (e: Exception) {
                 val errorMessage = getErrorMessage(e)
                 val errorItem = ChatItem.BotMessage(UUID.randomUUID().toString(), BotResponse.Error(errorMessage))
@@ -45,8 +57,8 @@ class ChatController @Inject constructor(
 
     private fun BotResponse.toDisplayString(): String = when (this) {
         is BotResponse.Directions -> {
-            val routes = suggestedRoutes?.joinToString("\n") {
-                "Summary: ${it.summary}\nDuration: ${it.durationInMinutes} minutes"
+            val routes = suggestedRoutes?.joinToString("\n") { route: Route ->
+                "Summary: ${route.summary}\nDuration: ${route.durationInMinutes} minutes"
             } ?: "No routes found."
             "Directions from $startLocation to $endLocation:\n$routes"
         }

@@ -20,5 +20,4 @@ public class User {
 
 	@CreatedDate
 	private Date createdAt;
-	// keep them separate and reference by userId
 }

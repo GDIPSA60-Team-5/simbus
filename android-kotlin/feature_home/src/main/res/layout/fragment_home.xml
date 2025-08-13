@@ -1,226 +1,358 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
 
+    <!-- Background Image -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:contentDescription="@string/bg_image_desc"
         android:scaleType="centerCrop"
-        android:src="@drawable/main_bg"
-        android:contentDescription="@string/bg_image_desc" />
+        android:src="@drawable/main_bg" />
 
-    <LinearLayout
-        android:id="@+id/main"
+    <!-- Main Content Scroll -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        android:orientation="vertical"
-        android:paddingBottom="56dp">
+        android:clipToPadding="false"
+        android:fillViewport="true">
 
         <LinearLayout
+            android:id="@+id/main"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:orientation="vertical"
-            android:paddingHorizontal="40dp"
-            android:paddingTop="80dp">
+            android:paddingBottom="32dp">
 
-            <TextView
-                android:id="@+id/homeTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingBottom="10sp"
-                android:text="Welcome Aung"
-                android:textColor="@color/black"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/subTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ready for your journey?"
-                android:textColor="@color/half_black"
-                android:textSize="14sp" />
-
+            <!-- Title Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp"
-                android:background="@drawable/input_bg"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="15dp"
-                android:paddingVertical="12dp">
+                android:background="@android:color/transparent"
+                android:orientation="vertical"
+                android:paddingHorizontal="40dp"
+                android:paddingTop="80dp">
 
-                <ImageView
-                    android:id="@+id/micIcon"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:contentDescription="@string/mic_desc"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_mic" />
-
-                <EditText
-                    android:id="@+id/messageInput"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="20dp"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:hint="Ask me for directions..."
-                    android:inputType="text"
-                    android:paddingHorizontal="8dp"
+                <TextView
+                    android:id="@+id/homeTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="10dp"
+                    android:text="Welcome"
                     android:textColor="@color/black"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/subTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ready for your journey?"
+                    android:textColor="@color/half_black"
                     android:textSize="14sp" />
 
-                <ImageView
-                    android:id="@+id/sendIcon"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:contentDescription="@string/send_desc"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_send_outline" />
+                <!-- Input Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/input_bg"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="15dp"
+                    android:paddingVertical="12dp">
+
+                    <ImageView
+                        android:id="@+id/micIcon"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:contentDescription="@string/mic_desc"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_mic" />
+
+                    <EditText
+                        android:id="@+id/messageInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="Ask me for directions..."
+                        android:inputType="text"
+                        android:paddingHorizontal="8dp"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+
+                    <ImageView
+                        android:id="@+id/sendIcon"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:contentDescription="@string/send_desc"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_send_outline" />
+                </LinearLayout>
+
+                <!-- Shortcut Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:weightSum="3">
+
+                    <!-- Button 1 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <ImageButton
+                            android:id="@+id/button1"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/btn_bg_dark"
+                            android:contentDescription="@string/button1_desc"
+                            android:elevation="4dp"
+                            android:padding="18dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_icon1" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Plan Commute"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Button 2 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <ImageButton
+                            android:id="@+id/button2"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/btn_bg_light"
+                            android:contentDescription="@string/button2_desc"
+                            android:elevation="4dp"
+                            android:padding="18dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_icon2" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Tag Locations"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Button 3 -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                        <ImageButton
+                            android:id="@+id/button3"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/btn_bg_light"
+                            android:contentDescription="@string/button3_desc"
+                            android:elevation="4dp"
+                            android:padding="18dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_icon3" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Trip History"
+                            android:textColor="@color/black"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <LinearLayout
+            <!-- Map Container -->
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:weightSum="3">
+                android:layout_marginBottom="24dp">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <!-- Map -->
+                <com.google.android.gms.maps.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp" />
+
+                <!-- Navigation Button -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab_navigation"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:src="@drawable/ic_arrow_forward"
+                    app:backgroundTint="@android:color/black"
+                    app:tint="@android:color/white"
+                    app:fabSize="normal"
+                    app:elevation="8dp" />
+
+                <!-- Active Trip Overlay -->
+                <LinearLayout
+                    android:id="@+id/layout_active_trip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/active_trip_overlay_bg"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="16dp"
+                    android:elevation="12dp"
+                    android:visibility="gone"
+                    android:translationY="0dp">
 
-                    <ImageButton
-                        android:id="@+id/button1"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/btn_bg_dark"
-                        android:src="@drawable/ic_icon1"
-                        android:scaleType="centerInside"
-                        android:contentDescription="@string/button1_desc"
-                        android:padding="8dp"
-                        android:elevation="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <!-- Trip Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Plan Commute"
-                        android:textColor="@color/black"
-                        android:textStyle="bold"
-                        android:textSize="14sp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_navigation"
+                            android:layout_marginEnd="8dp"
+                            app:tint="@android:color/white" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Active Journey"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/iv_collapse"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_expand_less"
+                            android:padding="4dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            app:tint="@android:color/white" />
+                    </LinearLayout>
+
+                    <!-- Current Instruction -->
+                    <TextView
+                        android:id="@+id/tv_current_instruction"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Walk to University Bus Stop"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Progress Info -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_leg_progress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Step 1 of 3"
+                            android:textColor="@color/half_white"
+                            android:textSize="12sp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tv_duration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2 min"
+                            android:textColor="@color/half_white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="0dp"
+            </FrameLayout>
+
+            <!-- ViewPager Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:paddingBottom="60dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="8dp">
+                    android:layout_marginVertical="32dp"
+                    android:paddingHorizontal="40dp"
+                    android:text="Upcoming Commutes"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-                    <ImageButton
-                        android:id="@+id/button2"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/btn_bg_light"
-                        android:src="@drawable/ic_icon2"
-                        android:scaleType="centerInside"
-                        android:contentDescription="@string/button2_desc"
-                        android:padding="8dp"
-                        android:elevation="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Tag Locations"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/tabLayout"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="8dp">
+                    android:layout_gravity="center"
+                    android:layout_marginTop="12dp"
+                    app:tabIndicatorColor="@android:color/transparent"
+                    app:tabIndicatorHeight="0dp"
+                    app:tabSelectedTextColor="@color/black" />
 
-                    <ImageButton
-                        android:id="@+id/button3"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:background="@drawable/btn_bg_light"
-                        android:src="@drawable/ic_icon3"
-                        android:scaleType="centerInside"
-                        android:contentDescription="@string/button3_desc"
-                        android:padding="8dp"
-                        android:elevation="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Trip History"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:textSize="14sp" />
-                </LinearLayout>
-
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/viewPager"
+                    android:layout_width="match_parent"
+                    android:layout_height="240dp"
+                    android:layout_marginHorizontal="-48dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingHorizontal="40dp"
+                    android:layout_marginBottom="80dp"/>
             </LinearLayout>
         </LinearLayout>
-
-        <com.google.android.gms.maps.MapView
-            android:id="@+id/mapView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="24dp"
-            android:layout_weight="1" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="40dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Upcoming Commutes"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:textSize="18sp" />
-
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/viewPager"
-                android:layout_width="match_parent"
-                android:layout_height="200dp" />
-
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                app:tabBackground="@drawable/tab_background"
-                app:tabIndicatorColor="@android:color/transparent"
-                app:tabIndicatorHeight="0dp"
-                app:tabSelectedTextColor="@color/black" />
-        </LinearLayout>
-
-    </LinearLayout>
-
+    </ScrollView>
 </FrameLayout>

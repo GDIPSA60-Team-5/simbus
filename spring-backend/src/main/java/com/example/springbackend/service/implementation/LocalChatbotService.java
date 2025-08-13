@@ -1,28 +1,28 @@
 package com.example.springbackend.service.implementation;
 
-import com.example.springbackend.controller.GeocodeController; // Required import
-import com.example.springbackend.dto.llm.BotResponseDTO;
-import com.example.springbackend.dto.llm.DirectionsResponseDTO;
-import com.example.springbackend.dto.llm.ErrorResponseDTO;
-import com.example.springbackend.dto.llm.MessageResponseDTO;
+import com.example.springbackend.controller.GeocodeController;
+import com.example.springbackend.dto.llm.*;
 import com.example.springbackend.dto.request.ChatRequest;
 import com.example.springbackend.model.Coordinates;
-import com.example.springbackend.model.User;
-import com.example.springbackend.repository.UserRepository;
-import com.example.springbackend.security.JwtTokenProvider;
 import com.example.springbackend.service.BotLogService;
 import com.example.springbackend.service.ChatbotService;
 import com.example.springbackend.service.GeocodingService;
 import com.example.springbackend.service.RoutingService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 @ConditionalOnProperty(name = "chatbot.strategy", havingValue = "local", matchIfMissing = true)
 public class LocalChatbotService implements ChatbotService {
@@ -36,136 +36,165 @@ public class LocalChatbotService implements ChatbotService {
     private final RoutingService routingService;
     private final GeocodingService geocodingService;
     private final BotLogService botLogService;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
 
-    public LocalChatbotService(RoutingService routingService, GeocodingService geocodingService, BotLogService botLogService, JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+    public LocalChatbotService(RoutingService routingService,
+                               GeocodingService geocodingService,
+                               BotLogService botLogService) {
         this.routingService = routingService;
         this.geocodingService = geocodingService;
         this.botLogService = botLogService;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.userRepository = userRepository;
     }
 
     @Override
     public Mono<BotResponseDTO> handleChatInput(ChatRequest request, HttpHeaders incomingHeaders) {
         String input = safeTrim(request.userInput());
+        LocalDateTime scheduledTime = TimeParser.parseTomorrowAt(input);
+        LocalTime scheduledLocalTime = (scheduledTime != null) ? scheduledTime.toLocalTime() : null;
+
+        if (input.isEmpty()) {
+            return Mono.just(new MessageResponseDTO(
+                    "Empty input. Please tell me where you want to go, e.g., 'from Bishan to Orchard'."));
+        }
+
         Instant requestTime = Instant.now();
 
-        return extractUserId(incomingHeaders)
-                .flatMap(userId -> {
-                    return botLogService.logRequest(userId, requestTime, input)
-                            .flatMap(log -> {
-                                if (input.isEmpty()) {
-                                    BotResponseDTO resp = new MessageResponseDTO("Empty input. Please tell me where you want to go, e.g., 'from Bishan to Orchard'.");
-                                    return botLogService.updateResponse(log, Instant.now(), resp.getType(), true)
-                                            .thenReturn(resp);
+        return getCurrentUserId()
+                .flatMap(userId -> botLogService.logRequest(userId, requestTime, input)
+                        .flatMap(log -> {
+
+                            // Greeting
+                            if (GREETING.matcher(input).find()) {
+                                BotResponseDTO resp = new MessageResponseDTO("Hello there! How can I help you today?");
+                                return botLogService.updateResponse(log, Instant.now(), resp.getType(), true)
+                                        .thenReturn(resp);
+                            }
+
+                            // Parse locations
+                            String startLocationName = null;
+                            String endLocationName = null;
+
+                            Matcher ftMatcher = FROM_TO_PATTERN.matcher(input);
+                            if (ftMatcher.find()) {
+                                startLocationName = ftMatcher.group(1).trim();
+                                endLocationName = ftMatcher.group(2).trim();
+                            } else {
+                                Matcher fromMatcher = FROM_PATTERN.matcher(input);
+                                if (fromMatcher.find()) startLocationName = fromMatcher.group(1).trim();
+
+                                Matcher toMatcher = TO_PATTERN.matcher(input);
+                                if (toMatcher.find()) endLocationName = toMatcher.group(1).trim();
+                            }
+
+                            if ((endLocationName == null || endLocationName.isBlank())
+                                    && !IGNORE_INPUT.matcher(input).find()) {
+                                String cleanInput = IGNORE_INPUT.matcher(input).replaceAll("").trim();
+                                if (!cleanInput.isBlank()) {
+                                    endLocationName = cleanInput;
                                 }
+                            }
 
-                                if (GREETING.matcher(input).find()) {
-                                    BotResponseDTO resp = new MessageResponseDTO("Hello there! How can I help you today?");
-                                    return botLogService.updateResponse(log, Instant.now(), resp.getType(), true)
-                                            .thenReturn(resp);
-                                }
+                            Mono<ResolvedLocation> startLocationMono =
+                                    (startLocationName != null && !startLocationName.isBlank())
+                                            ? getResolvedLocation(startLocationName)
+                                            : Mono.justOrEmpty(request.currentLocation())
+                                            .map(coords -> new ResolvedLocation(coords, "Origin"));
 
-                                String startLocationName = null;
-                                String endLocationName = null;
+                            Mono<ResolvedLocation> endLocationMono =
+                                    (endLocationName != null && !endLocationName.isBlank())
+                                            ? getResolvedLocation(endLocationName)
+                                            : Mono.just(new ResolvedLocation(
+                                            new Coordinates(0.0, 0.0), "Destination"));
 
-                                Matcher ftMatcher = FROM_TO_PATTERN.matcher(input);
-                                if (ftMatcher.find()) {
-                                    startLocationName = ftMatcher.group(1).trim();
-                                    endLocationName = ftMatcher.group(2).trim();
-                                } else {
-                                    Matcher fromMatcher = FROM_PATTERN.matcher(input);
-                                    if (fromMatcher.find()) {
-                                        startLocationName = fromMatcher.group(1).trim();
-                                    }
-                                    Matcher toMatcher = TO_PATTERN.matcher(input);
-                                    if (toMatcher.find()) {
-                                        endLocationName = toMatcher.group(1).trim();
-                                    }
-                                }
+                            return Mono.zip(startLocationMono, endLocationMono)
+                                    .flatMap(tuple -> {
+                                        ResolvedLocation startLoc = tuple.getT1();
+                                        ResolvedLocation endLoc = tuple.getT2();
 
-                                if ((endLocationName == null || endLocationName.isBlank()) && !IGNORE_INPUT.matcher(input).find()) {
-                                    String cleanInput = IGNORE_INPUT.matcher(input).replaceAll("").trim();
-                                    if (!cleanInput.isBlank()) {
-                                        endLocationName = cleanInput;
-                                    }
-                                }
-
-                                Mono<ResolvedLocation> startLocationMono = (startLocationName != null && !startLocationName.isBlank())
-                                        ? getResolvedLocation(startLocationName)
-                                        : Mono.justOrEmpty(request.currentLocation())
-                                        .map(coords -> new ResolvedLocation(coords, "Origin"));
-
-                                Mono<ResolvedLocation> endLocationMono = (endLocationName != null && !endLocationName.isBlank())
-                                        ? getResolvedLocation(endLocationName)
-                                        : Mono.just(new ResolvedLocation(new Coordinates(0.0, 0.0), "Destination"));
-
-                                return Mono.zip(startLocationMono, endLocationMono)
-                                        .flatMap(tuple -> {
-                                            ResolvedLocation startLoc = tuple.getT1();
-                                            ResolvedLocation endLoc = tuple.getT2();
-
-                                            String startCoordsStr = startLoc.coordinates().toString();
-                                            String endCoordsStr = endLoc.coordinates().toString();
-
-                                            return routingService.getBusRoutes(startCoordsStr, endCoordsStr, null)
-                                                    .map(routes -> (BotResponseDTO) new DirectionsResponseDTO(
-                                                            startLoc.displayName(),
-                                                            endLoc.displayName(),
-                                                            startLoc.coordinates(),
-                                                            endLoc.coordinates(),
-                                                            routes
-                                                    ))
-                                                    .flatMap(resp -> {
-                                                        return botLogService.updateResponse(log, Instant.now(), resp.getType(), true)
-                                                                .thenReturn(resp);
-                                                    });
-                                        });
-                            });
-                })
+                                        return routingService.getBusRoutes(
+                                                        startLoc.coordinates().toString(),
+                                                        endLoc.coordinates().toString(),
+                                                        null,
+                                                        scheduledLocalTime
+                                                )
+                                                .map(routes -> (BotResponseDTO) new DirectionsResponseDTO(
+                                                        startLoc.displayName(),
+                                                        endLoc.displayName(),
+                                                        startLoc.coordinates(),
+                                                        endLoc.coordinates(),
+                                                        routes
+                                                ))
+                                                .flatMap(resp -> botLogService.updateResponse(log, Instant.now(),
+                                                                resp.getType(), true)
+                                                        .thenReturn(resp));
+                                    });
+                        }))
                 .onErrorResume(e -> {
+                    log.error("Error handling chat input", e);
                     Instant errorTime = Instant.now();
                     return botLogService.updateResponseSafe(null, errorTime, "error", false)
                             .thenReturn(new ErrorResponseDTO("Internal error: " + e.getMessage()));
                 });
     }
 
+    private Mono<String> getCurrentUserId() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> ctx.getAuthentication().getPrincipal())
+                .filter(principal -> principal instanceof UserDetails)
+                .map(principal -> ((UserDetails) principal).getUsername())
+                .defaultIfEmpty("0");
+    }
+
     private Mono<ResolvedLocation> getResolvedLocation(String locationName) {
         return geocodingService.getCandidates(locationName)
                 .map(candidates -> {
+                    if (candidates.isEmpty()) {
+                        return new ResolvedLocation(new Coordinates(0.0, 0.0), locationName);
+                    }
                     GeocodeController.GeocodeCandidate firstCandidate = candidates.get(0);
-                    Coordinates coords = Coordinates.fromString(firstCandidate.latitude() + "," + firstCandidate.longitude());
-                    String displayName = firstCandidate.displayName() != null && !firstCandidate.displayName().isBlank()
+                    Coordinates coords = Coordinates.fromString(
+                            firstCandidate.latitude() + "," + firstCandidate.longitude());
+                    String displayName = (firstCandidate.displayName() != null
+                            && !firstCandidate.displayName().isBlank())
                             ? firstCandidate.displayName()
                             : locationName;
                     return new ResolvedLocation(coords, displayName);
                 });
     }
 
-    private record ResolvedLocation(Coordinates coordinates, String displayName) {
-    }
+    private record ResolvedLocation(Coordinates coordinates, String displayName) {}
 
     private static String safeTrim(String s) {
-        return s == null ? "" : s.trim();
+        return (s == null) ? "" : s.trim();
     }
 
-    private Mono<String> extractUserId(HttpHeaders headers) {
-        String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return Mono.just("0L");
+    static class TimeParser {
+        private static final Pattern TOMORROW_AT_PATTERN = Pattern.compile(
+                "(?i)\\btomorrow\\s+at\\s+([0-9]{1,2}(:[0-9]{2})?\\s*(am|pm)?)\\b");
+
+        public static LocalDateTime parseTomorrowAt(String input) {
+            Matcher matcher = TOMORROW_AT_PATTERN.matcher(input);
+            if (matcher.find()) {
+                String timePart = matcher.group(1).toLowerCase().replaceAll("\\s+", "");
+                try {
+                    LocalTime time;
+                    if (timePart.endsWith("am") || timePart.endsWith("pm")) {
+                        DateTimeFormatter formatter12h = DateTimeFormatter.ofPattern("h[:mm]a");
+                        time = LocalTime.parse(timePart, formatter12h);
+                    } else {
+                        DateTimeFormatter formatter24h = DateTimeFormatter.ofPattern("H[:mm]");
+                        time = LocalTime.parse(timePart, formatter24h);
+                    }
+                    return LocalDateTime.now()
+                            .plusDays(1)
+                            .withHour(time.getHour())
+                            .withMinute(time.getMinute())
+                            .withSecond(0)
+                            .withNano(0);
+                } catch (DateTimeParseException e) {
+                    return null;
+                }
+            }
+            return null;
         }
-        String token = authHeader.substring(7);
-        if (!jwtTokenProvider.validateToken(token)) {
-            return Mono.just("0L");
-        }
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        if (username == null || username.isBlank()) {
-            return Mono.just("0L");
-        }
-        return userRepository.findByUserName(username)
-                .map(User::getId)
-                .defaultIfEmpty("0L");
     }
 }

@@ -2,8 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
     alias(libs.plugins.ksp)
 }
 
@@ -14,7 +12,9 @@ hilt {
 android {
     namespace = "com.example.busappkotlin"
     compileSdk = 35
-
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.example.busappkotlin"
         minSdk = 29
@@ -23,7 +23,6 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -64,4 +63,6 @@ dependencies {
     implementation(project(":feature_chatbot"))
     implementation(project(":feature_home"))
     implementation(project(":feature_navigateBar"))
+    implementation(project(":feature_saveRoute"))
+    implementation(project(":feature_guidemap"))
 }

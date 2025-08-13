@@ -11,6 +11,11 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${googleMapsKey}" />
+        
+        <activity
+            android:name=".ui.TripHistoryActivity"
+            android:exported="false"
+            android:theme="@style/Theme.BusAppKotlin" />
     </application>
 
 </manifest>
