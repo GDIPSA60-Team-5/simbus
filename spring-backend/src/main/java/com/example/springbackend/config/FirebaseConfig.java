@@ -21,7 +21,11 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void initialize() {
-        try (InputStream serviceAccount = new FileInputStream(serviceAccountPath)) {
+        try (InputStream serviceAccount = getClass().getClassLoader()
+                .getResourceAsStream(serviceAccountPath)) {
+            if (serviceAccount == null) {
+                throw new RuntimeException("Firebase service account file not found: " + serviceAccountPath);
+            }
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
