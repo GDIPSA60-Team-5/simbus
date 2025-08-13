@@ -7,3 +7,5 @@
 .vscode
 *.log
 *.DS_Store
+spring-backend/src/main/resources/firebase-service-account.json
+
