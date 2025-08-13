@@ -16,7 +16,7 @@ public class NotificationJobMongo {
     private String id;
 
     private String routeId;         // Reference to RouteMongo
-    private String fcmToken;        // Target device
+    private String deviceId;        // Target device
 
     private String scheduledTime; // Exact time to send
     private String timezone;        // For display or debugging

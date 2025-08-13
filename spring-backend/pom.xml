@@ -8,6 +8,12 @@
         <version>3.5.4</version>
         <relativePath/>
     </parent>
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </repositories>
     <groupId>com.example</groupId>
     <artifactId>spring-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -133,6 +139,12 @@
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.5.0</version>
         </dependency>
     </dependencies>
 

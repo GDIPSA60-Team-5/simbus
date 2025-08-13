@@ -2,7 +2,6 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.model.NotificationJobMongo;
 import com.example.springbackend.model.RouteMongo;
-import com.example.springbackend.repository.DeviceTokenMongoRepository;
 import com.example.springbackend.repository.NotificationJobMongoRepository;
 import com.example.springbackend.repository.RouteMongoRepository;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +19,10 @@ public class RoutesController {
 
     private final RouteMongoRepository routeRepository;
     private final NotificationJobMongoRepository notificationRepository;
-    private final DeviceTokenMongoRepository deviceTokenRepository;
 
-    public RoutesController(RouteMongoRepository routeRepository, NotificationJobMongoRepository notificationRepository,
-        DeviceTokenMongoRepository deviceTokenRepository) {
+    public RoutesController(RouteMongoRepository routeRepository, NotificationJobMongoRepository notificationRepository) {
         this.routeRepository = routeRepository;
         this.notificationRepository = notificationRepository;
-        this.deviceTokenRepository = deviceTokenRepository;
     }
 
     @GetMapping("/routes")
@@ -55,7 +51,7 @@ public class RoutesController {
             .flatMap(savedRoute -> {
                 NotificationJobMongo job = new NotificationJobMongo();
                 job.setRouteId(savedRoute.getId());
-                job.setFcmToken(deviceId); // Or look up FCM token from user/device registry
+                job.setDeviceId(deviceId); // Or look up FCM token from user/device registry
                 job.setScheduledTime(savedRoute.getStartTime());
                 job.setSelectedDays(savedRoute.getSelectedDays());
                 job.setTimezone("Asia/Singapore");
@@ -65,14 +61,7 @@ public class RoutesController {
                         " is arriving soon.");
                 job.setStatus("PENDING");
 
-                return deviceTokenRepository.findByDeviceId(deviceId)
-                        .flatMap(deviceToken -> {
-                            job.setFcmToken(deviceToken.getFcmToken());
-                            return notificationRepository.save(job).thenReturn(savedRoute);
-                        })
-                        .switchIfEmpty(
-                                notificationRepository.save(job).thenReturn(savedRoute)
-                        );
+                return notificationRepository.save(job).thenReturn(savedRoute);
             });
     }
 
@@ -114,13 +103,10 @@ public class RoutesController {
                     existing.setUpdatedAt(LocalDateTime.now());
                     return routeRepository.save(existing)
                         .flatMap(updatedRoute ->
-                            notificationRepository.findByRouteId(routeId)
-                                .flatMap(notificationRepository::delete)
-                                .then(
-                                    Mono.just(createJobFromRoute(updatedRoute))
-                                            .flatMap(notificationRepository::save)
-                                )
-                                .thenReturn(updatedRoute)
+                                notificationRepository.findByRouteId(routeId)
+                                    .flatMap(notificationRepository::delete) // remove old jobs
+                                    .then(notificationRepository.save(createJobFromRoute(updatedRoute)))
+                                    .thenReturn(updatedRoute)
                         );
                 })
                 .map(ResponseEntity::ok)
@@ -130,7 +116,7 @@ public class RoutesController {
     private NotificationJobMongo createJobFromRoute(RouteMongo route) {
         NotificationJobMongo job = new NotificationJobMongo();
         job.setRouteId(route.getId());
-        job.setFcmToken(route.getDeviceId()); // or fetch from token registry
+        job.setDeviceId(route.getDeviceId()); // or fetch from token registry
         job.setScheduledTime(route.getStartTime());
         job.setSelectedDays(route.getSelectedDays());
         job.setTimezone("Asia/Singapore");
@@ -141,13 +127,7 @@ public class RoutesController {
         job.setStatus("PENDING");
         job.setCreatedAt(LocalDateTime.now());
         job.setUpdatedAt(LocalDateTime.now());
-
-        return deviceTokenRepository.findByDeviceId(route.getDeviceId())
-                .map(deviceToken -> {
-                    job.setFcmToken(deviceToken.getFcmToken());
-                    return job;
-                })
-                .defaultIfEmpty(job).block();
+        return job;
     }
 }
 
