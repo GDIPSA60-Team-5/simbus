@@ -1,19 +1,45 @@
 package com.example.core.api
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import retrofit2.Response
-import retrofit2.http.GET
-import java.time.LocalTime
+import retrofit2.http.*
 
 interface CommuteApi {
     @GET("/api/user/commute-plans/me")
     suspend fun getMyCommutes(): Response<List<CommutePlan>>
+    
+    @POST("/api/user/commute-plans")
+    suspend fun createCommutePlan(@Body request: CreateCommutePlanRequest): Response<CommutePlan>
+    
+    @PUT("/api/user/commute-plans/{id}")
+    suspend fun updateCommutePlan(
+        @Path("id") id: String,
+        @Body request: UpdateCommutePlanRequest
+    ): Response<CommutePlan>
+    
+    @DELETE("/api/user/commute-plans/{id}")
+    suspend fun deleteCommutePlan(@Path("id") id: String): Response<Unit>
+    
+    @GET("/api/user/commute-plans/{id}")
+    suspend fun getCommutePlan(@Path("id") id: String): Response<CommutePlan>
+    
+    @POST("/api/user/commute-plans/{id}/preferred-routes")
+    suspend fun addPreferredRoute(
+        @Path("id") commutePlanId: String,
+        @Body request: CreatePreferredRouteRequest
+    ): Response<PreferredRoute>
+    
+    @GET("/api/user/commute-plans/{id}/preferred-routes")
+    suspend fun getPreferredRoutes(@Path("id") commutePlanId: String): Response<List<PreferredRoute>>
 }
 
+@Parcelize
 data class CommutePlan(
     val id: String,
     val commutePlanName: String,
     val notifyAt: String,
-    val arrivalTime: String,
+    val arrivalTime: String?,
     val reminderOffsetMin: Int?,
     val recurrence: Boolean?,
     val startLocationId: String?,
@@ -22,4 +48,34 @@ data class CommutePlan(
     val commuteHistoryIds: List<String>?,
     val preferredRouteIds: List<String>?,
     val commuteRecurrenceDayIds: List<String>?
+) : Parcelable
+
+data class CreateCommutePlanRequest(
+    val commutePlanName: String,
+    val notifyAt: String,
+    val arrivalTime: String?,
+    val reminderOffsetMin: Int?,
+    val recurrence: Boolean?,
+    val startLocationId: String,
+    val endLocationId: String
+)
+
+data class UpdateCommutePlanRequest(
+    val commutePlanName: String?,
+    val notifyAt: String?,
+    val arrivalTime: String?,
+    val reminderOffsetMin: Int?,
+    val recurrence: Boolean?,
+    val startLocationId: String?,
+    val endLocationId: String?
+)
+
+data class PreferredRoute(
+    val id: String,
+    val commutePlanId: String,
+    val routeId: String
+)
+
+data class CreatePreferredRouteRequest(
+    val routeId: String
 )

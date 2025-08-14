@@ -6,9 +6,9 @@
         <item name="android:layout_marginStart">0dp</item>
         <item name="android:layout_marginEnd">0dp</item>
         <item name="android:layout_marginHorizontal">0dp</item>
-        <item name="android:background">@drawable/rounded_brown_bg</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:textColorHint">#DDDDDD</item>
+        <item name="android:background">@drawable/bg_half_dark</item>
+        <item name="android:textColor">#fffffff</item>
+        <item name="android:textColorHint">#CCffffff</item>
         <item name="android:paddingHorizontal">16dp</item>
         <item name="android:paddingVertical">10dp</item>
         <item name="android:gravity">center_vertical</item>
@@ -25,5 +25,15 @@
     <style name="RoundedCorners">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="GlassMenuRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:background">@drawable/rounded_glass_ripple</item>
     </style>
 </resources>

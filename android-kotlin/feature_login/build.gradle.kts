@@ -11,6 +11,9 @@ android {
     namespace = "iss.nus.edu.sg.appfiles.feature_login"
     compileSdk = 35
 
+    buildFeatures {
+        viewBinding = true
+    }
     defaultConfig {
         minSdk = 24
 
@@ -38,6 +41,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(libs.hilt.android)
+    implementation(libs.androidx.activity)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

@@ -10,14 +10,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 public class NotificationController {
 
     private final NotificationService notificationService;
 
     // Get all notifications for a user
-    @GetMapping("/user/{userID}")
+    @GetMapping("/{userID}")
     public Flux<UserNotification> getUserNotifications(@PathVariable String userID) {
         return notificationService.getUserNotifications(userID);
     }

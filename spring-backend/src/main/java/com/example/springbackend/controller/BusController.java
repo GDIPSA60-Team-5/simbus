@@ -161,12 +161,14 @@ public class BusController {
     @PostMapping("/sync/location")
     public Mono<SavedLocationMongo> syncLocation(
         @RequestHeader("Device-ID") String deviceId,
-        @RequestBody Map<String, String> locationData) {
+        @RequestBody Map<String, Object> locationData) {
 
         SavedLocationMongo location = new SavedLocationMongo(
             deviceId,
-            locationData.get("name"),
-            locationData.get("postalCode")
+            (String) locationData.get("name"),
+            (String) locationData.get("postalCode"),
+            locationData.get("latitude") != null ? Double.valueOf(locationData.get("latitude").toString()) : null,
+            locationData.get("longitude") != null ? Double.valueOf(locationData.get("longitude").toString()) : null
         );
 
         return savedLocationRepository.save(location);

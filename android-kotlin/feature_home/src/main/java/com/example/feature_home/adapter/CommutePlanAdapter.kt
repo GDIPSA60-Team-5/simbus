@@ -33,17 +33,25 @@ class CommutePlanAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(commutePlan: CommutePlan) {
+            // Commute name
             binding.commuteName.text = commutePlan.commutePlanName
-            binding.notifyTime.text = formatTime(commutePlan.notifyAt)
-            binding.arriveTime.text = formatTime(commutePlan.arrivalTime)
+
+            // Always label as "Starts"
+            binding.startTimeLabel.text = "Starts"
+
+            // Show notify time in HH:mm or fallback
+            binding.startTimeValue.text = formatTime(commutePlan.notifyAt)
         }
 
-        private fun formatTime(timeString: String): String {
-            return try {
-                // Remove seconds if present (e.g., "07:30:00" -> "07:30")
-                timeString.substring(0, 5)
-            } catch (e: Exception) {
-                timeString
+        private fun formatTime(timeString: String?): String {
+            return if (timeString.isNullOrEmpty()) {
+                "Not set"
+            } else {
+                try {
+                    timeString.substring(0, minOf(5, timeString.length))
+                } catch (e: Exception) {
+                    timeString
+                }
             }
         }
     }

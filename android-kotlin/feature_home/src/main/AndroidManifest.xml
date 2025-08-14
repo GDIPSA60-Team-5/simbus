@@ -17,5 +17,4 @@
             android:exported="false"
             android:theme="@style/Theme.BusAppKotlin" />
     </application>
-
 </manifest>

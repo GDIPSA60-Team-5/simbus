@@ -1,215 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/editroutebg"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@drawable/main_bg"
+    android:fillViewport="true">
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp">
 
     <TextView
         android:id="@+id/RoutePageTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add Route"
-        android:textSize="30dp"
-        android:layout_marginTop="50dp"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
-
-    <TextView
-        android:id="@+id/FromText"
-        android:layout_width="50dp"
-        android:layout_height="20dp"
-        android:text="From:"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="40dp"
-        app:layout_constraintTop_toBottomOf="@+id/RoutePageTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/tilFrom"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:layout_constraintStart_toEndOf="@id/FromText"
+        android:layout_marginTop="32dp"
+        android:hint="From Location"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/RoutePageTitle"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
         <AutoCompleteTextView
             android:id="@+id/FromEdit"
-            android:layout_width="200dp"
-            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"
-            >
-
-        </AutoCompleteTextView>
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
 
-    <TextView
-        android:id="@+id/ToText"
-        android:layout_width="50dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="65dp"
-        android:layout_marginLeft="15dp"
-        android:text="To:"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/FromText" />
-
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/tilTo"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        app:layout_constraintStart_toEndOf="@id/ToText"
-        app:layout_constraintTop_toBottomOf="@id/FromText"
+        android:layout_marginTop="16dp"
+        android:hint="To Location"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tilFrom"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
         <AutoCompleteTextView
             android:id="@+id/ToEdit"
-            android:layout_width="200dp"
-            android:layout_marginTop="40dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"/>
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <TextView
-        android:id="@+id/BusStopText"
-        android:layout_width="70dp"
-        android:layout_height="20dp"
-        android:text="Bus Stop:"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="50dp"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnGetRoutes"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Get Route Options"
+        android:textAllCaps="false"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ToText"
-        />
-    <EditText
-        android:id="@+id/BusStopEdit"
-        android:layout_width="100dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tilTo" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/routeOptionsContainer"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:cursorVisible="false"
-        android:inputType="none"
-        android:textSize="15dp"
-        app:layout_constraintStart_toEndOf="@id/BusStopText"
-        app:layout_constraintTop_toBottomOf="@id/ToText"
-        />
-
-    <Button
-        android:id="@+id/BusStopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select Bus Stop"
-        android:layout_marginTop="25dp"
-        android:backgroundTint="#5F3A15"
-        app:layout_constraintTop_toBottomOf="@id/ToText"
-        app:layout_constraintStart_toEndOf="@id/BusStopEdit"
-        />
-
-
-    <TextView
-        android:id="@+id/BusServiceText"
-        android:layout_width="80dp"
-        android:layout_height="20dp"
-        android:text="Bus Service:"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/BusStopText"
-        />
-    <EditText
-        android:id="@+id/BusServiceEdit"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="29dp"
-        android:clickable="false"
-        android:focusable="false"
-        android:focusableInTouchMode="false"
-        android:cursorVisible="false"
-        android:inputType="none"
-        app:layout_constraintStart_toEndOf="@+id/BusServiceText"
-        app:layout_constraintTop_toBottomOf="@+id/BusStopText"
-        />
-    <Button
-        android:id="@+id/BusServiceButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select Bus Service"
-        android:layout_marginTop="19dp"
-        android:backgroundTint="#5F3A15"
-        app:layout_constraintStart_toEndOf="@id/BusServiceEdit"
-        app:layout_constraintTop_toBottomOf="@id/BusStopText"
-        />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnGetRoutes">
 
+        <TextView
+            android:id="@+id/tvRouteOptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select a Route"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/StartTimeText"
-        android:layout_width="60dp"
-        android:layout_height="20dp"
-        android:text="Start at:"
-        android:layout_marginTop="36dp"
-        android:layout_marginLeft="15dp"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerRouteOptions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvRouteOptions" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/selectedRouteCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BusServiceText"
-        />
-    <EditText
-        android:id="@+id/StartTimeEdit"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:focusable="false"
-        android:clickable="true"
-        android:inputType="none"
-        app:layout_constraintStart_toEndOf="@id/StartTimeText"
-        app:layout_constraintTop_toBottomOf="@id/BusServiceText"
-        />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/routeOptionsContainer">
 
-    <TextView
-        android:id="@+id/ArrivalTimeText"
-        android:layout_width="60dp"
-        android:layout_height="20dp"
-        android:text="Arrive at: "
-        android:layout_marginTop="36dp"
-        android:layout_marginLeft="15dp"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selected Route"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/routeDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="25 min"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/routeSummary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Route summary"
+                android:textSize="12sp"
+                android:textColor="@color/gray" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilStartTime"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:hint="Start Time"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/StartTimeText"
-        />
-    <EditText
-        android:id="@+id/ArrivalTimeEdit"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:focusable="false"
-        android:clickable="true"
-        android:inputType="none"
-        app:layout_constraintStart_toEndOf="@id/ArrivalTimeText"
-        app:layout_constraintTop_toBottomOf="@id/StartTimeText"
-        />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/selectedRouteCard"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-    <TextView
-        android:id="@+id/NotifText"
-        android:layout_width="190dp"
-        android:layout_height="20dp"
-        android:text="Number of notifications sent:"
-        android:layout_marginTop="36dp"
-        android:layout_marginLeft="15dp"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/StartTimeEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilArrivalTime"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Arrival Time (Optional)"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ArrivalTimeText"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tilStartTime"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-    <EditText
-        android:id="@+id/NotfiEdit"
-        android:layout_width="100dp"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ArrivalTimeEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilNotifications"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:focusable="false"
-        android:clickable="true"
-        android:inputType="none"
-        app:layout_constraintStart_toEndOf="@id/NotifText"
-        app:layout_constraintTop_toBottomOf="@+id/ArrivalTimeText"/>
+        android:layout_marginTop="16dp"
+        android:hint="Notification Count"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tilArrivalTime"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/NotfiEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:clickable="true"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/notifupdate"
@@ -217,29 +217,30 @@
         android:layout_height="wrap_content"
         android:text="test"
         android:visibility="gone"
-        android:layout_marginLeft="15dp"
-        app:layout_constraintTop_toBottomOf="@id/NotifText"
-        app:layout_constraintStart_toStartOf="parent"/>
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tilNotifications"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
 
     <TextView
         android:id="@+id/DaysFrequencyText"
         android:layout_width="wrap_content"
-        android:layout_height="20dp"
-        android:text="Days:"
-        android:layout_marginTop="36dp"
-        android:layout_marginLeft="15dp"
-        app:layout_constraintTop_toBottomOf="@+id/NotifText"
-        app:layout_constraintStart_toStartOf="parent"
-        >
-    </TextView>
+        android:layout_height="wrap_content"
+        android:text="Select Days"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/notifupdate"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/FrequencyLayout"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_marginTop="12dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/DaysFrequencyText">
@@ -248,79 +249,58 @@
             android:id="@+id/MonCheck"
             android:text="M"
             style="@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
         <CheckBox
             android:id="@+id/TuesCheck"
             android:text="T"
-            style = "@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            style="@style/DayToggle"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
         <CheckBox
             android:id="@+id/WedCheck"
             android:text="W"
-            style = "@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            style="@style/DayToggle"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
         <CheckBox
             android:id="@+id/ThursCheck"
             android:text="T"
-            style = "@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            style="@style/DayToggle"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
         <CheckBox
             android:id="@+id/FriCheck"
             android:text="F"
-            style = "@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            style="@style/DayToggle"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
         <CheckBox
             android:id="@+id/SatCheck"
             android:text="S"
-            style = "@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            style="@style/DayToggle"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
         <CheckBox
             android:id="@+id/SunCheck"
             android:text="S"
-            style = "@style/DayToggle"
-            android:layout_marginTop="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp"
+            style="@style/DayToggle"
+            android:layout_margin="4dp"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="48dp"
-            />
+            android:layout_height="48dp" />
     </LinearLayout>
 
     <TextView
@@ -330,10 +310,10 @@
         android:textColor="@android:color/holo_red_dark"
         android:visibility="gone"
         android:text="Please select at least one day"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/FrequencyLayout"
-        />
+        app:layout_constraintTop_toBottomOf="@id/FrequencyLayout" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/centerGuideline"
@@ -355,8 +335,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="50dp"
-        app:shapeAppearanceOverlay="@style/CircleShape"
-        />
+        app:shapeAppearanceOverlay="@style/CircleShape" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/RouteSaveButton"
@@ -371,8 +350,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginStart="32dp"
         android:layout_marginBottom="50dp"
-        app:shapeAppearanceOverlay="@style/CircleShape"/>
-
-
+        app:shapeAppearanceOverlay="@style/CircleShape" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

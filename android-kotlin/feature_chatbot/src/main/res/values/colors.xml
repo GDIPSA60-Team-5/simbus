@@ -4,5 +4,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="half_black">#80000000</color>
     <color name="half_white">#80FFFFFF</color>
+    <color name="brown">#663D2E1A</color>
 
 </resources>

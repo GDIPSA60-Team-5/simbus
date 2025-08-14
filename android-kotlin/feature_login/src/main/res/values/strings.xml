@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">feature_login</string>
+    <string name="signup_text">No account yet? <font color='#ff7c2b'>Sign up</font></string>
 </resources>

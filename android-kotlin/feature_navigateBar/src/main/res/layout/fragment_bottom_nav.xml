@@ -12,13 +12,19 @@
         android:layout_marginHorizontal="20dp"
         android:background="@drawable/rounded_nav_card"
         android:elevation="4dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="vertical">
 
         <!-- Your nav bar RelativeLayout inside card -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="12dp">
+            android:padding="12dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+
+            >
 
             <!-- Linear for 4 navigate button -->
             <LinearLayout

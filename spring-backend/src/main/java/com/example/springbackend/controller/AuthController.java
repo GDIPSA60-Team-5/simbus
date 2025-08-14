@@ -3,6 +3,8 @@ package com.example.springbackend.controller;
 import com.example.springbackend.dto.*;
 import com.example.springbackend.dto.request.AuthRequest;
 import com.example.springbackend.dto.response.AuthResponse;
+import com.example.springbackend.model.User;
+import com.example.springbackend.repository.UserRepository;
 import com.example.springbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +19,11 @@ import reactor.core.publisher.Mono;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/login")
@@ -56,7 +60,14 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public Mono<UserDetails> getCurrentUser(@AuthenticationPrincipal Mono<UserDetails> userDetailsMono) {
-        return userDetailsMono;
+    public Mono<CurrentUserResponse> getCurrentUser(@AuthenticationPrincipal Mono<UserDetails> userDetailsMono) {
+        return userDetailsMono
+                .flatMap(userDetails -> 
+                    userRepository.findByUserName(userDetails.getUsername())
+                            .map(user -> new CurrentUserResponse(user.getId(), user.getUserName()))
+                );
     }
+    
+    // Response DTO for current user
+    public record CurrentUserResponse(String id, String username) {}
 }

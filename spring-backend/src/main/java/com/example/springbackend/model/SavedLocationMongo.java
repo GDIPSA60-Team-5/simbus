@@ -19,6 +19,8 @@ public class SavedLocationMongo {
     private String deviceId; // Simple device identification
     private String name;
     private String postalCode;
+    private Double latitude;
+    private Double longitude;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -30,6 +32,16 @@ public class SavedLocationMongo {
         this.deviceId = deviceId;
         this.name = name;
         this.postalCode = postalCode;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public SavedLocationMongo(String deviceId, String name, String postalCode, Double latitude, Double longitude) {
+        this.deviceId = deviceId;
+        this.name = name;
+        this.postalCode = postalCode;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -84,7 +96,19 @@ public class SavedLocationMongo {
 		this.updatedAt = updatedAt;
 	}
 
+	public Double getLatitude() {
+		return latitude;
+	}
 
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
 
+	public Double getLongitude() {
+		return longitude;
+	}
 
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
+	}
 }

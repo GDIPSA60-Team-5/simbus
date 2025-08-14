@@ -51,6 +51,7 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":feature_trip_notification"))
     implementation(libs.retrofit)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)

@@ -4,14 +4,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/menu_bg">
+    android:background="@drawable/main_bg">
 
     <!-- back button -->
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@drawable/ic_arrow_back"
+        android:src="@drawable/ic_back_arrow"
         android:contentDescription="Back"
         android:tint="#000000"
         android:clickable="true"

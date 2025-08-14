@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface UserApi {
     @POST("/api/user/change-password")
@@ -11,6 +12,9 @@ interface UserApi {
     
     @GET("/api/auth/me")
     suspend fun getCurrentUser(): Response<User>
+    
+    @GET("/api/notifications/{userId}")
+    suspend fun getUserNotifications(@Path("userId") userId: String): Response<List<UserNotification>>
 }
 
 data class ChangePasswordRequest(
@@ -19,10 +23,21 @@ data class ChangePasswordRequest(
 )
 
 data class User(
+    val id: String,
     val username: String,
     val authorities: List<Authority>? = null
 )
 
 data class Authority(
     val authority: String
+)
+
+data class UserNotification(
+    val id: String,
+    val userId: String,
+    val type: String,
+    val title: String,
+    val message: String,
+    val sentAt: String,
+    val expiresAt: String?
 )
