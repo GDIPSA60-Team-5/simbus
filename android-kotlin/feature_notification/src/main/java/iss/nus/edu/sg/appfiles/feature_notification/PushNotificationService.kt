@@ -1,11 +1,9 @@
 package iss.nus.edu.sg.appfiles.feature_notification
 
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import iss.nus.edu.sg.appfiles.feature_notification.api.DeviceTokenController
@@ -15,7 +13,7 @@ import kotlinx.coroutines.launch
 import androidx.core.content.edit
 import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
-import iss.nus.edu.sg.feature_notification.R
+import iss.nus.edu.sg.appfiles.feature_notification.broadcast_receiver.NotificationHelper
 import iss.nus.edu.sg.feature_saveroute.DeviceIdUtil
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -37,86 +35,67 @@ class PushNotificationService : FirebaseMessagingService() {
         Log.d("FCM", "Message data payload: ${message.data}")
 
         val busJson = message.data["nextBus"] ?: "[]"
-        Log.d("FCM", "busJson=$busJson")
+        val busStopName = message.data["busStopName"] ?: "Bus Stop"
+        val notificationIdStr = message.data["notificationId"] ?: ""
+        val notificationId = notificationIdStr.toIntOrNull() ?: -1
+        Log.d("FCM", "Using notificationId=$notificationId from backend")
 
         val nextBusInfo = try {
             val busList = org.json.JSONArray(busJson)
             if (busList.length() == 0) "" else {
-                val firstBus = busList.getJSONObject(0)
-                val serviceName = firstBus.getString("serviceName")
-                val arrivals = firstBus.getJSONArray("arrivals")
-                val now = ZonedDateTime.now()
+                val lines = mutableListOf<String>()
+                lines.add(busStopName) // first line: bus stop name
 
-                (0 until minOf(3, arrivals.length())).joinToString("\n") { index ->
-                    val isoStr = arrivals.getString(index)
-                    val arrivalTime = ZonedDateTime.parse(isoStr)
-                    val minutesDiff = Duration.between(now, arrivalTime).toMinutes()
-                    val timeText = if (minutesDiff <= 0) "Arriving now" else "In $minutesDiff min"
-                    "$serviceName: $timeText"
+                for (i in 0 until busList.length()) {
+                    val bus = busList.getJSONObject(i)
+                    val serviceName = bus.getString("serviceName")
+                    val arrivals = bus.getJSONArray("arrivals")
+                    val now = ZonedDateTime.now()
+
+                    if (arrivals.length() > 0) {
+                        val timesText = (0 until minOf(3, arrivals.length()))
+                            .map { index ->
+                                val arrivalTime = ZonedDateTime.parse(arrivals.getString(index))
+                                val minutesDiff = Duration.between(now, arrivalTime).toMinutes()
+                                if (minutesDiff <= 0) "Arriving now" else "$minutesDiff min"
+                            }
+                            .joinToString(", ") // all arrivals for the same service on one line
+                        lines.add("$serviceName: $timesText")
+                    } else {
+                        lines.add("$serviceName: No upcoming arrival")
+                    }
                 }
+
+                lines.joinToString("\n")
             }
         } catch (e: Exception) {
             Log.e("FCM", "Failed parsing bus arrivals", e)
             ""
         }.trim()
-        Log.d("FCM", "NextBusInfo=$nextBusInfo")
 
         if (nextBusInfo.isNotEmpty()) {
-            sendNotification(nextBusInfo)
+            sendNotification(notificationId, nextBusInfo)
         } else {
             Log.w("FCM", "NextBusInfo is empty, skipping notification")
         }
     }
 
     @SuppressLint("ServiceCast")
-    private fun sendNotification(nextBusInfo: String) {
+    private fun sendNotification(notificationId: Int, nextBusInfo: String) {
+        val prefs = getSharedPreferences("bus_notifications", Context.MODE_PRIVATE)
+        val isMuted = prefs.getBoolean("muted_$notificationId", false)
+
+        // Save the latest bus info for this notification ID
+        prefs.edit().putString("nextBusInfo_$notificationId", nextBusInfo).apply()
+
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "bus_alert_channel_v2"
-        val channelName = "Bus Alert Channel"
-
-        // Check if notifications are enabled
-        if (!manager.areNotificationsEnabled()) {
-            Log.w("FCM", "Notifications are disabled for this app")
-            return
-        }
-
-        if (manager.getNotificationChannel(channelId) == null) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Notifications for bus arrival alerts"
-                enableLights(true)
-                enableVibration(true)
-            }
-            manager.createNotificationChannel(channel)
-            Log.d("FCM", "Created notification channel: $channelId")
-        }
-
-        // Try to use app icon, fallback to system icon if not available
-        val iconRes = try {
-            R.drawable.ic_bus_notification
-        } catch (e: Exception) {
-            Log.w("FCM", "App icon not found, using system icon")
-            android.R.drawable.ic_dialog_info
-        }
-
-        val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(iconRes)
-            .setContentTitle("Bus Alert")
-            .setContentText(nextBusInfo.take(50)) // optional short text for lock screen
-            .setStyle(NotificationCompat.BigTextStyle().bigText(nextBusInfo))
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-        val notificationId = System.currentTimeMillis().toInt()
-        Log.d("FCM", "Sending notification with ID $notificationId, content: '$nextBusInfo'")
-        
-        try {
-            manager.notify(notificationId, builder.build())
-            Log.d("FCM", "Notification sent successfully")
-        } catch (e: Exception) {
-            Log.e("FCM", "Failed to send notification", e)
-        }
+        val builder = NotificationHelper.buildNotification(
+            this,
+            notificationId,
+            nextBusInfo,
+            muted = isMuted
+        )
+        manager.notify(notificationId, builder.build())
     }
 
     private fun sendTokenToServer(token: String) {

@@ -15,6 +15,8 @@ public class NotificationJobMongo {
     @Id
     private String id;
 
+    private Integer notificationId;
+
     private String routeId;         // Reference to RouteMongo
     private String deviceId;        // Target device
 

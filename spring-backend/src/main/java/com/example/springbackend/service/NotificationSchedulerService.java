@@ -1,6 +1,7 @@
 package com.example.springbackend.service;
 
 import com.example.springbackend.model.BusArrival;
+import com.example.springbackend.model.BusStop;
 import com.example.springbackend.repository.DeviceTokenMongoRepository;
 import com.example.springbackend.repository.NotificationJobMongoRepository;
 import com.example.springbackend.repository.RouteMongoRepository;
@@ -73,35 +74,42 @@ public class NotificationSchedulerService {
                             && "PENDING".equalsIgnoreCase(job.getStatus()))) {
 
                         return routeRepository.findById(job.getRouteId())
-                                .flatMap(route -> fetchNextBusTimings(route.getBusStop(), route.getBusService())
-                                        .collectList() // collect Flux<BusArrival> into List<BusArrival>
-                                        .flatMap(busArrivalsList -> {
-                                            String busJson;
-                                            try {
-                                                busJson = objectMapper.writeValueAsString(busArrivalsList);
-                                            } catch (JsonProcessingException e) {
-                                                log.error("Error serializing bus arrivals to JSON", e);
-                                                busJson = "[]";
-                                            }
+                                .flatMap(route ->
+                                        fetchBusStopByCode(route.getBusStop()) // get full stop info
+                                                .flatMap(busStop ->
+                                                        fetchNextBusTimings(route.getBusStop(), route.getBusService())
+                                                                .collectList()
+                                                                .flatMap(busArrivalsList -> {
+                                                                    String busJson;
+                                                                    try {
+                                                                        busJson = objectMapper.writeValueAsString(busArrivalsList);
+                                                                    } catch (JsonProcessingException e) {
+                                                                        log.error("Error serializing bus arrivals to JSON", e);
+                                                                        busJson = "[]";
+                                                                    }
 
-                                            String finalBusJson = busJson;
-                                            return deviceTokenRepository.findByDeviceId(job.getDeviceId())
-                                                    .take(1)  // Take only the first result if multiple exist
-                                                    .next()   // Convert Flux to Mono
-                                                    .flatMap(deviceToken -> {
-                                                        // send busJson as its own data field
-                                                        Map<String, String> data = new HashMap<>();
-                                                        data.put("title", job.getMessageTitle());
-                                                        data.put("body", job.getMessageBody());
-                                                        data.put("nextBus", finalBusJson);
+                                                                    String finalBusJson = busJson;
+                                                                    return deviceTokenRepository.findByDeviceId(job.getDeviceId())
+                                                                            .take(1)
+                                                                            .next()
+                                                                            .flatMap(deviceToken -> {
+                                                                                Map<String, String> data = new HashMap<>();
+                                                                                data.put("title", job.getMessageTitle());
+                                                                                data.put("body", job.getMessageBody());
+                                                                                data.put("nextBus", finalBusJson);
+                                                                                data.put("busStopName", busStop.name()); // <-- send name
+                                                                                data.put("busStopCode", busStop.code()); // optional
+                                                                                data.put("notificationId", String.valueOf(job.getNotificationId()));
 
-                                                        fcmService.sendNotification(deviceToken.getFcmToken(), data);
+                                                                                fcmService.sendNotification(deviceToken.getFcmToken(), data);
 
-                                                    job.setStatus("ONGOING");
-                                                        return jobRepository.save(job);
-                                                    });
-                                        })
+                                                                                job.setStatus("ONGOING");
+                                                                                return jobRepository.save(job);
+                                                                            });
+                                                                })
+                                                )
                                 );
+
                     }
                     return Mono.empty(); // use Mono.empty() here because flatMap expects Mono
                 })
@@ -115,4 +123,11 @@ public class NotificationSchedulerService {
                 .filter(arrival -> serviceNo == null || serviceNo.isBlank()
                         || arrival.serviceName().equalsIgnoreCase(serviceNo));
     }
+
+    private Mono<BusStop> fetchBusStopByCode(String busStopCode) {
+        return busService.searchBusStops(busStopCode)
+                .filter(busStop -> busStop.code().equalsIgnoreCase(busStopCode))
+                .next();
+    }
+
 }

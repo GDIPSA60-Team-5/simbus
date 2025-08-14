@@ -60,6 +60,7 @@ public class RoutesController {
                         " to " + savedRoute.getTo() +
                         " is arriving soon.");
                 job.setStatus("PENDING");
+                job.setNotificationId((int) (System.currentTimeMillis() % Integer.MAX_VALUE));
 
                 return notificationRepository.save(job).thenReturn(savedRoute);
             });
@@ -125,6 +126,7 @@ public class RoutesController {
                 " to " + route.getTo() +
                 " is arriving soon.");
         job.setStatus("PENDING");
+        job.setNotificationId((int) (System.currentTimeMillis() % Integer.MAX_VALUE));
         job.setCreatedAt(LocalDateTime.now());
         job.setUpdatedAt(LocalDateTime.now());
         return job;
