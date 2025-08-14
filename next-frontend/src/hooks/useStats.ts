@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useCallback } from 'react';
-import { useApi } from './useApi';
+import { useEffect, useCallback, useState } from 'react';
+import { actuatorClient } from '@/lib/actuatorClient';
 import { apiGet } from '@/lib/apiClient';
 
 export interface StatsResponse {
@@ -12,21 +12,79 @@ export interface StatsResponse {
   botRequestCount: number;
   botSuccessCount: number;
   botSuccessRate: number;
+  // Add system metrics from Actuator
+  systemCpuUsage?: number;
+  processCpuUsage?: number;
+  jvmMemoryUsed?: number;
+  activeHttpRequests?: number;
+  httpRequestCount?: number;
 }
 
 export const useStats = () => {
-  const { data, loading, error, execute } = useApi<StatsResponse>();
+  const [data, setData] = useState<StatsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async (): Promise<StatsResponse> => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
-    const url = `${backendUrl}/stats`;
-    
-    return await apiGet<StatsResponse>(url);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+
+    try {
+      // Fetch business logic stats from your existing API
+      const businessStats = await apiGet<StatsResponse>(`${backendUrl}/api/stats`);
+      console.log('Business stats:', businessStats);
+
+      // Fetch system metrics from Spring Actuator
+      console.log('Fetching actuator metrics...');
+      const [
+        systemCpuUsage,
+        processCpuUsage,
+        jvmMemoryUsed,
+        activeHttpRequests,
+        httpRequestCount
+      ] = await Promise.all([
+        actuatorClient.getSystemCpuUsage(),
+        actuatorClient.getProcessCpuUsage(),
+        actuatorClient.getJvmMemoryUsed('heap'),
+        actuatorClient.getHttpRequestsActive(),
+        actuatorClient.getHttpRequestCount()
+      ]);
+
+      console.log('Actuator metrics results:', {
+        systemCpuUsage,
+        processCpuUsage,
+        jvmMemoryUsed,
+        activeHttpRequests,
+        httpRequestCount
+      });
+
+      return {
+        ...businessStats,
+        systemCpuUsage: systemCpuUsage || undefined,
+        processCpuUsage: processCpuUsage || undefined,
+        jvmMemoryUsed: jvmMemoryUsed || undefined,
+        activeHttpRequests: activeHttpRequests || undefined,
+        httpRequestCount: httpRequestCount || undefined,
+      };
+    } catch (err) {
+      // If Actuator metrics fail, fallback to just business stats
+      console.warn('Actuator metrics unavailable, using business stats only:', err);
+      return await apiGet<StatsResponse>(`${backendUrl}/api/stats`);
+    }
   }, []);
 
-  const refresh = useCallback(() => {
-    execute(fetchStats);
-  }, [execute, fetchStats]);
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const stats = await fetchStats();
+      setData(stats);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch stats');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchStats]);
 
   useEffect(() => {
     refresh();

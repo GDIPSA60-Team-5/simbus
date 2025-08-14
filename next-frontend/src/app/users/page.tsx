@@ -30,6 +30,9 @@ const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [userFilter, setUserFilter] = useState<UserFilterType>('all');
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', userType: 'user' });
+  const [isCreating, setIsCreating] = useState(false);
 
   const { users, loading: usersLoading, error: usersError, refresh, deleteUser } = useUsers();
   const { stats, loading: statsLoading } = useStats();
@@ -60,6 +63,37 @@ const UsersPage: React.FC = () => {
       setShowDeleteModal(null);
     } catch (error) {
       alert('Failed to delete user. Please try again.');
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.username || !newUser.email || !newUser.password) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const response = await fetch('http://localhost:8080/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(newUser)
+      });
+
+      if (response.ok) {
+        setShowAddUserModal(false);
+        setNewUser({ username: '', email: '', password: '', userType: 'user' });
+        refresh();
+      } else {
+        alert('Failed to create user. Username might already exist.');
+      }
+    } catch (error) {
+      alert('Failed to create user. Please try again.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -169,14 +203,17 @@ const UsersPage: React.FC = () => {
                 <select
                   value={userFilter}
                   onChange={(e) => setUserFilter(e.target.value as UserFilterType)}
-                  className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border placeholder:text-black text-black border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Users</option>
                   <option value="admin">Admins</option>
                   <option value="user">Users</option>
                 </select>
               </div>
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all flex items-center space-x-2">
+              <button 
+                onClick={() => setShowAddUserModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all flex items-center space-x-2"
+              >
                 <UserPlus className="w-4 h-4" />
                 <span>Add User</span>
               </button>
@@ -258,6 +295,87 @@ const UsersPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Add User Modal */}
+        {showAddUserModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-3 rounded-full bg-blue-100">
+                  <UserPlus className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Add New User</h3>
+                  <p className="text-gray-600">Create a new user account</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter username"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter email"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter password"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">User Type</label>
+                  <select
+                    value={newUser.userType}
+                    onChange={(e) => setNewUser({...newUser, userType: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowAddUserModal(false);
+                    setNewUser({ username: '', email: '', password: '', userType: 'user' });
+                  }}
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all"
+                  disabled={isCreating}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateUser}
+                  disabled={isCreating}
+                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreating ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && (

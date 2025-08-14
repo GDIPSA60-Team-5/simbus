@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useApi } from './useApi';
+import { useAuth } from './useAuth';
 import { apiGet } from '@/lib/apiClient';
 
 export interface Feedback {
@@ -27,9 +28,9 @@ export const useFeedbacks = () => {
   };
 
   const fetchFeedbacks = async (): Promise<Feedback[]> => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
-    const feedbacks = await apiGet<any[]>(`${backendUrl}/user/feedbacks`);
-    
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const feedbacks = await apiGet<any[]>(`${backendUrl}/api/admin/feedbacks`);
+
     // Transform to match our Feedback interface
     return feedbacks.map((fb: any, index: number) => ({
       id: fb.id || `FB-${String(index + 1).padStart(3, '0')}`,

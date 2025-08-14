@@ -1,0 +1,11 @@
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'spring-boot-app'
+    static_configs:
+      - targets: ['host.docker.internal:8080']  # Replace 8080 with your app port
+    metrics_path: '/actuator/prometheus'  # Default Spring Boot metrics endpoint
+    scrape_interval: 10s

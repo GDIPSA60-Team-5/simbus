@@ -58,7 +58,7 @@ const FeedbackPage: React.FC = () => {
       count: feedbacks.filter(f => f.rating === rating).length,
       percentage: (feedbacks.filter(f => f.rating === rating).length / totalFeedbacks) * 100
     }));
-    
+
     const featureBreakdown = {
       chatbot: feedbacks.filter(f => f.feature === 'chatbot').length,
       directions: feedbacks.filter(f => f.feature === 'directions').length,
@@ -135,11 +135,10 @@ const FeedbackPage: React.FC = () => {
         {Array.from({ length: 5 }, (_, i) => (
           <Star
             key={i}
-            className={`${sizeClasses[size]} ${
-              i < rating 
-                ? 'text-yellow-400 fill-current' 
-                : 'text-gray-300'
-            }`}
+            className={`${sizeClasses[size]} ${i < rating
+              ? 'text-yellow-400 fill-current'
+              : 'text-gray-300'
+              }`}
           />
         ))}
       </div>
@@ -176,7 +175,7 @@ const FeedbackPage: React.FC = () => {
     const now = new Date();
     const feedbackTime = new Date(timeString);
     const diffInHours = Math.floor((now.getTime() - feedbackTime.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
@@ -239,10 +238,10 @@ const FeedbackPage: React.FC = () => {
         onRefresh={refresh}
         isRefreshing={feedbacksLoading || statsLoading}
         notifications={[]}
-        onNotificationClick={() => {}}
+        onNotificationClick={() => { }}
         sidebarItems={sidebarItems}
         activeSidebarItem={activeItem}
-        onSidebarItemClick={() => {}}
+        onSidebarItemClick={() => { }}
         variant="feedback"
       >
         {/* Stats Grid */}
@@ -284,7 +283,7 @@ const FeedbackPage: React.FC = () => {
                   <select
                     value={featureFilter}
                     onChange={(e) => setFeatureFilter(e.target.value as FeedbackFilterType)}
-                    className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="p-2 rounded-lg bg-white/60 placeholder:text-black text-black backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Features</option>
                     <option value="chatbot">Chatbot</option>
@@ -293,11 +292,11 @@ const FeedbackPage: React.FC = () => {
                     <option value="performance">Performance</option>
                     <option value="general">General</option>
                   </select>
-                  
+
                   <select
                     value={ratingFilter}
                     onChange={(e) => setRatingFilter(e.target.value as RatingFilterType)}
-                    className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border placeholder:text-black text-black border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Ratings</option>
                     <option value="5">5 Stars</option>
@@ -310,7 +309,7 @@ const FeedbackPage: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortType)}
-                    className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-white/30 placeholder:text-black text-black hover:bg-white/80 transition-all text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -342,10 +341,10 @@ const FeedbackPage: React.FC = () => {
                 ) : (
                   getFilteredAndSortedFeedbacks().map((feedback, index) => {
                     const FeatureIcon = getFeatureIcon(feedback.feature);
-                    
+
                     return (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         className="p-4 rounded-xl bg-white/40 border border-white/30 hover:bg-white/60 transition-all cursor-pointer"
                         onClick={() => setSelectedFeedback(feedback)}
                       >
@@ -364,7 +363,7 @@ const FeedbackPage: React.FC = () => {
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getFeatureColor(feedback.feature)}`}>
                               <FeatureIcon className="w-3 h-3" />
@@ -378,34 +377,11 @@ const FeedbackPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <p className="text-sm text-gray-700 mb-3 line-clamp-2">
                           {feedback.comment}
                         </p>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedFeedback(feedback);
-                                setShowResponseModal(true);
-                              }}
-                              className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition-all"
-                            >
-                              <Reply className="w-3 h-3" />
-                              <span>Reply</span>
-                            </button>
-                            <button className="flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 transition-all">
-                              <Flag className="w-3 h-3" />
-                              <span>Flag</span>
-                            </button>
-                          </div>
-                          
-                          <button className="p-1 rounded-full hover:bg-white/60 transition-all">
-                            <MoreVertical className="w-4 h-4 text-gray-600" />
-                          </button>
-                        </div>
+
                       </div>
                     );
                   })
@@ -429,7 +405,7 @@ const FeedbackPage: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <div className="bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-2 rounded-full transition-all"
                             style={{ width: `${percentage}%` }}
                           />
@@ -452,7 +428,7 @@ const FeedbackPage: React.FC = () => {
                   {Object.entries(feedbackStats.featureBreakdown).map(([feature, count]) => {
                     const FeatureIcon = getFeatureIcon(feature);
                     const percentage = (count / feedbackStats.totalFeedbacks) * 100;
-                    
+
                     return (
                       <div key={feature} className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -461,7 +437,7 @@ const FeedbackPage: React.FC = () => {
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                            <div 
+                            <div
                               className="bg-blue-500 h-1.5 rounded-full"
                               style={{ width: `${percentage}%` }}
                             />

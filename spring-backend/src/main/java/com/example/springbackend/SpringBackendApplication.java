@@ -66,7 +66,7 @@ public class SpringBackendApplication {
                         Feedback.builder()
                                 .userName(user.getUserName())
                                 .userId(user.getId())
-                                .feedbackText("lee")
+                                .feedbackText("a bit laggy")
                                 .rating(3)
                                 .tagList("direction")
                                 .submittedAt(LocalDateTime.now())

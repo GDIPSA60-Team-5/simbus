@@ -36,6 +36,10 @@ public class StatsService {
         Mono<Double> botSuccessRate = Mono.zip(totalBotRequests, totalBotSuccess)
                 .map(t -> t.getT1() > 0 ? (t.getT2() * 100.0 / t.getT1()) : 0.0);
 
+        //response time metrics
+        Mono<Double> avgResponseTime = botLogRepository.getAverageResponseTime().defaultIfEmpty(0.0);
+        Mono<Double> maxResponseTime = botLogRepository.getMaxResponseTime().defaultIfEmpty(0.0);
+        Mono<Double> minResponseTime = botLogRepository.getMinResponseTime().defaultIfEmpty(0.0);
 
         return Mono.zip(
                 userCount,
@@ -44,7 +48,10 @@ public class StatsService {
                 feedbackCountRecently,
                 totalBotRequests,
                 totalBotSuccess,
-                botSuccessRate
+                botSuccessRate,
+                avgResponseTime,
+                maxResponseTime,
+                minResponseTime
         ).map(tuple -> new StatsDTO(
                 tuple.getT1(),
                 tuple.getT2(),
@@ -52,7 +59,10 @@ public class StatsService {
                 tuple.getT4(),
                 tuple.getT5(),
                 tuple.getT6(),
-                tuple.getT7()
+                tuple.getT7(),
+                tuple.getT8(),
+                tuple.getT9(),
+                tuple.getT10()
         ));
     }
 }

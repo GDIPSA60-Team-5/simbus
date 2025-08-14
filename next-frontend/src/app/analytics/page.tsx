@@ -27,7 +27,7 @@ import { LineChart } from '@/components/charts/LineChart';
 const AnalyticsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [timeRange, setTimeRange] = useState('24h');
-  
+
   const { data: metrics, loading, error, refresh } = usePrometheus();
   const { items: sidebarItems, activeItem } = useNavigation();
 
@@ -139,17 +139,17 @@ const AnalyticsPage: React.FC = () => {
         onRefresh={refresh}
         isRefreshing={loading}
         notifications={[]}
-        onNotificationClick={() => {}}
+        onNotificationClick={() => { }}
         sidebarItems={sidebarItems}
         activeSidebarItem={activeItem}
-        onSidebarItemClick={() => {}}
+        onSidebarItemClick={() => { }}
         variant="analytics"
       >
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
             <strong className="font-bold">Error fetching metrics: </strong>
             <span className="block sm:inline">{error}</span>
-            <button 
+            <button
               onClick={refresh}
               className="ml-4 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
             >
@@ -262,7 +262,7 @@ const AnalyticsPage: React.FC = () => {
                   </p>
                 </div>
               )}
-              
+
               {metrics.peakDay && (
                 <div className="backdrop-blur-md bg-white/60 border border-white/30 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-4">

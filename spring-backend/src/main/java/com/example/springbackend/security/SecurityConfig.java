@@ -2,6 +2,7 @@ package com.example.springbackend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -36,11 +37,14 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // <-- allow preflight
                         .pathMatchers("/api/auth/login").permitAll()
                         .pathMatchers("/api/auth/register").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/api/admin/login").permitAll()
                         .anyExchange().authenticated()
                 )
+
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
                 )
@@ -54,11 +58,10 @@ public class SecurityConfig {
         
         // Allow specific origins (modify these for production)
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:3000",
-            "http://127.0.0.1:3000", 
-            "http://localhost:*",
-            "http://127.0.0.1:*"
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
         ));
+
         
         // Allow all HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
@@ -77,6 +80,7 @@ public class SecurityConfig {
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/actuator/**", configuration);
         
         return source;
     }

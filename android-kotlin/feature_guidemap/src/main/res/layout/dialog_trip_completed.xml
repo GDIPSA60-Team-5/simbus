@@ -1,50 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_completion"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:background="@drawable/route_card_bg">
+    android:layout_height="match_parent"
+    android:background="#80000000"
+    android:clickable="true"
+    android:focusable="true">
 
-    <!-- Completion Icon -->
-    <ImageView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+    <!-- Centered content -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:src="@drawable/ic_navigation"
-        android:layout_marginBottom="16dp"
-        android:tint="@color/direction_right" />
+        android:background="@drawable/btn_bg_light"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <!-- Completion Message -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="You've completed a trip!"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:gravity="center"
-        android:layout_marginBottom="8dp" />
+        <!-- Completion Icon -->
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/ic_navigation"
+            android:tint="@color/direction_right" />
 
-    <!-- Sub message -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Great job! Your journey has been completed successfully."
-        android:textSize="16sp"
-        android:textColor="@android:color/darker_gray"
-        android:gravity="center"
-        android:layout_marginBottom="24dp" />
+        <!-- Completion Message -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="You've completed a trip!"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:scrollHorizontally="true" />
 
-    <!-- Back to Home Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_back_to_home"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:text="Back to Home"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        android:backgroundTint="@color/direction_right"
-        android:layout_gravity="center" />
+        <!-- Sub message -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center"
+            android:text="Great job! Your journey has been completed successfully."
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:scrollHorizontally="true" />
 
-</LinearLayout>
+
+        <!-- Back to Home Button -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btn_back_to_home"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:background="@drawable/btn_bg_dark_ripple"
+            android:text="Back to Home"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</FrameLayout>

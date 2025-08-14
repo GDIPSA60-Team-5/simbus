@@ -64,10 +64,10 @@ public class AuthController {
         return userDetailsMono
                 .flatMap(userDetails -> 
                     userRepository.findByUserName(userDetails.getUsername())
-                            .map(user -> new CurrentUserResponse(user.getId(), user.getUserName()))
+                            .map(user -> new CurrentUserResponse(user.getId(), user.getUserName(), user.getUserType()))
                 );
     }
     
     // Response DTO for current user
-    public record CurrentUserResponse(String id, String username) {}
+    public record CurrentUserResponse(String id, String username, String userType) {}
 }

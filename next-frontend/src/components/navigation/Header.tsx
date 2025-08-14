@@ -100,46 +100,6 @@ export const Header = ({
             </button>
           )}
 
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-lg bg-white/60 backdrop-blur-sm border border-white/30 hover:bg-white/80 transition-all"
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications Dropdown */}
-            {showNotifications && notifications.length > 0 && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold">Notifications</h3>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      onClick={() => onNotificationClick?.(notification.id)}
-                      className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
-                    >
-                      <div className={`inline-block px-2 py-1 rounded-full text-xs mb-2 ${getNotificationTypeColor(notification.type)}`}>
-                        {notification.type}
-                      </div>
-                      <h4 className="font-semibold text-gray-900">{notification.title}</h4>
-                      <p className="text-sm text-gray-600">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Settings */}
           <div className="relative">
             <button

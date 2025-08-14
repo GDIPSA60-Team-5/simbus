@@ -21,4 +21,6 @@ public interface UserRepository extends ReactiveCrudRepository<User, String> {
     // Count users created since a given time
     @Query(value = "{ 'createdAt': { $gte: ?0 } }", count = true)
     Mono<Long> countUsersSince(LocalDateTime since);
+
+    Mono<Object> findByEmail(String email);
 }

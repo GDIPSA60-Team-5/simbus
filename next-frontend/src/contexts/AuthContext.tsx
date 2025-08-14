@@ -2,17 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  decodeJWT, 
-  isTokenExpired, 
-  getTokenExpirationTime, 
+import {
+  decodeJWT,
+  isTokenExpired,
+  getTokenExpirationTime,
   getUsernameFromToken,
-  isValidTokenFormat 
+  isValidTokenFormat
 } from '@/utils/tokenUtils';
 
 interface User {
   username: string;
   token: string;
+  userType?: string;
   expiresAt?: number;
 }
 
@@ -21,6 +22,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   loading: boolean;
   setAuthCookie: (token: string) => void;
   clearAuthCookie: () => void;
@@ -41,7 +43,7 @@ interface AuthProviderProps {
 }
 
 // Helper function to validate and set user from token
-const validateAndSetUser = (token: string, setUser: (user: User | null) => void): boolean => {
+const validateAndSetUser = async (token: string, setUser: (user: User | null) => void): Promise<boolean> => {
   if (!isValidTokenFormat(token)) {
     console.warn('Invalid token format');
     return false;
@@ -58,14 +60,48 @@ const validateAndSetUser = (token: string, setUser: (user: User | null) => void)
     return false;
   }
 
-  const decoded = decodeJWT(token);
-  setUser({
-    username,
-    token,
-    expiresAt: decoded?.exp ? decoded.exp * 1000 : undefined
-  });
+  try {
+    // Fetch user details including userType
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const response = await fetch(`${backendUrl}/api/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  return true;
+    if (response.ok) {
+      const userData = await response.json();
+      const decoded = decodeJWT(token);
+      setUser({
+        username: userData.username,
+        userType: userData.userType,
+        token,
+        expiresAt: decoded?.exp ? decoded.exp * 1000 : undefined
+      });
+      return true;
+    } else {
+      console.warn('Failed to fetch user details');
+      // Fallback to basic user info from token
+      const decoded = decodeJWT(token);
+      setUser({
+        username,
+        token,
+        expiresAt: decoded?.exp ? decoded.exp * 1000 : undefined
+      });
+      return true;
+    }
+  } catch (error) {
+    console.warn('Error fetching user details:', error);
+    // Fallback to basic user info from token
+    const decoded = decodeJWT(token);
+    setUser({
+      username,
+      token,
+      expiresAt: decoded?.exp ? decoded.exp * 1000 : undefined
+    });
+    return true;
+  }
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
@@ -77,11 +113,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const setAuthCookie = useCallback((token: string) => {
     // Store in localStorage for immediate access
     localStorage.setItem('authToken', token);
-    
+
     // Set HTTP cookie for middleware
     const decoded = decodeJWT(token);
     const maxAge = decoded?.exp ? decoded.exp - Math.floor(Date.now() / 1000) : 86400; // 1 day default
-    
+
     document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
   }, []);
 
@@ -102,20 +138,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize authentication state
   useEffect(() => {
     let isMounted = true;
-    
-    const initializeAuth = () => {
+
+    const initializeAuth = async () => {
       if (!isMounted) return;
-      
+
       const token = localStorage.getItem('authToken');
-      
+
       if (token) {
-        const isValid = validateAndSetUser(token, setUser);
+        const isValid = await validateAndSetUser(token, setUser);
         if (!isValid) {
           localStorage.removeItem('authToken');
           document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         }
       }
-      
+
       if (isMounted) {
         setLoading(false);
       }
@@ -132,7 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (user?.token) {
       const timeUntilExpiry = getTokenExpirationTime(user.token);
-      
+
       if (timeUntilExpiry && timeUntilExpiry > 0) {
         const timeoutId = setTimeout(() => {
           console.log('Token expired, automatically logging out');
@@ -148,9 +184,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [user?.token, logout]);
 
   const login = useCallback(async (username: string, password: string): Promise<void> => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
-    
-    const response = await fetch(`${backendUrl}/auth/login`, {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+
+    const response = await fetch(`${backendUrl}/api/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,7 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthCookie(token);
 
     // Validate and set user from token
-    const isValid = validateAndSetUser(token, setUser);
+    const isValid = await validateAndSetUser(token, setUser);
     if (!isValid) {
       throw new Error('Invalid token received from server');
     }
@@ -185,6 +221,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!user && !loading,
+    isAdmin: user?.userType === 'admin',
     loading,
     setAuthCookie,
     clearAuthCookie,
