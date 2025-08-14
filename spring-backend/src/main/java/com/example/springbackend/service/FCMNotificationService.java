@@ -22,7 +22,7 @@ public class FCMNotificationService {
      * Send commute started notification
      */
     public void sendCommuteStarted(String username, String commutePlanName) {
-        userRepository.findByUserName(username)
+        userRepository.findByUserName("user")
                 .subscribe(user -> {
                     if (user != null && user.getFcmToken() != null) {
                         try {
