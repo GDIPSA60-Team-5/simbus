@@ -2,14 +2,10 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.ChangePasswordRequest;
 import com.example.springbackend.repository.UserRepository;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
@@ -23,22 +19,42 @@ public class UserController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @PostMapping("/change-password")
-    public Mono<ResponseEntity<String>> changePassword(
-            @RequestBody @Valid ChangePasswordRequest request,
-            Principal principal) {
 
+    @PostMapping("/change-password")
+    public Mono<ResponseEntity<String>> changePassword(@RequestBody ChangePasswordRequest req,
+                                                       Principal principal) {
+        // (1) Old/new password must not be empty
+        if (req == null ||
+                req.getCurrentPassword() == null || req.getCurrentPassword().trim().isEmpty() ||
+                req.getNewPassword() == null || req.getNewPassword().trim().isEmpty()) {
+            return Mono.just(ResponseEntity.badRequest().body("Parameters cannot be empty"));
+        }
+
+        final String oldPwd = req.getCurrentPassword().trim();
+        final String newPwd = req.getNewPassword().trim();
+
+        // (2) New password length must be at least 8
+        if (newPwd.length() < 8) {
+            return Mono.just(ResponseEntity.badRequest().body("Password must be at least 8 characters"));
+        }
+
+        // (3) New password must be different from old password
+        if (oldPwd.equals(newPwd)) {
+            return Mono.just(ResponseEntity.badRequest().body("New password must be different from the current password"));
+        }
+
+        // (4) Verify old password and update to the new password
         return userRepository.findByUserName(principal.getName())
                 .flatMap(user -> {
-                    if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
-                        return Mono.just(ResponseEntity.badRequest().body("password not correct"));
+                    if (!passwordEncoder.matches(oldPwd, user.getPasswordHash())) {
+                        // Old password is incorrect
+                        return Mono.just(ResponseEntity.badRequest().body("Current password is incorrect"));
                     }
-
-                    user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+                    user.setPasswordHash(passwordEncoder.encode(newPwd));
                     return userRepository.save(user)
-                            .thenReturn(ResponseEntity.ok("password changed successfully"));
+                            .thenReturn(ResponseEntity.ok("Password changed successfully"));
                 })
-                .switchIfEmpty(Mono.just(ResponseEntity.badRequest().body("user not found")));
+                .switchIfEmpty(Mono.just(ResponseEntity.badRequest().body("User not found")));
     }
 }
 

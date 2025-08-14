@@ -7,10 +7,10 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.core.api.ChangePasswordRequest
 import com.example.core.api.UserApi
 import com.example.core.di.SecureStorageManager
 import dagger.hilt.android.AndroidEntryPoint
-import com.example.core.api.ChangePasswordRequest
 import iss.nus.edu.sg.appfiles.feature_navigatebar.R
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,52 +34,69 @@ class ChangePasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
 
-        // init UI
+        // view bindings from activity_change_password.xml
+        backButton = findViewById(R.id.btnBack)
         currentPasswordEdit = findViewById(R.id.currentPassword)
         newPasswordEdit = findViewById(R.id.newPassword)
         confirmPasswordEdit = findViewById(R.id.confirmPassword)
         submitButton = findViewById(R.id.submitBtn)
-        backButton = findViewById(R.id.btnBack)
 
-        backButton.setOnClickListener {
-            finish()
-        }
+        backButton.setOnClickListener { finish() }
 
         submitButton.setOnClickListener {
-            val currentPassword = currentPasswordEdit.text.toString().trim()
-            val newPassword = newPasswordEdit.text.toString().trim()
-            val confirmPassword = confirmPasswordEdit.text.toString().trim()
+            val oldPwd = currentPasswordEdit.text?.toString()?.trim().orEmpty()
+            val newPwd = newPasswordEdit.text?.toString()?.trim().orEmpty()
+            val confirmPwd = confirmPasswordEdit.text?.toString()?.trim().orEmpty()
 
-            if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            // === Client-side validations (match backend rules) ===
+            // (1) non-empty
+            if (oldPwd.isEmpty() || newPwd.isEmpty()) {
+                Toast.makeText(this, "Parameters cannot be empty", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // (2) min length 8
+            if (newPwd.length < 8) {
+                Toast.makeText(this, "Password must be at least 8 characters", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // (3) new != old
+            if (oldPwd == newPwd) {
+                Toast.makeText(this, "New password must be different from the current password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            // confirm matches
+            if (newPwd != confirmPwd) {
+                Toast.makeText(this, "Confirmation password does not match", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (newPassword != confirmPassword) {
-                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val token = secureStorageManager.getToken()
-            if (token == null) {
-                Toast.makeText(this, "Not logged in yet. Please log in first.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
+            // === Call API ===
             lifecycleScope.launch {
                 try {
                     val response = userApi.changePassword(
-                        ChangePasswordRequest(currentPassword, newPassword)
+                        ChangePasswordRequest(
+                            currentPassword = oldPwd,
+                            newPassword = newPwd
+                        )
                     )
                     if (response.isSuccessful) {
-                        Toast.makeText(this@ChangePasswordActivity, "Password changed successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ChangePasswordActivity,
+                            "Password changed successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     } else {
+                        // show backend message to user
                         val error = response.errorBody()?.string() ?: "Unknown error"
                         Toast.makeText(this@ChangePasswordActivity, error, Toast.LENGTH_LONG).show()
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(this@ChangePasswordActivity, "Network error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ChangePasswordActivity,
+                        "Network error: ${e.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
