@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import time
+from typing import List
 
 
 # ---- CONVERSATION HISTORY LENGTH TO KEEP ----
@@ -19,7 +20,7 @@ INTENTS = ["route_info", "schedule_commute", "next_bus", "help", "reset"]
 
 INTENT_DESCRIPTIONS = {
     "route_info": "Help users find directions from a start location to a destination.",
-    "schedule_commute": "Plan when to leave based on start, destination, arrival time, and notification timing.",
+    "schedule_commute": "Plan a recurring commute with start and destination locations and a notification time.",
     "next_bus": "Provide arrival time for the next bus given a bus service number and optionally boarding stop info.",
     "help": "Provide guidance on how to use the assistant.",
     "reset": "Clear the current conversation context to start fresh.",
@@ -30,7 +31,8 @@ REQUIRED_SLOTS = {
     "schedule_commute": [
         "start_location",
         "end_location",
-        ["notification_start_time", "arrival_time"],
+        "notification_start_time",
+        "recurrence_days"   #eg. ["mon", "tue", "wed", "thu", "fri"]
     ],
     "next_bus": [
         "bus_service_number",
@@ -43,8 +45,8 @@ REQUIRED_SLOTS = {
 SLOT_TYPES = {
     "start_location": str,
     "end_location": str,
-    "notification_start_time": datetime,
-    "arrival_time": datetime,
+    "notification_start_time": time,
+    "recurrence_days": List[str],
     "bus_service_number": str,
     "boarding_bus_stop_name": str,
     "boarding_bus_stop_code": str,
