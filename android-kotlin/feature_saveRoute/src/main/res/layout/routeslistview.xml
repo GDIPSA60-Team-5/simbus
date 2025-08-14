@@ -1,5 +1,4 @@
-
-<com.google.android.material.card.MaterialCardView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -7,9 +6,8 @@
     android:layout_marginHorizontal="16dp"
     android:layout_marginTop="12dp"
     app:cardCornerRadius="30dp"
-    app:cardElevation="0dp"
+    app:cardElevation="2dp"
     app:cardBackgroundColor="@android:color/transparent"
-    app:contentPadding="0dp"
     app:cardUseCompatPadding="false"
     app:cardPreventCornerOverlap="false">
 
@@ -17,142 +15,154 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="13dp"
-        android:background="@drawable/eachrow">
+        android:padding="16dp"
+        android:background="@drawable/btn_bg_light">
 
+        <!-- Route number & frequency -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/routeNumber"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Route"
                 android:textColor="@color/white"
-                android:layout_marginStart="30dp"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:ellipsize="end"
+                android:maxLines="1"/>
 
             <TextView
                 android:id="@+id/frequency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=""
                 android:textColor="@color/white"
-                android:layout_marginEnd="15dp"
                 android:background="@drawable/frequency_background"
                 android:paddingHorizontal="6dp"
-                android:paddingVertical="3dp" />
+                android:paddingVertical="3dp"
+                android:ellipsize="end"
+                android:maxLines="1"/>
         </LinearLayout>
 
-
-
+        <!-- From → To -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/FromText"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="From:"
+                android:layout_weight="1"
                 android:textColor="@color/white"
-                android:textSize="25dp"
-                android:layout_marginLeft="30dp"
-                />
+                android:textSize="18sp"
+                android:ellipsize="end"
+                android:maxLines="1"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="→"
                 android:textColor="@color/white"
-                android:textSize="40dp"/>
+                android:textSize="24sp"
+                android:layout_marginHorizontal="4dp"/>
 
             <TextView
                 android:id="@+id/DestinationText"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="To:"
+                android:layout_weight="1"
                 android:textColor="@color/white"
-                android:textSize="25dp"/>
-
+                android:textSize="18sp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAlignment="viewEnd"/>
         </LinearLayout>
 
+        <!-- Start Time -->
         <TextView
             android:id="@+id/StartTime"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start at:"
             android:textColor="@color/white"
-            android:layout_marginLeft="30dp"
-            android:textSize="20dp"
-            />
+            android:textSize="16sp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_marginBottom="8dp"/>
 
+        <!-- Bus Stop & Service -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="start"
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/BusStop"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Bus Stop: "
+                android:layout_weight="1"
                 android:textColor="@color/white"
-                android:layout_marginLeft="30dp"
-            />
+                android:ellipsize="end"
+                android:maxLines="1"/>
+
             <TextView
                 android:id="@+id/BusService"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Bus Service:"
                 android:textColor="@color/white"
-                android:layout_marginLeft="30dp"
-            />
-    </LinearLayout>
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
 
-
+        <!-- Arrival Time -->
         <TextView
             android:id="@+id/ArrivalTime"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=""
             android:textColor="@color/white"
-            android:layout_marginLeft="30dp"
-            />
+            android:textSize="14sp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_marginBottom="8dp"/>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/editRouteButton"
-            android:layout_width="wrap_content"
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edit"
-            android:backgroundTint="#80944C24"
-            android:layout_marginLeft="30dp"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp">
+            android:orientation="horizontal"
+            android:gravity="start"
+            android:layout_marginTop="8dp">
 
-        </Button>
+            <Button
+                android:id="@+id/editRouteButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit"
+                android:background="@drawable/btn_bg_light"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"/>
 
-        <Button
-            android:id="@+id/deleteRoute"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Delete"
-            android:backgroundTint="@color/red"
-            android:layout_marginLeft="15dp"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp">
-        </Button>
+            <Button
+                android:id="@+id/deleteRoute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete"
+                android:background="@drawable/btn_bg_light"
+                android:layout_marginStart="8dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"/>
+        </LinearLayout>
 
     </LinearLayout>
-
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+</LinearLayout>
