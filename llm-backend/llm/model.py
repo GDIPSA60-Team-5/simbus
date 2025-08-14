@@ -7,7 +7,7 @@ from typing import Optional
 
 # Load model once
 # Switch to "cuda" to enable gpu
-model = GPT4All("Meta-Llama-3.1-8B-Instruct-128k-Q4_0.gguf", device="cuda")
+model = GPT4All("Meta-Llama-3.1-8B-Instruct-128k-Q4_0.gguf", device="cpu")
 
 # Load embedder and classifier as a tuple
 embedder, intent_classifier = joblib.load(

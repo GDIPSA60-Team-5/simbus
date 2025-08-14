@@ -36,7 +36,7 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
     print(f"Incoming JWT_Token: {jwt_token}")
     user_input = request.userInput.strip()
     current_location = request.currentLocation
-    user_name = "Aung"  # Replace with session or actual user name
+    user_name = "user"  # Replace with session or actual user name
 
     ctx = get_user_context(user_name)
     ctx["current_location"] = current_location
