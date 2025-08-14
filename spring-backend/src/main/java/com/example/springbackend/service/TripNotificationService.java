@@ -20,22 +20,33 @@ public class TripNotificationService {
 
     private final NotificationService notificationService;
     private final BusService busService;
+    private final FCMNotificationService fcmNotificationService;
 
     /**
      * Sends notifications when a trip starts
      */
     public Mono<Void> sendTripStartNotification(Trip trip) {
         String title = "Trip Starting";
-        String message = String.format("Trip starting from %s to %s", 
+        String message = String.format("Trip starting from %s to %s",
                 trip.getStartLocation(), trip.getEndLocation());
-        
-        return notificationService.sendNotification(
-                trip.getUsername(),
-                "TRIP_START",
-                title,
-                message,
-                LocalDateTime.now().plusHours(1) // Notification expires in 1 hour
-        ).then();
+
+        return Mono.when(
+                // Save notification to database
+                notificationService.sendNotification(
+                        trip.getUsername(),
+                        "TRIP_START",
+                        title,
+                        message,
+                        LocalDateTime.now().plusHours(1)
+                )
+//                .then(),
+//                // Send FCM push notification
+//                fcmNotificationService.sendTripStartNotification(
+//                        trip.getUsername(),
+//                        trip.getStartLocation(),
+//                        trip.getEndLocation()
+//                ).then()
+        );
     }
 
     /**
@@ -49,14 +60,24 @@ public class TripNotificationService {
         Trip.TripLeg firstLeg = trip.getRoute().getLegs().get(0);
         String title = "First Step";
         String message = getInstructionForLeg(firstLeg);
-        
-        return notificationService.sendNotification(
-                trip.getUsername(),
-                "TRIP_INSTRUCTION",
-                title,
-                message,
-                LocalDateTime.now().plusHours(1)
-        ).then();
+
+        return Mono.when(
+                // Save notification to database
+                notificationService.sendNotification(
+                        trip.getUsername(),
+                        "TRIP_INSTRUCTION",
+                        title,
+                        message,
+                        LocalDateTime.now().plusHours(1)
+                )
+//                .then(),
+//                // Send FCM push notification
+//                fcmNotificationService.sendLegInstructionNotification(
+//                        trip.getUsername(),
+//                        message,
+//                        0 // First leg index
+//                ).then()
+        );
     }
 
     /**
@@ -71,9 +92,9 @@ public class TripNotificationService {
                                     if (!arrivalTimes.isEmpty()) {
                                         String nextArrival = formatArrivalTime(arrivalTimes.get(0));
                                         String title = "Bus Arrival";
-                                        String message = String.format("Bus %s arriving at %s in %s", 
+                                        String message = String.format("Bus %s arriving at %s in %s",
                                                 busInfo.serviceNumber(), busInfo.busStopName(), nextArrival);
-                                        
+
                                         return notificationService.sendNotification(
                                                 trip.getUsername(),
                                                 "BUS_ARRIVAL",
@@ -88,7 +109,7 @@ public class TripNotificationService {
                     return Mono.empty();
                 })
                 .onErrorResume(error -> {
-                    log.warn("Failed to send bus arrival notification for trip {}: {}", 
+                    log.warn("Failed to send bus arrival notification for trip {}: {}",
                             trip.getId(), error.getMessage());
                     return Mono.empty();
                 });
@@ -103,7 +124,7 @@ public class TripNotificationService {
                 sendFirstInstructionNotification(trip),
                 sendBusArrivalNotification(trip)
         ).onErrorResume(error -> {
-            log.error("Error sending trip start notifications for trip {}: {}", 
+            log.error("Error sending trip start notifications for trip {}: {}",
                     trip.getId(), error.getMessage());
             return Mono.empty();
         });
@@ -126,7 +147,7 @@ public class TripNotificationService {
             if ("BUS".equalsIgnoreCase(leg.getType())) {
                 return Mono.just(new BusInfo(leg.getFromStopName(), leg.getBusServiceNumber()));
             }
-            
+
             // If current leg is WALK, check if it leads to a bus stop
             if ("WALK".equalsIgnoreCase(leg.getType()) && i + 1 < legs.size()) {
                 Trip.TripLeg nextLeg = legs.get(i + 1);
@@ -162,7 +183,7 @@ public class TripNotificationService {
     private String formatArrivalTime(ZonedDateTime arrivalTime) {
         ZonedDateTime now = ZonedDateTime.now();
         long minutesUntil = ChronoUnit.MINUTES.between(now, arrivalTime);
-        
+
         if (minutesUntil <= 0) {
             return "now";
         } else if (minutesUntil == 1) {
@@ -178,7 +199,7 @@ public class TripNotificationService {
     private String getInstructionForLeg(Trip.TripLeg leg) {
         return switch (leg.getType().toUpperCase()) {
             case "WALK" -> String.format("Walk to %s", leg.getToStopName() != null ? leg.getToStopName() : "destination");
-            case "BUS" -> String.format("Take Bus %s to %s", 
+            case "BUS" -> String.format("Take Bus %s to %s",
                     leg.getBusServiceNumber() != null ? leg.getBusServiceNumber() : "N/A",
                     leg.getToStopName() != null ? leg.getToStopName() : "destination");
             default -> leg.getInstruction() != null ? leg.getInstruction() : "Continue your journey";

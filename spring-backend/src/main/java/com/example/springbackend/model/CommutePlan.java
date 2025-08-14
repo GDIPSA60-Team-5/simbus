@@ -16,7 +16,7 @@ import lombok.*;
 public class CommutePlan {
 		@Id private String id;
 		private String commutePlanName;
-		private LocalTime notifyAt;
+		private String notifyAt;
 		private LocalTime arrivalTime;
 		private Integer reminderOffsetMin;
 		private Boolean recurrence;
