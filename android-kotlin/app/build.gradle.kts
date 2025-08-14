@@ -65,4 +65,6 @@ dependencies {
     implementation(project(":feature_navigateBar"))
     implementation(project(":feature_saveRoute"))
     implementation(project(":feature_guidemap"))
+    implementation(project(":feature_location"))
+    implementation(project(":feature_trip_notification"))
 }

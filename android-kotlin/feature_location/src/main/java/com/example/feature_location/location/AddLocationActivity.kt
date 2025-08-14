@@ -93,6 +93,7 @@ class AddLocationActivity : AppCompatActivity(), OnMapReadyCallback {
             binding.etLocationName.setText(candidate.displayName)
             
             // Hide search results
+            binding.cardSearchResults.visibility = View.GONE
             binding.recyclerViewSearchResults.visibility = View.GONE
         }
         
@@ -112,6 +113,7 @@ class AddLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (!query.isNullOrEmpty() && query.length >= 3) {
                     searchLocations(query)
                 } else {
+                    binding.cardSearchResults.visibility = View.GONE
                     binding.recyclerViewSearchResults.visibility = View.GONE
                 }
             }
@@ -155,18 +157,21 @@ class AddLocationActivity : AppCompatActivity(), OnMapReadyCallback {
                     val results = geocodeResponse.results
                     if (results.isNotEmpty()) {
                         searchResultsAdapter.updateResults(results)
+                        binding.cardSearchResults.visibility = View.VISIBLE
                         binding.recyclerViewSearchResults.visibility = View.VISIBLE
-                        Toast.makeText(this@AddLocationActivity, "Found ${results.size} results", Toast.LENGTH_SHORT).show()
                     } else {
+                        binding.cardSearchResults.visibility = View.GONE
                         binding.recyclerViewSearchResults.visibility = View.GONE
                         Toast.makeText(this@AddLocationActivity, "No results found", Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    binding.cardSearchResults.visibility = View.GONE
                     binding.recyclerViewSearchResults.visibility = View.GONE
                     android.util.Log.e("AddLocation", "Search failed - Code: ${response.code()}, Message: ${response.message()}")
                     Toast.makeText(this@AddLocationActivity, "Search failed: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                binding.cardSearchResults.visibility = View.GONE
                 binding.recyclerViewSearchResults.visibility = View.GONE
                 android.util.Log.e("AddLocation", "Exception during search", e)
                 Toast.makeText(this@AddLocationActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()

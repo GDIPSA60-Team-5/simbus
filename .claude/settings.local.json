@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(rm:*)",
-      "Bash(.gradlew assembleDebug)"
+      "Bash(.gradlew assembleDebug)",
+      "Bash(./gradlew:*)"
     ],
     "deny": [],
     "ask": []

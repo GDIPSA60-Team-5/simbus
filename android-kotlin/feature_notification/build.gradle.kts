@@ -1,30 +1,20 @@
-import java.util.Properties
-
-val localProperties = Properties().apply {
-    load(rootProject.file("local.properties").inputStream())
-}
-val mapsApiKey = localProperties.getProperty("MAPS_API_KEY") ?: error("MAPS_API_KEY is missing in local.properties!")
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
-    namespace = "com.example.feature_guidemap"
+    namespace = "com.example.feature_notification"
     compileSdk = 35
 
     buildFeatures {
-        viewBinding = true
         buildConfig = true
     }
 
     defaultConfig {
         minSdk = 29
-        manifestPlaceholders["googleMapsKey"] = mapsApiKey
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -44,23 +34,31 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        viewBinding = true
-    }
 }
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":feature_trip_notification"))
-    implementation(libs.retrofit)
+    
+    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    
+    // Work Manager with Hilt
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+    
+    // Retrofit
+    implementation(libs.retrofit)
+    
+    // Location services
+    implementation(libs.play.services.location)
+    
+    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.play.services.maps)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.play.services.location)
+    
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

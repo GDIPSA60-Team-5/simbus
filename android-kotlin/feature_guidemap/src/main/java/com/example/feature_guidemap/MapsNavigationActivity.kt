@@ -31,6 +31,7 @@ import com.example.core.service.TripService
 import com.example.core.api.UserApi
 import com.example.core.api.BusApi
 import com.example.core.model.BusArrival
+import com.example.feature_notification.BusArrivalNotificationService
 import com.example.feature_guidemap.databinding.ActivityMapsNavigationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -89,6 +90,9 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     
     @Inject
     lateinit var busApi: BusApi
+
+    @Inject
+    lateinit var busArrivalNotificationService: BusArrivalNotificationService
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1000
@@ -309,7 +313,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             hasLocationPermission = granted
             if (granted) {
                 // Setup map with location if map is ready
-                if (isMapReady) {
+                if (isMapReady && ::googleMap.isInitialized) {
                     setupMapWithLocation()
                 }
             } else {
@@ -752,6 +756,14 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         
         setupRouteDisplay()
         startLocationTracking()
+        
+        // Start bus arrival monitoring
+        busArrivalNotificationService.startBusArrivalMonitoring()
+        
+        // Check bus arrivals immediately for current leg
+        CoroutineScope(Dispatchers.IO).launch {
+            busArrivalNotificationService.checkBusArrivalsForCurrentTrip()
+        }
     }
     
     private fun enterPreviewMode(route: Route) {
@@ -1063,6 +1075,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             try {
                 tripService.completeTrip(currentTrip.id)
                 withContext(Dispatchers.Main) {
+                    busArrivalNotificationService.stopBusArrivalMonitoring()
                     previewRoute?.let { route ->
                         enterPreviewMode(route)
                     }
@@ -1089,6 +1102,9 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                                     // Update the local trip object to reflect the new state
                                     currentTrip = updatedTrip
                                 }
+                                
+                                // Check bus arrivals for the new leg
+                                busArrivalNotificationService.checkBusArrivalsForCurrentTrip()
                             }
                         } catch (e: Exception) {
                             android.util.Log.e("MapsNavigation", "Error updating trip progress", e)
@@ -1198,6 +1214,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MapsNavigationActivity, "Journey completed!", Toast.LENGTH_LONG).show()
                         stopLocationTracking()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         finish()
                     }
                 } catch (e: Exception) {
@@ -1217,18 +1234,21 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MapsNavigationActivity, "Trip completed!", Toast.LENGTH_SHORT).show()
                         stopLocationTracking()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         finish()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MapsNavigationActivity, "Error completing trip: ${e.message}", Toast.LENGTH_LONG).show()
                         stopLocationTracking()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         finish()
                     }
                 }
             }
         } ?: run {
             stopLocationTracking()
+            busArrivalNotificationService.stopBusArrivalMonitoring()
             finish()
         }
     }
@@ -1262,11 +1282,13 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     tripService.completeTrip(trip.id)
                     withContext(Dispatchers.Main) {
                         stopLocationTracking()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         showTripCompletionDialog()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MapsNavigationActivity, "Error completing trip: ${e.message}", Toast.LENGTH_LONG).show()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         showTripCompletionDialog() // Still show dialog even if DB update fails
                     }
                 }
@@ -1317,6 +1339,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     tripService.completeTrip(trip.id)
                     withContext(Dispatchers.Main) {
                         stopLocationTracking()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         binding.llActiveButtons.visibility = View.GONE
                         Toast.makeText(this@MapsNavigationActivity, "Trip ended", Toast.LENGTH_SHORT).show()
                         
@@ -1326,6 +1349,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MapsNavigationActivity, "Error ending trip: ${e.message}", Toast.LENGTH_LONG).show()
+                        busArrivalNotificationService.stopBusArrivalMonitoring()
                         // Still show dialog even if DB update fails
                         showTripEndedDialog()
                     }
@@ -1348,6 +1372,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onDestroy() {
         super.onDestroy()
         stopLocationTracking()
+        busArrivalNotificationService.stopBusArrivalMonitoring()
         // Hide active mode buttons when destroying
         binding.llActiveButtons.visibility = View.GONE
     }
