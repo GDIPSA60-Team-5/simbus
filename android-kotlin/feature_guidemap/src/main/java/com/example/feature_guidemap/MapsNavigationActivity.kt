@@ -31,7 +31,7 @@ import com.example.core.service.TripService
 import com.example.core.api.UserApi
 import com.example.core.api.BusApi
 import com.example.core.model.BusArrival
-import com.example.feature_notification.BusArrivalNotificationService
+import com.example.feature_trip_notification.BusArrivalNotificationService
 import com.example.feature_guidemap.databinding.ActivityMapsNavigationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
