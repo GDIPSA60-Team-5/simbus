@@ -16,7 +16,7 @@ public class User {
 	private String id;
 
 	private String userName;
-	private String userType;
+	private String userType = "user";
 	private String passwordHash;
 
 	@CreatedDate
