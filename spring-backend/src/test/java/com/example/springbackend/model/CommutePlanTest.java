@@ -37,8 +37,6 @@ public class CommutePlanTest {
                 .startLocationId(startLocationId)
                 .endLocationId(endLocationId)
                 .userId(userId)
-                .commuteHistoryIds(commuteHistoryIds)
-                .preferredRouteIds(preferredRouteIds)
                 .commuteRecurrenceDayIds(commuteRecurrenceDayIds)
                 .build();
 
@@ -51,8 +49,6 @@ public class CommutePlanTest {
         assertEquals(startLocationId, plan.getStartLocationId());
         assertEquals(endLocationId, plan.getEndLocationId());
         assertEquals(userId, plan.getUserId());
-        assertEquals(commuteHistoryIds, plan.getCommuteHistoryIds());
-        assertEquals(preferredRouteIds, plan.getPreferredRouteIds());
         assertEquals(commuteRecurrenceDayIds, plan.getCommuteRecurrenceDayIds());
     }
 
@@ -69,8 +65,6 @@ public class CommutePlanTest {
         assertEquals("startLoc", plan.getStartLocationId());
         assertEquals("endLoc", plan.getEndLocationId());
         assertEquals("user456", plan.getUserId());
-        assertEquals(List.of("histA"), plan.getCommuteHistoryIds());
-        assertEquals(List.of("routeB"), plan.getPreferredRouteIds());
         assertEquals(List.of("dayX"), plan.getCommuteRecurrenceDayIds());
     }
 
@@ -86,8 +80,6 @@ public class CommutePlanTest {
         plan.setStartLocationId("startLoc");
         plan.setEndLocationId("endLoc");
         plan.setUserId("user456");
-        plan.setCommuteHistoryIds(List.of("histA"));
-        plan.setPreferredRouteIds(List.of("routeB"));
         plan.setCommuteRecurrenceDayIds(List.of("dayX"));
         return plan;
     }
@@ -104,8 +96,6 @@ public class CommutePlanTest {
                 .startLocationId("start1")
                 .endLocationId("end1")
                 .userId("user1")
-                .commuteHistoryIds(List.of("hist1"))
-                .preferredRouteIds(List.of("route1"))
                 .commuteRecurrenceDayIds(List.of("day1"))
                 .build();
 
@@ -119,8 +109,6 @@ public class CommutePlanTest {
                 .startLocationId("start1")
                 .endLocationId("end1")
                 .userId("user1")
-                .commuteHistoryIds(List.of("hist1"))
-                .preferredRouteIds(List.of("route1"))
                 .commuteRecurrenceDayIds(List.of("day1"))
                 .build();
 
@@ -134,8 +122,6 @@ public class CommutePlanTest {
                 .startLocationId("start2")
                 .endLocationId("end2")
                 .userId("user2")
-                .commuteHistoryIds(List.of("hist2"))
-                .preferredRouteIds(List.of("route2"))
                 .commuteRecurrenceDayIds(List.of("day2"))
                 .build();
 
@@ -165,8 +151,6 @@ public class CommutePlanTest {
         assertNull(plan.getStartLocationId());
         assertNull(plan.getEndLocationId());
         assertNull(plan.getUserId());
-        assertNull(plan.getCommuteHistoryIds());
-        assertNull(plan.getPreferredRouteIds());
         assertNull(plan.getCommuteRecurrenceDayIds());
     }
 
@@ -180,7 +164,6 @@ public class CommutePlanTest {
         assertEquals(plan1.hashCode(), plan2.hashCode());
 
         // One with null lists, other with empty lists should NOT be equal
-        plan2.setCommuteHistoryIds(Collections.emptyList());
         assertNotEquals(plan1, plan2);
     }
 
@@ -213,12 +196,8 @@ public class CommutePlanTest {
         CommutePlan plan = new CommutePlan();
 
         // Set lists to empty and null and check getter returns
-        plan.setCommuteHistoryIds(Collections.emptyList());
-        plan.setPreferredRouteIds(null);
         plan.setCommuteRecurrenceDayIds(new ArrayList<>());
 
-        assertTrue(plan.getCommuteHistoryIds().isEmpty());
-        assertNull(plan.getPreferredRouteIds());
         assertTrue(plan.getCommuteRecurrenceDayIds().isEmpty());
     }
 
@@ -233,8 +212,6 @@ public class CommutePlanTest {
                 .startLocationId(null)
                 .endLocationId(null)
                 .userId(null)
-                .commuteHistoryIds(null)
-                .preferredRouteIds(null)
                 .commuteRecurrenceDayIds(null)
                 .build();
     }
@@ -252,14 +229,10 @@ public class CommutePlanTest {
         List<String> list2 = Arrays.asList("c", "b", "a");
 
         CommutePlan plan1 = CommutePlan.builder()
-                .commuteHistoryIds(list1)
-                .preferredRouteIds(list1)
                 .commuteRecurrenceDayIds(list1)
                 .build();
 
         CommutePlan plan2 = CommutePlan.builder()
-                .commuteHistoryIds(list2)
-                .preferredRouteIds(list2)
                 .commuteRecurrenceDayIds(list2)
                 .build();
 
@@ -285,31 +258,5 @@ public class CommutePlanTest {
         String str = plan.toString();
         assertTrue(str.contains("plan123"));
         assertTrue(str.contains("Test Plan"));
-    }
-
-    @Test
-    public void testListMutationAfterSet() {
-        List<String> mutableList = new ArrayList<>();
-        mutableList.add("initial");
-
-        CommutePlan plan = new CommutePlan();
-        plan.setCommuteHistoryIds(mutableList);
-
-        // Mutate original list and check that getter reflects change (since no defensive copy)
-        mutableList.add("added");
-
-        List<String> retrieved = plan.getCommuteHistoryIds();
-        assertEquals(2, retrieved.size());
-        assertTrue(retrieved.contains("added"));
-    }
-
-    @Test
-    public void testSetImmutableLists() {
-        List<String> immutableList = List.of("x", "y");
-
-        CommutePlan plan = new CommutePlan();
-        plan.setPreferredRouteIds(immutableList);
-
-        assertEquals(immutableList, plan.getPreferredRouteIds());
     }
 }

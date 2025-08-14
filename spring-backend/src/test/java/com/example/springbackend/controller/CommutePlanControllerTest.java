@@ -53,8 +53,6 @@ class CommutePlanControllerTest {
                 .startLocationId("start1")
                 .endLocationId("end1")
                 .userId("user1")
-                .commuteHistoryIds(List.of("hist1", "hist2"))
-                .preferredRouteIds(List.of("route1"))
                 .commuteRecurrenceDayIds(List.of("day1", "day2"))
                 .build();
     }
@@ -130,8 +128,6 @@ class CommutePlanControllerTest {
                 .startLocationId("start2")
                 .endLocationId("end2")
                 .userId("user2")
-                .commuteHistoryIds(List.of())
-                .preferredRouteIds(List.of())
                 .commuteRecurrenceDayIds(List.of())
                 .build();
 
