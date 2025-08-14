@@ -17,11 +17,13 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.example.core.permission.LocationPermissionManager
 import com.example.core.model.Route
 import com.example.core.model.RouteLeg
 import com.example.core.model.Trip
@@ -55,6 +57,8 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentLocationMarker: Marker? = null
     private var routePolylines: MutableList<Polyline> = mutableListOf()
+    private var isMapReady = false
+    private var hasLocationPermission = false
     
     private var selectedRoute: Route? = null
     private var currentLegIndex = 0
@@ -68,6 +72,14 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     // Location tracking for active navigation
     private var locationCallback: LocationCallback? = null
     private var isLocationUpdatesActive = false
+    
+    // Permission management
+    private lateinit var locationPermissionManager: LocationPermissionManager
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionManager.handlePermissionResult(permissions)
+    }
     
     @Inject
     lateinit var tripService: TripService
@@ -95,28 +107,57 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             intent.getParcelableExtra("selected_route")
         }
 
+        locationPermissionManager =
+            LocationPermissionManager(activity = this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         initViews()
         supportActionBar?.hide()
-        checkLocationPermissions()
+        
+        // Check if we already have location permissions
+        hasLocationPermission = locationPermissionManager.hasLocationPermissions()
+        
+        // Request permissions if not granted
+        if (!hasLocationPermission) {
+            requestLocationPermissions()
+        }
+        
         initializeNavigationMode()
     }
 
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-        setupMap()
+        isMapReady = true
+        
+        // Setup map if we already have location permission
+        if (hasLocationPermission) {
+            setupMapWithLocation()
+        } else {
+            setupMapBasic()
+        }
         
         setupRouteDisplay()
     }
 
 
+    private fun setupMapBasic() {
+        with(googleMap) {
+            // Disable default UI elements since we have custom ones
+            uiSettings.isCompassEnabled = false
+            uiSettings.isZoomControlsEnabled = false
+            uiSettings.isMapToolbarEnabled = false
+
+            // Move camera to default location (Singapore)
+            val singapore = LatLng(1.3521, 103.8198)
+            moveCamera(CameraUpdateFactory.newLatLngZoom(singapore, 15f))
+        }
+    }
+    
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    private fun setupMap() {
+    private fun setupMapWithLocation() {
         with(googleMap) {
             // Enable location if permission granted
             if (ContextCompat.checkSelfPermission(
@@ -143,6 +184,10 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun displayRoute() {
+        if (!isMapReady || !::googleMap.isInitialized) {
+            return
+        }
+        
         selectedRoute?.let { route ->
             if (isActiveMode) {
                 // Active mode: focus on current leg
@@ -155,6 +200,10 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun displayFullRoute(route: Route) {
+        if (!isMapReady || !::googleMap.isInitialized) {
+            return
+        }
+        
         // Clear existing polylines and markers
         routePolylines.forEach { it.remove() }
         routePolylines.clear()
@@ -255,22 +304,26 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun checkLocationPermissions() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
+    private fun requestLocationPermissions() {
+        locationPermissionManager.requestLocationPermissions(permissionLauncher) { granted ->
+            hasLocationPermission = granted
+            if (granted) {
+                // Setup map with location if map is ready
+                if (isMapReady) {
+                    setupMapWithLocation()
+                }
+            } else {
+                Toast.makeText(this, "Location permission is required for navigation", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun getCurrentLocation() {
+        if (!isMapReady || !::googleMap.isInitialized) {
+            return
+        }
+        
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -298,24 +351,6 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    setupMap()
-                    getCurrentLocation()
-                } else {
-                    Toast.makeText(this, "Location permission required for navigation", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
 
     private fun initViews() {
         // Set click listeners using binding
@@ -393,6 +428,10 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun focusOnLeg(legIndex: Int) {
+        if (!isMapReady || !::googleMap.isInitialized) {
+            return
+        }
+        
         selectedRoute?.let { route ->
             if (legIndex < route.legs.size) {
                 // Clear existing polylines and markers
@@ -510,6 +549,10 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun addLegMarkers(leg: RouteLeg, startPos: LatLng, endPos: LatLng) {
+        if (!isMapReady || !::googleMap.isInitialized) {
+            return
+        }
+        
         // Add start marker
         val startTitle = when (leg.type.uppercase()) {
             "WALK" -> "Start walking"
@@ -604,6 +647,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     private fun zoomIn() {
+        if (!isMapReady || !::googleMap.isInitialized) return
         googleMap.animateCamera(CameraUpdateFactory.zoomIn())
         
         // Add bounce animation to the button
@@ -622,6 +666,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun zoomOut() {
+        if (!isMapReady || !::googleMap.isInitialized) return
         googleMap.animateCamera(CameraUpdateFactory.zoomOut())
         
         // Add bounce animation to the button
@@ -1095,6 +1140,10 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     
     private fun updateCurrentLocationMarker(location: Location) {
+        if (!isMapReady || !::googleMap.isInitialized) {
+            return
+        }
+        
         val currentLatLng = LatLng(location.latitude, location.longitude)
         
         // Update current location marker

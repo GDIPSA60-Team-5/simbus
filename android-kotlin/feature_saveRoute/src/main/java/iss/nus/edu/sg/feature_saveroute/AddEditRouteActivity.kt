@@ -14,15 +14,24 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import iss.nus.edu.sg.feature_saveroute.Data.Route
-import iss.nus.edu.sg.feature_saveroute.Data.RouteMongo
-import iss.nus.edu.sg.feature_saveroute.Data.RouteStorage
-import iss.nus.edu.sg.feature_saveroute.Data.toRequest
 import iss.nus.edu.sg.feature_saveroute.databinding.AddeditRouteBinding
-import retrofit2.Call
-import retrofit2.Response
-import retrofit2.Callback
+import com.example.core.api.LocationApi
+import com.example.core.api.SavedLocation
+import com.example.core.api.RoutingRequest
+import com.example.core.api.CommuteApi
+import com.example.core.api.CommutePlan
+import com.example.core.api.CreateCommutePlanRequest
+import com.example.core.api.UpdateCommutePlanRequest
+import com.example.core.api.CreatePreferredRouteRequest
+import com.example.feature_location.location.AddLocationActivity
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.core.model.Route as CoreRoute
 
+@AndroidEntryPoint
 class AddEditRouteActivity : AppCompatActivity() {
     private lateinit var binding: AddeditRouteBinding
     private var isEdit = false
@@ -31,23 +40,36 @@ class AddEditRouteActivity : AppCompatActivity() {
     private lateinit var startAdapter: ArrayAdapter<String>
     private lateinit var endAdapter: ArrayAdapter<String>
     private val ADD_NEW = "+Add new location…"
+    private var savedLocations = listOf<SavedLocation>()
+    private var routeOptions = listOf<CoreRoute>()
+    private lateinit var routeOptionsAdapter: RouteOptionsAdapter
+    private var selectedRoute: CoreRoute? = null
+    private var currentCommutePlan: CommutePlan? = null
+    private var selectedRouteId: String? = null
+
+    @Inject
+    lateinit var locationApi: LocationApi
+    
+    @Inject
+    lateinit var commuteApi: CommuteApi
 
     private val addLocationLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            setupLocationAdapters()
+            // Reload locations to include the new one
+            loadUserLocations()
 
             val target = result.data?.getStringExtra("target")
-            val savedName = result.data?.getStringExtra("savedName")
+            val locationName = result.data?.getStringExtra("locationName")
 
-            if (!savedName.isNullOrEmpty()) {
+            if (!locationName.isNullOrEmpty()) {
                 if (target == "start") {
-                    binding.FromEdit.setText(savedName, false)
-                    binding.FromEdit.error = null
+                    binding.FromEdit.setText(locationName, false)
+                    binding.tilFrom.error = null
                 } else if (target == "end") {
-                    binding.ToEdit.setText(savedName, false)
-                    binding.ToEdit.error = null
+                    binding.ToEdit.setText(locationName, false)
+                    binding.tilTo.error = null
                 }
             }
         }
@@ -58,33 +80,24 @@ class AddEditRouteActivity : AppCompatActivity() {
         binding = AddeditRouteBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupLocationAdapters()
+        loadUserLocations()
 
         isEdit = intent.getBooleanExtra("isEdit", false)
         position = intent.getIntExtra("Position", -1)
+        
+        // Get commute plan ID if editing
+        val commutePlanId = intent.getStringExtra("commutePlanId")
+        if (isEdit && !commutePlanId.isNullOrEmpty()) {
+            loadCommutePlan(commutePlanId)
+        }
+        
+        setupRouteOptionsRecyclerView()
 
         if (isEdit) {
-            val route = intent.getParcelableExtra<Route>("Edit_Route")
-            binding.RoutePageTitle.text = "Edit Route"
-            route?.let {
-                binding.FromEdit.setText(it.from)
-                binding.ToEdit.setText(it.to)
-                binding.BusStopEdit.setText(it.busStop)
-                binding.BusServiceEdit.setText(it.busService)
-                binding.StartTimeEdit.setText(it.startTime)
-                binding.ArrivalTimeEdit.setText(it.arrivalTime)
-                binding.NotfiEdit.setText((it.notificationNum))
-                it.selectedDays?.let { days ->
-                    binding.MonCheck.isChecked = days[0]
-                    binding.TuesCheck.isChecked = days[1]
-                    binding.WedCheck.isChecked = days[2]
-                    binding.ThursCheck.isChecked = days[3]
-                    binding.FriCheck.isChecked = days[4]
-                    binding.SatCheck.isChecked = days[5]
-                    binding.SunCheck.isChecked = days[6]
-                }
-                updateSummary()
-            }
+            binding.RoutePageTitle.text = "Edit Commute Plan"
+            // CommutePlan data will be loaded via loadCommutePlan method
+        } else {
+            binding.RoutePageTitle.text = "Add Commute Plan"
         }
 
         binding.RouteSaveButton.setOnClickListener {
@@ -93,20 +106,8 @@ class AddEditRouteActivity : AppCompatActivity() {
 
         binding.RouteCancelButton.setOnClickListener { finish() }
 
-        binding.BusStopButton.setOnClickListener {
-            val intent = Intent(this, SelectBusStopTypeActivity::class.java)
-            busStopSelectorLauncher.launch(intent)
-        }
-
-        binding.BusServiceButton.setOnClickListener {
-            val busStopCode = binding.BusStopEdit.text.toString().trim()
-            if (busStopCode.isEmpty()) {
-                Toast.makeText(this, "Please select a bus stop first", Toast.LENGTH_SHORT).show()
-            } else {
-                val intent = Intent(this, SelectBusServiceActivity::class.java)
-                intent.putExtra("BusStopCode", busStopCode)
-                busServiceSelectorLauncher.launch(intent)
-            }
+        binding.btnGetRoutes.setOnClickListener {
+            getRouteOptions()
         }
 
         binding.StartTimeEdit.setOnClickListener { showStartTimeClock() }
@@ -128,142 +129,170 @@ class AddEditRouteActivity : AppCompatActivity() {
     private fun saveRoute() {
         var hasError = false
 
-        if (binding.FromEdit.text.toString().trim().isEmpty()) {
-            binding.FromEdit.error = "This field is required"
-            hasError = true
-        }
-        if (binding.ToEdit.text.toString().trim().isEmpty()) {
-            binding.ToEdit.error = "This field is required"
-            hasError = true
-        }
-        if (binding.BusStopEdit.text.toString().trim().isEmpty()) {
-            binding.BusStopEdit.error = "Please select a bus stop"
+        if (binding.FromEdit.text?.toString()?.trim().isNullOrEmpty()) {
+            binding.tilFrom.error = "This field is required"
             hasError = true
         } else {
-            binding.BusStopEdit.error = null
+            binding.tilFrom.error = null
         }
-        if (binding.BusServiceEdit.text.toString().trim().isEmpty()) {
-            binding.BusServiceEdit.error = "Please select a bus service"
-            hasError = true
-        }
-        if (binding.StartTimeEdit.text.toString().trim().isEmpty()) {
-            binding.StartTimeEdit.error = "Please select a start time"
+        
+        if (binding.ToEdit.text?.toString()?.trim().isNullOrEmpty()) {
+            binding.tilTo.error = "This field is required"
             hasError = true
         } else {
-            binding.StartTimeEdit.error = null
+            binding.tilTo.error = null
+        }
+        
+        if (binding.StartTimeEdit.text?.toString()?.trim().isNullOrEmpty()) {
+            binding.tilStartTime.error = "Please select a start time"
+            hasError = true
+        } else {
+            binding.tilStartTime.error = null
         }
 
-        val noDaySelected = !binding.MonCheck.isChecked &&
-                !binding.TuesCheck.isChecked &&
-                !binding.WedCheck.isChecked &&
-                !binding.ThursCheck.isChecked &&
-                !binding.FriCheck.isChecked &&
-                !binding.SatCheck.isChecked &&
-                !binding.SunCheck.isChecked
-
-        if (noDaySelected) {
-            binding.frequencyError.visibility = View.VISIBLE
+        val commutePlanName = "${getSelectedLocation(binding.FromEdit.text?.toString())?.locationName} to ${getSelectedLocation(binding.ToEdit.text?.toString())?.locationName}"
+        val fromLocationId = getSelectedLocation(binding.FromEdit.text?.toString())?.id
+        val toLocationId = getSelectedLocation(binding.ToEdit.text?.toString())?.id
+        
+        if (fromLocationId == null || toLocationId == null) {
+            Toast.makeText(this, "Please select valid locations", Toast.LENGTH_SHORT).show()
             hasError = true
-        } else {
-            binding.frequencyError.visibility = View.GONE
         }
 
         if (hasError) return
 
-        val frequency = booleanArrayOf(
-            binding.MonCheck.isChecked,
-            binding.TuesCheck.isChecked,
-            binding.WedCheck.isChecked,
-            binding.ThursCheck.isChecked,
-            binding.FriCheck.isChecked,
-            binding.SatCheck.isChecked,
-            binding.SunCheck.isChecked
-        )
+        val notifyAt = binding.StartTimeEdit.text?.toString() ?: ""
+        val arrivalTime = binding.ArrivalTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
+        val reminderOffset = binding.NotfiEdit.text?.toString()?.toIntOrNull()
+        
+        // Determine recurrence based on selected days
+        val hasRecurrence = binding.MonCheck.isChecked ||
+                binding.TuesCheck.isChecked ||
+                binding.WedCheck.isChecked ||
+                binding.ThursCheck.isChecked ||
+                binding.FriCheck.isChecked ||
+                binding.SatCheck.isChecked ||
+                binding.SunCheck.isChecked
 
-        val newRoute = Route(
-            from = binding.FromEdit.text.toString(),
-            to = binding.ToEdit.text.toString(),
-            busStop = binding.BusStopEdit.text.toString(),
-            busService = binding.BusServiceEdit.text.toString(),
-            startTime = binding.StartTimeEdit.text.toString(),
-            arrivalTime = binding.ArrivalTimeEdit.text.toString(),
-            selectedDays = frequency
-        )
-
-        if (isEdit) {
-            val existingRoute = intent.getParcelableExtra<Route>("Edit_Route")
-            newRoute.id = existingRoute?.id
-
-            val routeId = newRoute.id ?: run {
-                Toast.makeText(this, "Missing route ID for update", Toast.LENGTH_SHORT).show()
-                return
-            }
-            val deviceId = DeviceIdUtil.getDeviceId(this)
-
-            RetrofitClient.api.updateRoute(deviceId, routeId, newRoute.toRequest())
-                .enqueue(object : Callback<RouteMongo> {
-                    override fun onResponse(call: Call<RouteMongo>, response: Response<RouteMongo>) {
-                        if (response.isSuccessful) {
-                            Toast.makeText(this@AddEditRouteActivity, "Route updated successfully", Toast.LENGTH_SHORT).show()
-                            finishWithResult(newRoute)
-                        } else {
-                            Toast.makeText(this@AddEditRouteActivity, "Failed to update route: ${response.code()}", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                if (isEdit && currentCommutePlan != null) {
+                    val updateRequest = UpdateCommutePlanRequest(
+                        commutePlanName = commutePlanName,
+                        notifyAt = notifyAt,
+                        arrivalTime = arrivalTime,
+                        reminderOffsetMin = reminderOffset,
+                        recurrence = hasRecurrence,
+                        startLocationId = fromLocationId,
+                        endLocationId = toLocationId
+                    )
+                    
+                    val response = commuteApi.updateCommutePlan(currentCommutePlan!!.id, updateRequest)
+                    if (response.isSuccessful) {
+                        val updatedPlan = response.body()!!
+                        
+                        // Save preferred route if selected
+                        if (selectedRouteId != null) {
+                            try {
+                                commuteApi.addPreferredRoute(
+                                    updatedPlan.id,
+                                    CreatePreferredRouteRequest(selectedRouteId!!)
+                                )
+                            } catch (e: Exception) {
+                                // Log but don't fail - the commute plan was saved successfully
+                            }
                         }
+                        
+                        Toast.makeText(this@AddEditRouteActivity, "Commute plan updated successfully", Toast.LENGTH_SHORT).show()
+                        finishWithCommutePlan(updatedPlan)
+                    } else {
+                        Toast.makeText(this@AddEditRouteActivity, "Failed to update commute plan", Toast.LENGTH_SHORT).show()
                     }
-                    override fun onFailure(call: Call<RouteMongo>, t: Throwable) {
-                        Toast.makeText(this@AddEditRouteActivity, "Update failed: ${t.message}", Toast.LENGTH_SHORT).show()
-                    }
-                })
-        } else {
-            RouteStorage.syncRouteToMongoDB(this, newRoute) { serverId ->
-                if (serverId != null) {
-                    newRoute.id = serverId
-                    Toast.makeText(this, "Route saved successfully", Toast.LENGTH_SHORT).show()
-                    finishWithResult(newRoute)
                 } else {
-                    Toast.makeText(this, "Failed to save route", Toast.LENGTH_SHORT).show()
+                    val createRequest = CreateCommutePlanRequest(
+                        commutePlanName = commutePlanName,
+                        notifyAt = notifyAt,
+                        arrivalTime = arrivalTime,
+                        reminderOffsetMin = reminderOffset,
+                        recurrence = hasRecurrence,
+                        startLocationId = fromLocationId!!,
+                        endLocationId = toLocationId!!
+                    )
+                    
+                    val response = commuteApi.createCommutePlan(createRequest)
+                    if (response.isSuccessful) {
+                        val newPlan = response.body()!!
+                        
+                        // Save preferred route if selected
+                        if (selectedRouteId != null) {
+                            try {
+                                commuteApi.addPreferredRoute(
+                                    newPlan.id,
+                                    CreatePreferredRouteRequest(selectedRouteId!!)
+                                )
+                            } catch (e: Exception) {
+                                // Log but don't fail - the commute plan was saved successfully
+                            }
+                        }
+                        
+                        Toast.makeText(this@AddEditRouteActivity, "Commute plan created successfully", Toast.LENGTH_SHORT).show()
+                        finishWithCommutePlan(newPlan)
+                    } else {
+                        Toast.makeText(this@AddEditRouteActivity, "Failed to create commute plan", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            } catch (e: Exception) {
+                Toast.makeText(this@AddEditRouteActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun finishWithResult(route: Route) {
+    private fun finishWithCommutePlan(commutePlan: CommutePlan) {
         val resultIntent = Intent().apply {
-            if (isEdit) putExtra("Edit_Route", route)
-            else putExtra("New_Route", route)
+            if (isEdit) putExtra("Updated_CommutePlan", commutePlan)
+            else putExtra("New_CommutePlan", commutePlan)
             putExtra("Position", position)
         }
         setResult(Activity.RESULT_OK, resultIntent)
         finish()
     }
-
-    private val busStopSelectorLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val busStopCode = result.data?.getStringExtra("BusStopCode")
-                if (!busStopCode.isNullOrEmpty()) {
-                    val currentBusStopCode = binding.BusStopEdit.text.toString()
-
-                    if (currentBusStopCode != busStopCode) {
-                        binding.BusServiceEdit.setText("")
-                        binding.BusServiceEdit.error = null
-                    }
-
-                    binding.BusStopEdit.setText(busStopCode)
+    
+    private fun loadCommutePlan(commutePlanId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = commuteApi.getCommutePlan(commutePlanId)
+                if (response.isSuccessful && response.body() != null) {
+                    currentCommutePlan = response.body()!!
+                    populateFormFromCommutePlan(currentCommutePlan!!)
+                } else {
+                    Toast.makeText(this@AddEditRouteActivity, "Failed to load commute plan", Toast.LENGTH_SHORT).show()
                 }
+            } catch (e: Exception) {
+                Toast.makeText(this@AddEditRouteActivity, "Error loading commute plan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
-
-    private val busServiceSelectorLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val selectedService = result.data?.getStringExtra("SelectedBusService")
-                if (!selectedService.isNullOrEmpty()) {
-                    binding.BusServiceEdit.setText(selectedService)
-                    binding.BusServiceEdit.error = null
-                }
+    }
+    
+    private fun populateFormFromCommutePlan(commutePlan: CommutePlan) {
+        lifecycleScope.launch {
+            // Load location names from IDs
+            val startLocation = commutePlan.startLocationId?.let { id ->
+                savedLocations.find { it.id == id }
             }
+            val endLocation = commutePlan.endLocationId?.let { id ->
+                savedLocations.find { it.id == id }
+            }
+            
+            binding.FromEdit.setText(startLocation?.locationName ?: "")
+            binding.ToEdit.setText(endLocation?.locationName ?: "")
+            binding.StartTimeEdit.setText(commutePlan.notifyAt)
+            binding.ArrivalTimeEdit.setText(commutePlan.arrivalTime ?: "")
+            binding.NotfiEdit.setText(commutePlan.reminderOffsetMin?.toString() ?: "")
+            
+            updateSummary()
         }
+    }
+
 
     private fun showStartTimeClock() {
         val picker = MaterialTimePicker.Builder()
@@ -292,13 +321,27 @@ class AddEditRouteActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupLocationAdapters() {
-        val saved = SavedLocation.load(this)
+    private fun loadUserLocations() {
+        lifecycleScope.launch {
+            try {
+                val response = locationApi.getUserLocations()
+                if (response.isSuccessful && response.body() != null) {
+                    savedLocations = response.body()!!
+                    setupLocationAdapters()
+                } else {
+                    Toast.makeText(this@AddEditRouteActivity, "Failed to load locations", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AddEditRouteActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
-        val display = mutableListOf(ADD_NEW) + saved.map { "${it.name}" }
+    private fun setupLocationAdapters() {
+        val display = mutableListOf(ADD_NEW) + savedLocations.map { it.locationName }
 
         startAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, display)
-        endAdapter   = ArrayAdapter(this, android.R.layout.simple_list_item_1, display)
+        endAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, display)
 
         binding.FromEdit.setAdapter(startAdapter)
         binding.ToEdit.setAdapter(endAdapter)
@@ -311,33 +354,99 @@ class AddEditRouteActivity : AppCompatActivity() {
         binding.FromEdit.enableDropdown()
         binding.ToEdit.enableDropdown()
 
-
         binding.FromEdit.setOnItemClickListener { _, _, position, _ ->
             handleLocationPick(isStart = true, position = position, input = binding.FromEdit)
         }
         binding.ToEdit.setOnItemClickListener { _, _, position, _ ->
             handleLocationPick(isStart = false, position = position, input = binding.ToEdit)
         }
+    }
 
+    private fun setupRouteOptionsRecyclerView() {
+        routeOptionsAdapter = RouteOptionsAdapter { route ->
+            selectedRoute = route
+            selectedRouteId = "route_${route.hashCode()}" // Generate a unique ID
+            binding.selectedRouteCard.isVisible = true
+            binding.routeDuration.text = "${route.durationInMinutes} min"
+            binding.routeSummary.text = route.summary
+        }
+        
+        binding.recyclerRouteOptions.apply {
+            layoutManager = LinearLayoutManager(this@AddEditRouteActivity)
+            adapter = routeOptionsAdapter
+        }
+    }
 
-
-
-
+    private fun getRouteOptions() {
+        val fromLocation = getSelectedLocation(binding.FromEdit.text?.toString())
+        val toLocation = getSelectedLocation(binding.ToEdit.text?.toString())
+        
+        if (fromLocation == null || toLocation == null) {
+            Toast.makeText(this, "Please select both start and end locations", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        val startTime = binding.StartTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
+        val arrivalTime = binding.ArrivalTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
+        
+        val routingRequest = RoutingRequest(
+            startCoordinates = "${fromLocation.latitude},${fromLocation.longitude}",
+            endCoordinates = "${toLocation.latitude},${toLocation.longitude}",
+            startLocation = fromLocation.locationName,
+            endLocation = toLocation.locationName,
+            startTime = startTime,
+            arrivalTime = arrivalTime
+        )
+        
+        lifecycleScope.launch {
+            try {
+                binding.btnGetRoutes.isEnabled = false
+                binding.btnGetRoutes.text = "Loading..."
+                
+                val response = locationApi.getRouteOptions(routingRequest)
+                if (response.isSuccessful && response.body() != null) {
+                    val directionsResponse = response.body()!!
+                    routeOptions = directionsResponse.suggestedRoutes
+                    routeOptionsAdapter.updateRoutes(routeOptions)
+                    binding.routeOptionsContainer.isVisible = true
+                    
+                    if (routeOptions.isEmpty()) {
+                        Toast.makeText(this@AddEditRouteActivity, "No routes found", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this@AddEditRouteActivity, "Failed to get routes", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AddEditRouteActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.btnGetRoutes.isEnabled = true
+                binding.btnGetRoutes.text = "Get Route Options"
+            }
+        }
+    }
+    
+    private fun getSelectedLocation(locationName: String?): SavedLocation? {
+        return if (locationName.isNullOrBlank()) null else savedLocations.find { it.locationName == locationName }
     }
 
     private fun handleLocationPick(isStart: Boolean, position: Int, input: AutoCompleteTextView) {
         if (position == 0) {
-            val intent = Intent(this, CreateSavedLocationActivity::class.java)
-                .putExtra("target", if (isStart) "start" else "end")
-
+            // Navigate to add location screen
+            val intent = Intent(this, com.example.feature_location.location.AddLocationActivity::class.java).apply {
+                putExtra("target", if (isStart) "start" else "end")
+            }
             addLocationLauncher.launch(intent)
             input.setText("")
             return
         }
 
-        val saved = SavedLocation.load(this)
-        val chosen = saved[position - 1]
-        input.setText(chosen.name, false)
+        val chosen = savedLocations[position - 1]
+        input.setText(chosen.locationName, false)
+        
+        // Clear route options when location changes
+        binding.routeOptionsContainer.isGone = true
+        binding.selectedRouteCard.isGone = true
+        selectedRoute = null
     }
 
     private fun updateSummary() {
@@ -345,7 +454,7 @@ class AddEditRouteActivity : AppCompatActivity() {
         val notif = binding.NotfiEdit.text?.toString()?.trim().orEmpty()
 
         if (start.isNotEmpty() && notif.isNotEmpty()) {
-            binding.notifupdate.text = getString(R.string.notif_update, start, notif)
+            binding.notifupdate.text = "Notification: $notif times, starting at $start"
             binding.notifupdate.isVisible = true
         } else {
             binding.notifupdate.isGone = true

@@ -2,6 +2,7 @@ package com.example.springbackend.service;
 
 import com.example.springbackend.dto.llm.DirectionsResponseDTO;
 import com.example.springbackend.model.Trip;
+import com.example.springbackend.model.Coordinates;
 import com.example.springbackend.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,10 @@ import reactor.core.publisher.Mono;
 public class TripService {
     
     private final TripRepository tripRepository;
+    private final TripNotificationService tripNotificationService;
     
     public Mono<Trip> startTrip(String username, String startLocation, String endLocation, 
+                               Coordinates startCoordinates, Coordinates endCoordinates,
                                DirectionsResponseDTO.RouteDTO routeDTO) {
         
         return tripRepository.findByUsernameAndStatus(username, Trip.TripStatus.ON_TRIP)
@@ -37,6 +40,8 @@ public class TripService {
                             .username(username)
                             .startLocation(startLocation)
                             .endLocation(endLocation)
+                            .startCoordinates(startCoordinates)
+                            .endCoordinates(endCoordinates)
                             .route(tripRoute)
                             .status(Trip.TripStatus.ON_TRIP)
                             .currentLegIndex(0)
@@ -44,8 +49,23 @@ public class TripService {
                             .build();
                     
                     return tripRepository.save(trip)
-                            .doOnSuccess(savedTrip -> log.info("Started new trip for username: {}", username));
+                            .doOnSuccess(savedTrip -> {
+                                log.info("Started new trip for username: {}", username);
+                                // Send trip start notifications asynchronously
+                                tripNotificationService.sendTripStartNotifications(savedTrip)
+                                        .subscribe(
+                                                null, // onNext (Void)
+                                                error -> log.error("Failed to send trip notifications for trip {}: {}", 
+                                                        savedTrip.getId(), error.getMessage())
+                                        );
+                            });
                 });
+    }
+    
+    // Backward compatibility method
+    public Mono<Trip> startTrip(String username, String startLocation, String endLocation, 
+                               DirectionsResponseDTO.RouteDTO routeDTO) {
+        return startTrip(username, startLocation, endLocation, null, null, routeDTO);
     }
     
     public Mono<Trip> completeTrip(String tripId) {

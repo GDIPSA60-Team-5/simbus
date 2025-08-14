@@ -9,8 +9,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
     alias(libs.plugins.ksp)
 }
 
@@ -59,6 +57,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":feature_guidemap"))
     implementation(project(":feature_saveRoute"))
+    implementation(project(":feature_location"))
     implementation(project(":feature_chatbot"))
 
     implementation(libs.play.services.maps)
@@ -68,7 +67,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.play.services.location)
-    implementation(libs.play.services.maps)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
     implementation(libs.gson)

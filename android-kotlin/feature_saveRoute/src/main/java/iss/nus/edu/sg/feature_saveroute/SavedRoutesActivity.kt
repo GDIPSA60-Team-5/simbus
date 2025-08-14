@@ -12,48 +12,57 @@ import iss.nus.edu.sg.feature_saveroute.Data.RouteMongo
 import iss.nus.edu.sg.feature_saveroute.Data.toRequest
 import iss.nus.edu.sg.feature_saveroute.Data.toUi
 import iss.nus.edu.sg.feature_saveroute.databinding.SavedRoutesBinding
+import com.example.core.api.CommuteApi
+import com.example.core.api.CommutePlan
+import com.example.core.api.LocationApi
+import com.example.core.api.SavedLocation
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class SavedRoutesActivity : AppCompatActivity() {
     private lateinit var binding: SavedRoutesBinding
-    private lateinit var adapter: MyCustomAdapter
-    private val routes = mutableListOf<Route>()
+    private lateinit var adapter: CommutePlansAdapter
+    private val commutePlans = mutableListOf<CommutePlan>()
+    private var savedLocations = listOf<SavedLocation>()
+    
+    @Inject
+    lateinit var commuteApi: CommuteApi
+    
+    @Inject
+    lateinit var locationApi: LocationApi
 
-    private val editRouteLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-            result ->
-        if (result.resultCode == Activity.RESULT_OK){
+    private val editCommutePlanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
             val data = result.data
-            val updatedRoute = data?.getParcelableExtra<Route>("Edit_Route")
-            val position = data?.getIntExtra("Position", -1)?:-1
-            if (updatedRoute !=null && position>=0){
-                updateRouteOnServer(updatedRoute, position)
-                routes[position] = updatedRoute
-                adapter.notifyDataSetChanged()
+            val updatedCommutePlan = data?.getParcelableExtra<CommutePlan>("Updated_CommutePlan")
+            if (updatedCommutePlan != null) {
+                fetchCommutePlans() // Refresh the list
             }
         }
     }
-    private val addRouteLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data = result.data
-                val newRoute = data?.getParcelableExtra<Route>("New_Route")
-                if (newRoute != null) {
-                    routes.add(newRoute)
-                    adapter.notifyDataSetChanged()
-                    binding.activeRoutesNumber.text = routes.size.toString()
-                }
+    private val addCommutePlanLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val newCommutePlan = data?.getParcelableExtra<CommutePlan>("New_CommutePlan")
+            if (newCommutePlan != null) {
+                fetchCommutePlans() // Refresh the list
             }
         }
+    }
 
     private fun confirmDelete(position: Int) {
-        val route = routes[position]
-        val title = "Delete route?"
-        val message = "Remove \"${route.from} → ${route.to}\"?"
+        val commutePlan = commutePlans[position]
+        val title = "Delete commute plan?"
+        val message = "Remove \"${commutePlan.commutePlanName}\"?"
 
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton("Delete") { _, _ ->
-                deleteRouteFromServer(position)
+                deleteCommutePlanFromServer(commutePlan.id)
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -66,15 +75,16 @@ class SavedRoutesActivity : AppCompatActivity() {
         binding = SavedRoutesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = MyCustomAdapter(
-            routes,
-            onEditClick = { route, position ->
+        adapter = CommutePlansAdapter(
+            commutePlans,
+            savedLocations,
+            onEditClick = { commutePlan, position ->
                 val intent = Intent(this, AddEditRouteActivity::class.java).apply {
                     putExtra("isEdit", true)
-                    putExtra("Edit_Route", route)
+                    putExtra("commutePlanId", commutePlan.id)
                     putExtra("Position", position)
                 }
-                editRouteLauncher.launch(intent)
+                editCommutePlanLauncher.launch(intent)
             },
             onDeleteClick = { position ->
                 confirmDelete(position)
@@ -82,93 +92,69 @@ class SavedRoutesActivity : AppCompatActivity() {
         )
         binding.routesRecyclerView.adapter = adapter
         binding.routesRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.activeRoutesNumber.text = routes.size.toString()
+        binding.activeRoutesNumber.text = commutePlans.size.toString()
 
 
 
         binding.addRouteButton.setOnClickListener {
-            val intent = Intent(this, AddEditRouteActivity::class.java).apply{
+            val intent = Intent(this, AddEditRouteActivity::class.java).apply {
                 putExtra("isEdit", false)
             }
-            addRouteLauncher.launch(intent)
+            addCommutePlanLauncher.launch(intent)
         }
-        fetchSavedRoutes()
+        
+        loadData()
     }
 
-    private fun updateRouteOnServer(updated: Route, position: Int) {
-        val deviceId = DeviceIdUtil.getDeviceId(this)
-        val routeId = updated.id ?: run {
-            Toast.makeText(this, "Missing route id to update", Toast.LENGTH_SHORT).show()
-            return
+    private fun deleteCommutePlanFromServer(commutePlanId: String) {
+        lifecycleScope.launch {
+            try {
+                val response = commuteApi.deleteCommutePlan(commutePlanId)
+                if (response.isSuccessful) {
+                    fetchCommutePlans() // Refresh the list
+                    Toast.makeText(this@SavedRoutesActivity, "Commute plan deleted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@SavedRoutesActivity, "Delete failed: ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@SavedRoutesActivity, "Network error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
-
-        val body = updated.toRequest()
-
-        RetrofitClient.api.updateRoute(deviceId, routeId, body)
-            .enqueue(object : retrofit2.Callback<RouteMongo> {
-                override fun onResponse(call: retrofit2.Call<RouteMongo>, res: retrofit2.Response<RouteMongo>) {
-                    if (res.isSuccessful && res.body() != null) {
-                        val serverRouteUi = res.body()!!.toUi()
-                        routes[position] = serverRouteUi
-                        adapter.notifyItemChanged(position)
-                        Toast.makeText(this@SavedRoutesActivity, "Route updated", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@SavedRoutesActivity, "Update failed: ${res.code()}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                override fun onFailure(call: retrofit2.Call<RouteMongo>, t: Throwable) {
-                    Toast.makeText(this@SavedRoutesActivity, "Network: ${t.message}", Toast.LENGTH_LONG).show()
-                }
-            })
     }
 
-    private fun deleteRouteFromServer(position: Int) {
-        val route = routes[position]
-        val routeId = route.id ?: run {
-            Toast.makeText(this, "Missing route id to delete", Toast.LENGTH_SHORT).show()
-            return
+    private fun loadData() {
+        lifecycleScope.launch {
+            try {
+                // Load locations first
+                val locationsResponse = locationApi.getUserLocations()
+                if (locationsResponse.isSuccessful) {
+                    savedLocations = locationsResponse.body() ?: emptyList()
+                    adapter.updateLocations(savedLocations)
+                }
+                
+                // Then load commute plans
+                fetchCommutePlans()
+            } catch (e: Exception) {
+                Toast.makeText(this@SavedRoutesActivity, "Error loading data: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
-        val deviceId = DeviceIdUtil.getDeviceId(this)
-
-        RetrofitClient.api.deleteRoute(deviceId, routeId)
-            .enqueue(object : retrofit2.Callback<Void> {
-                override fun onResponse(call: retrofit2.Call<Void>, r: retrofit2.Response<Void>) {
-                    if (r.isSuccessful) {
-                        routes.removeAt(position)
-                        adapter.notifyItemRemoved(position)
-                        adapter.notifyItemRangeChanged(position, routes.size - position)
-                        binding.activeRoutesNumber.text = routes.size.toString()
-                        Toast.makeText(this@SavedRoutesActivity, "Route deleted", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@SavedRoutesActivity, "Delete failed: ${r.code()}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
-                    Toast.makeText(this@SavedRoutesActivity, "Network: ${t.message}", Toast.LENGTH_LONG).show()
-                }
-            })
     }
 
-    private fun fetchSavedRoutes() {
-        val deviceId = DeviceIdUtil.getDeviceId(this)
-
-        RetrofitClient.api.getSavedRoutes(deviceId)
-            .enqueue(object : retrofit2.Callback<List<RouteMongo>> {
-                override fun onResponse(
-                    call: retrofit2.Call<List<RouteMongo>>,
-                    res: retrofit2.Response<List<RouteMongo>>
-                ) {
-                    if (res.isSuccessful && res.body() != null) {
-                        routes.clear()
-                        routes.addAll(res.body()!!.map { it.toUi() })
-                        adapter.notifyDataSetChanged()
-                        binding.activeRoutesNumber.text = routes.size.toString()
-                    }
+    private fun fetchCommutePlans() {
+        lifecycleScope.launch {
+            try {
+                val response = commuteApi.getMyCommutes()
+                if (response.isSuccessful && response.body() != null) {
+                    commutePlans.clear()
+                    commutePlans.addAll(response.body()!!)
+                    adapter.updateCommutePlans(commutePlans)
+                    binding.activeRoutesNumber.text = commutePlans.size.toString()
+                } else {
+                    Toast.makeText(this@SavedRoutesActivity, "Failed to load commute plans", Toast.LENGTH_SHORT).show()
                 }
-
-                override fun onFailure(call: retrofit2.Call<List<RouteMongo>>, t: Throwable) {
-                    Toast.makeText(this@SavedRoutesActivity, "Error: ${t.message}", Toast.LENGTH_LONG).show()
-                }
-            })
+            } catch (e: Exception) {
+                Toast.makeText(this@SavedRoutesActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

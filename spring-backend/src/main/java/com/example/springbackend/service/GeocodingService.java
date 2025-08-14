@@ -47,7 +47,8 @@ public class GeocodingService {
         }
 
         if (oneMapToken == null || oneMapToken.isBlank()) {
-            log.warn("OneMap token is not configured");
+            log.warn("OneMap token is not configured, using fallback data");
+            return getFallbackCandidates(locationName);
         }
 
         return webClient.get()
@@ -91,5 +92,52 @@ public class GeocodingService {
             log.error("Failed to parse geocode candidates", e);
         }
         return List.of();
+    }
+    
+    /**
+     * Fallback method that returns some common Singapore locations when OneMap token is not available
+     */
+    private Mono<List<GeocodeController.GeocodeCandidate>> getFallbackCandidates(String locationName) {
+        List<GeocodeController.GeocodeCandidate> fallbackLocations = List.of(
+            new GeocodeController.GeocodeCandidate(
+                "1.2927777312893", "103.854173501417", "CITYLINK MALL", 
+                "039393", "1", "RAFFLES LINK", "CITYLINK MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.35435719591377", "103.944305344915", "EASTLINK MALL", 
+                "529543", "8", "TAMPINES CENTRAL 1", "EASTLINK MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.37782876616465", "103.942364336974", "ELIAS MALL", 
+                "510623", "623", "ELIAS ROAD", "ELIAS MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.28964784521264", "103.856267250977", "ESPLANADE MALL", 
+                "039802", "8", "RAFFLES AVENUE", "ESPLANADE MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.37843100827586", "103.762842789877", "HILLION MALL", 
+                "678278", "17", "PETIR ROAD", "HILLION MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.37249493810003", "103.893775562605", "HOUGANG MALL", 
+                "538766", "90", "HOUGANG AVENUE 10", "HOUGANG MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.31754555939886", "103.785850542515", "JELITA MALL", 
+                "278628", "293", "HOLLAND ROAD", "JELITA MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.30540765569962", "103.788446680148", "ROCHESTER MALL", 
+                "138639", "35", "ROCHESTER DRIVE", "ROCHESTER MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.35252737278519", "103.944698751072", "TAMPINES MALL", 
+                "529510", "4", "TAMPINES CENTRAL 5", "TAMPINES MALL"),
+            new GeocodeController.GeocodeCandidate(
+                "1.32694504456951", "103.846554377679", "ZHONGSHAN MALL", 
+                "329984", "20", "AH HOOD ROAD", "ZHONGSHAN MALL")
+        );
+        
+        // Simple string matching for demo purposes
+        List<GeocodeController.GeocodeCandidate> matches = fallbackLocations.stream()
+            .filter(candidate -> candidate.displayName().toLowerCase().contains(locationName.toLowerCase()) ||
+                               candidate.building().toLowerCase().contains(locationName.toLowerCase()) ||
+                               candidate.road().toLowerCase().contains(locationName.toLowerCase()))
+            .toList();
+            
+        return Mono.just(matches);
     }
 }

@@ -16,7 +16,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.PagerSnapHelper
 import com.example.core.di.SecureStorageManager
+import com.example.core.permission.LocationPermissionManager
 import com.example.core.service.TripService
 import com.example.core.model.Trip
 import com.example.feature_home.databinding.FragmentHomeBinding
@@ -35,7 +38,7 @@ import com.example.core.model.RouteLeg
 import com.example.feature_chatbot.ui.ChatbotActivity
 import com.example.feature_home.adapter.DailyCommuteAdapter
 import com.example.feature_home.adapter.DayCommutes
-import com.example.feature_home.R
+import com.example.feature_location.LocationsListActivity
 import iss.nus.edu.sg.feature_saveroute.AddEditRouteActivity
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -75,13 +78,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var dailyCommuteAdapter: DailyCommuteAdapter
     private var currentTrip: Trip? = null
     private var routePolylines: MutableList<Polyline> = mutableListOf()
+    private lateinit var locationPermissionManager: LocationPermissionManager
 
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions.values.any { it }) {
-            enableLocationAndZoom()
-        }
+        locationPermissionManager.handlePermissionResult(permissions)
     }
 
     private val locationCallback = object : LocationCallback() {
@@ -100,6 +102,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        locationPermissionManager =
+            LocationPermissionManager(fragment = this)
         setupUI(savedInstanceState)
         setupOnClickListeners()
         loadUserData()
@@ -110,7 +114,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         setupWindowInsets()
         setupLocationClient()
         setupMapView(savedInstanceState)
-        setupCommuteViewPager()
+        setupCommuteRecyclerView()
         setupBackPressHandler()
     }
 
@@ -149,6 +153,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             val intent = Intent(requireContext(), AddEditRouteActivity::class.java)
             startActivity(intent)
         }
+        binding.button2.setOnClickListener {
+            val intent = Intent(requireContext(), LocationsListActivity::class.java)
+            startActivity(intent)
+        }
         binding.button3.setOnClickListener {
             val intent = Intent(requireContext(), TripHistoryActivity::class.java)
             startActivity(intent)
@@ -172,11 +180,16 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun setupCommuteViewPager() {
+    private fun setupCommuteRecyclerView() {
         dailyCommuteAdapter = DailyCommuteAdapter()
-        binding.apply {
-            viewPager.adapter = dailyCommuteAdapter
-            viewPager.setOffscreenPageLimit(2);
+        
+        binding.commuteRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            adapter = dailyCommuteAdapter
+            
+            // Add snap helper for pager-like behavior
+            val snapHelper = PagerSnapHelper()
+            snapHelper.attachToRecyclerView(this)
         }
     }
 
@@ -205,10 +218,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
 
     private fun handleLocationPermissionAndSetup() {
-        if (hasLocationPermission()) {
-            enableLocationAndZoom()
-        } else {
-            locationPermissionRequest.launch(LOCATION_PERMISSIONS)
+        locationPermissionManager.requestLocationPermissions(locationPermissionRequest) { granted ->
+            if (granted) {
+                enableLocationAndZoom()
+            }
         }
     }
 

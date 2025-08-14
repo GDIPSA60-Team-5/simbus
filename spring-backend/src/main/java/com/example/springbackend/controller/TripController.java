@@ -2,6 +2,7 @@ package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.llm.DirectionsResponseDTO;
 import com.example.springbackend.model.Trip;
+import com.example.springbackend.model.Coordinates;
 import com.example.springbackend.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,8 @@ public class TripController {
                 request.username(),
                 request.startLocation(),
                 request.endLocation(),
+                request.startCoordinates(),
+                request.endCoordinates(),
                 request.route()
         )
         .map(ResponseEntity::ok)
@@ -79,6 +82,8 @@ public class TripController {
             String username,
             String startLocation,
             String endLocation,
+            Coordinates startCoordinates,
+            Coordinates endCoordinates,
             DirectionsResponseDTO.RouteDTO route
     ) {}
     

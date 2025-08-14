@@ -38,12 +38,16 @@ class CommutePlanAdapter(
             binding.arriveTime.text = formatTime(commutePlan.arrivalTime)
         }
 
-        private fun formatTime(timeString: String): String {
-            return try {
-                // Remove seconds if present (e.g., "07:30:00" -> "07:30")
-                timeString.substring(0, 5)
-            } catch (e: Exception) {
-                timeString
+        private fun formatTime(timeString: String?): String {
+            return if (timeString.isNullOrEmpty()) {
+                "Not set"
+            } else {
+                try {
+                    // Remove seconds if present (e.g., "07:30:00" -> "07:30")
+                    timeString.substring(0, minOf(5, timeString.length))
+                } catch (e: Exception) {
+                    timeString
+                }
             }
         }
     }
