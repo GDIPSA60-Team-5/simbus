@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/main_bg"
-    tools:context=".SavedRoutesActivity">
+    tools:context="iss.nus.edu.sg.feature_saveroute.SchedulesFragment">
 
     <ImageView
         android:id="@+id/saved_routes_img1"

@@ -137,7 +137,8 @@ public class UserCommutePlanController {
             Integer reminderOffsetMin,
             Boolean recurrence,
             String startLocationId,
-            String endLocationId
+            String endLocationId,
+            java.util.List<String> commuteRecurrenceDayIds
     ) {}
 
     /**
@@ -161,6 +162,8 @@ public class UserCommutePlanController {
                         updates.startLocationId() : existingPlan.getStartLocationId())
                 .endLocationId(updates.endLocationId() != null ?
                         updates.endLocationId() : existingPlan.getEndLocationId())
+                .commuteRecurrenceDayIds(updates.commuteRecurrenceDayIds() != null ?
+                        updates.commuteRecurrenceDayIds() : existingPlan.getCommuteRecurrenceDayIds())
                 .build();
     }
 }

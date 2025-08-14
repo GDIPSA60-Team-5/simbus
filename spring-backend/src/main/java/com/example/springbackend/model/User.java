@@ -17,6 +17,7 @@ public class User {
 	private String userName;
 	private String userType;
 	private String passwordHash;
+	private String fcmToken; // Firebase Cloud Messaging token for push notifications
 
 	@CreatedDate
 	private Date createdAt;

@@ -7,6 +7,7 @@ import com.example.feature_home.ui.HomeFragment
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.MenuFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.databinding.ActivityNavigateBinding
+import iss.nus.edu.sg.feature_saveroute.SchedulesFragment
 
 @AndroidEntryPoint
 class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelectedListener {
@@ -44,7 +45,7 @@ class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelecte
         when (itemId) {
             R.id.nav_home -> replaceMainFragment(HomeFragment())
             R.id.nav_assistant -> startActivity(Intent(this, com.example.feature_chatbot.ui.ChatbotActivity::class.java))
-            R.id.nav_schedules -> startActivity(Intent(this, iss.nus.edu.sg.feature_saveroute.SavedRoutesActivity::class.java))
+            R.id.nav_schedules -> replaceMainFragment(SchedulesFragment())
             R.id.nav_menu -> replaceMainFragment(MenuFragment())
         }
     }
