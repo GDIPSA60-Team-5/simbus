@@ -33,6 +33,8 @@ public class DeviceTokenController {
         }
 
         return deviceTokenRepository.findByDeviceId(deviceId)
+                .take(1)  // Take only the first result if multiple exist
+                .next()   // Convert Flux to Mono
                 .flatMap(existingToken -> {
                     existingToken.setFcmToken(fcmToken);
                     return deviceTokenRepository.save(existingToken);

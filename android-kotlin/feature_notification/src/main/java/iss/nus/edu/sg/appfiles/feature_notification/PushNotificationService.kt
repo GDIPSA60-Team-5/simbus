@@ -63,6 +63,8 @@ class PushNotificationService : FirebaseMessagingService() {
 
         if (nextBusInfo.isNotEmpty()) {
             sendNotification(nextBusInfo)
+        } else {
+            Log.w("FCM", "NextBusInfo is empty, skipping notification")
         }
     }
 
@@ -72,22 +74,49 @@ class PushNotificationService : FirebaseMessagingService() {
         val channelId = "bus_alert_channel_v2"
         val channelName = "Bus Alert Channel"
 
+        // Check if notifications are enabled
+        if (!manager.areNotificationsEnabled()) {
+            Log.w("FCM", "Notifications are disabled for this app")
+            return
+        }
+
         if (manager.getNotificationChannel(channelId) == null) {
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Notifications for bus arrival alerts"
+                enableLights(true)
+                enableVibration(true)
+            }
             manager.createNotificationChannel(channel)
+            Log.d("FCM", "Created notification channel: $channelId")
+        }
+
+        // Try to use app icon, fallback to system icon if not available
+        val iconRes = try {
+            R.drawable.ic_bus_notification
+        } catch (e: Exception) {
+            Log.w("FCM", "App icon not found, using system icon")
+            android.R.drawable.ic_dialog_info
         }
 
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // must be valid
+            .setSmallIcon(iconRes)
             .setContentTitle("Bus Alert")
             .setContentText(nextBusInfo.take(50)) // optional short text for lock screen
             .setStyle(NotificationCompat.BigTextStyle().bigText(nextBusInfo))
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         val notificationId = System.currentTimeMillis().toInt()
-        Log.d("FCM", "Sending notification with ID $notificationId")
-        manager.notify(notificationId, builder.build())
+        Log.d("FCM", "Sending notification with ID $notificationId, content: '$nextBusInfo'")
+        
+        try {
+            manager.notify(notificationId, builder.build())
+            Log.d("FCM", "Notification sent successfully")
+        } catch (e: Exception) {
+            Log.e("FCM", "Failed to send notification", e)
+        }
     }
 
     private fun sendTokenToServer(token: String) {

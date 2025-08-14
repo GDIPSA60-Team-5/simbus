@@ -86,6 +86,8 @@ public class NotificationSchedulerService {
 
                                             String finalBusJson = busJson;
                                             return deviceTokenRepository.findByDeviceId(job.getDeviceId())
+                                                    .take(1)  // Take only the first result if multiple exist
+                                                    .next()   // Convert Flux to Mono
                                                     .flatMap(deviceToken -> {
                                                         // send busJson as its own data field
                                                         Map<String, String> data = new HashMap<>();
@@ -95,7 +97,7 @@ public class NotificationSchedulerService {
 
                                                         fcmService.sendNotification(deviceToken.getFcmToken(), data);
 
-                                                        job.setStatus("ONGOING");
+                                                    job.setStatus("ONGOING");
                                                         return jobRepository.save(job);
                                                     });
                                         })

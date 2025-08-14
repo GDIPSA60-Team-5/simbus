@@ -86,10 +86,12 @@ public class NusBusServiceProvider implements BusServiceProvider {
                     }
                 })
                 .map(shuttle -> {
-                    List<ZonedDateTime> arrivals = shuttle._etas().stream()
-                            .map(eta -> now.plusMinutes(eta.eta()))
-                            .sorted()
-                            .toList();
+                    List<ZonedDateTime> arrivals = shuttle._etas() != null ? 
+                            shuttle._etas().stream()
+                                    .map(eta -> now.plusMinutes(eta.eta()))
+                                    .sorted()
+                                    .toList() : 
+                            List.of();
                     return new BusArrival(shuttle.name(), API_NAME, arrivals);
                 });
     }
