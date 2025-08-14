@@ -42,22 +42,23 @@ public class AuthService {
                     return new AuthResponse(token);
                 });
     }
+
     public Mono<MessageResponse> register(RegisterRequest request) {
         return userRepository.findByUserName(request.username())
                 .flatMap(existingUser ->
                         Mono.<MessageResponse>error(new IllegalArgumentException("Username already in use"))
                 )
-                .switchIfEmpty(
-                        Mono.defer(() ->
-                                userRepository.save(
-                                        User.builder()
-                                                .userName(request.username())
-                                                .email(request.email())
-                                                .passwordHash(passwordEncoder.encode(request.password()))
-                                                .createdAt(new Date())
-                                                .build()
-                                ).then(Mono.just(new MessageResponse("Registration successful")))
-                        )
-                );
+                .switchIfEmpty(Mono.defer(() -> {
+                    User user = User.builder()
+                            .userName(request.username())
+                            .email(request.email())
+                            .passwordHash(passwordEncoder.encode(request.password()))
+                            .createdAt(new Date())
+                            .build();
+
+                    return userRepository.save(user)
+                            .then(Mono.<MessageResponse>just(new MessageResponse("Registration successful")));
+                }));
     }
+
 }

@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, User, Lock, ArrowRight, Bus, Users, MessageSquare, Star } from "lucide-react";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function LoginPage() {
+// Separate component that uses useSearchParams
+function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +34,7 @@ export default function LoginPage() {
 
     try {
       await login(username, password);
-      
+
       // Get redirect URL from search params or default to dashboard
       const redirectTo = searchParams.get('redirect') || '/dashboard';
       router.push(redirectTo);
@@ -59,7 +60,7 @@ export default function LoginPage() {
     },
     {
       icon: MessageSquare,
-      title: "Chatbot Performance", 
+      title: "Chatbot Performance",
       description: "Monitor AI interactions and success rates",
       iconColor: "bg-blue-100 text-blue-600"
     },
@@ -183,5 +184,26 @@ export default function LoginPage() {
         </p>
       </div>
     </AuthLayout>
+  );
+}
+
+// Loading fallback component
+function LoginLoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-100">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading login page...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main page component wrapped with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoadingFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }
