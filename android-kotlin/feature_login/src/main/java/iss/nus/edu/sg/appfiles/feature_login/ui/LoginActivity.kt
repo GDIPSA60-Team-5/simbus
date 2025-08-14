@@ -10,7 +10,7 @@ import com.example.core.di.SecureStorageManager
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_login.R
 import iss.nus.edu.sg.appfiles.feature_login.api.AuthController
-import iss.nus.edu.sg.appfiles.feature_login.data.AuthRequest
+import iss.nus.edu.sg.appfiles.feature_login.data.LoginRequest
 import iss.nus.edu.sg.appfiles.feature_login.databinding.ActivityLoginBinding
 import iss.nus.edu.sg.appfiles.feature_navigatebar.NavigateActivity
 import kotlinx.coroutines.launch
@@ -46,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
     private fun login() {
         val username = binding.etUsername.text.toString()
         val password = binding.etPassword.text.toString()
-        val request = AuthRequest(username, password)
+        val request = LoginRequest(username, password)
 
         lifecycleScope.launch {
             val result = authController.login(request)

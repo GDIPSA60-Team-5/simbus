@@ -1,7 +1,6 @@
 package iss.nus.edu.sg.appfiles.feature_login.data;
 
-data class AuthRequest(
+data class LoginRequest(
         val username: String,
         val password: String
 )
-

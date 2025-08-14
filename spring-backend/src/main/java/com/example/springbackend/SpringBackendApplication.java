@@ -36,6 +36,7 @@ public class SpringBackendApplication {
                                     User.builder()
                                             .userName("user")
                                             .userType("admin")
+                                            .email("user@example.com")
                                             .passwordHash(passwordEncoder.encode("password"))
                                             .createdAt(new Date())
                                             .build()
