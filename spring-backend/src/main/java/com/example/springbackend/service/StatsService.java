@@ -17,31 +17,45 @@ public class StatsService {
     private final FeedbackRepository feedbackRepository;
     private final BotLogRepository botLogRepository;
 
-
-
     public Mono<StatsDTO> getStats() {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
 
-        //user
+        // User stats
         Mono<Long> userCount = userRepository.countUsers();
-        Mono<Long> userCountRecently= userRepository.countUsersSince(sevenDaysAgo);
+        Mono<Long> userCountRecently = userRepository.countUsersSince(sevenDaysAgo);
 
-        //feedback
+        // Feedback stats
         Mono<Long> feedbackCount = feedbackRepository.countFeedback();
         Mono<Long> feedbackCountRecently = feedbackRepository.countFeedbackSince(sevenDaysAgo);
 
-        //chatbot
+        // Chatbot request stats
         Mono<Long> totalBotRequests = botLogRepository.count();
         Mono<Long> totalBotSuccess = botLogRepository.countSuccessfulResponses();
         Mono<Double> botSuccessRate = Mono.zip(totalBotRequests, totalBotSuccess)
-                .map(t -> t.getT1() > 0 ? (t.getT2() * 100.0 / t.getT1()) : 0.0);
+                .map(tuple -> {
+                    long requests = tuple.getT1();
+                    long successes = tuple.getT2();
+                    return requests > 0 ? (successes * 100.0 / requests) : 0.0;
+                });
 
-        //response time metrics
+        // Chatbot performance metrics
         Mono<Double> avgResponseTime = botLogRepository.getAverageResponseTime().defaultIfEmpty(0.0);
         Mono<Double> maxResponseTime = botLogRepository.getMaxResponseTime().defaultIfEmpty(0.0);
         Mono<Double> minResponseTime = botLogRepository.getMinResponseTime().defaultIfEmpty(0.0);
 
         return Mono.zip(
+                objects -> new StatsDTO(
+                        (Long) objects[0],     // userCount
+                        (Long) objects[1],     // userCountRecently
+                        (Long) objects[2],     // feedbackCount
+                        (Long) objects[3],     // feedbackCountRecently
+                        (Long) objects[4],     // totalBotRequests
+                        (Long) objects[5],     // totalBotSuccess
+                        (Double) objects[6],   // botSuccessRate
+                        (Double) objects[7],   // avgResponseTime
+                        (Double) objects[8],   // maxResponseTime
+                        (Double) objects[9]    // minResponseTime
+                ),
                 userCount,
                 userCountRecently,
                 feedbackCount,
@@ -52,18 +66,6 @@ public class StatsService {
                 avgResponseTime,
                 maxResponseTime,
                 minResponseTime
-        ).map(tuple -> new StatsDTO(
-                tuple.getT1(),
-                tuple.getT2(),
-                tuple.getT3(),
-                tuple.getT4(),
-                tuple.getT5(),
-                tuple.getT6(),
-                tuple.getT7(),
-                tuple.getT8(),
-                tuple.getT9(),
-                tuple.getT10()
-        ));
+        );
     }
 }
-

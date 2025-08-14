@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/auth/register").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
                         .pathMatchers("/api/admin/login").permitAll()
+                        .pathMatchers("/api/chatbot-analytics/**").authenticated()  // Allow authenticated users
                         .anyExchange().authenticated()
                 )
 
