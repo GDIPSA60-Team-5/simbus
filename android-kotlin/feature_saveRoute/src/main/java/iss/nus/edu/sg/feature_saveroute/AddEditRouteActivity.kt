@@ -22,7 +22,8 @@ import com.example.core.api.CommuteApi
 import com.example.core.api.CommutePlan
 import com.example.core.api.CreateCommutePlanRequest
 import com.example.core.api.UpdateCommutePlanRequest
-import com.example.core.api.CreatePreferredRouteRequest
+import com.example.core.api.CreateSavedTripRouteRequest
+import com.example.core.api.SavedTripRoute
 import com.example.feature_location.location.AddLocationActivity
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -45,7 +46,7 @@ class AddEditRouteActivity : AppCompatActivity() {
     private lateinit var routeOptionsAdapter: RouteOptionsAdapter
     private var selectedRoute: CoreRoute? = null
     private var currentCommutePlan: CommutePlan? = null
-    private var selectedRouteId: String? = null
+    private var savedTripRouteId: String? = null
 
     @Inject
     lateinit var locationApi: LocationApi
@@ -195,13 +196,30 @@ class AddEditRouteActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val updatedPlan = response.body()!!
                         
-                        // Save preferred route if selected
-                        if (selectedRouteId != null) {
+                        // Create saved trip route if selected
+                        selectedRoute?.let { route ->
                             try {
-                                commuteApi.addPreferredRoute(
-                                    updatedPlan.id,
-                                    CreatePreferredRouteRequest(selectedRouteId!!)
+                                val savedRouteResponse = commuteApi.createSavedTripRoute(
+                                    CreateSavedTripRouteRequest(route)
                                 )
+                                if (savedRouteResponse.isSuccessful) {
+                                    savedTripRouteId = savedRouteResponse.body()?.id
+                                    // Update the commute plan with the saved trip route ID
+                                    savedTripRouteId?.let { routeId ->
+                                        val updateWithRoute = UpdateCommutePlanRequest(
+                                            commutePlanName = updatedPlan.commutePlanName,
+                                            notifyAt = updatedPlan.notifyAt,
+                                            arrivalTime = updatedPlan.arrivalTime,
+                                            reminderOffsetMin = updatedPlan.reminderOffsetMin,
+                                            recurrence = updatedPlan.recurrence,
+                                            startLocationId = updatedPlan.startLocationId,
+                                            endLocationId = updatedPlan.endLocationId,
+                                            savedTripRouteId = routeId,
+                                            commuteRecurrenceDayIds = updatedPlan.commuteRecurrenceDayIds
+                                        )
+                                        commuteApi.updateCommutePlan(updatedPlan.id, updateWithRoute)
+                                    }
+                                }
                             } catch (e: Exception) {
                                 // Log but don't fail - the commute plan was saved successfully
                             }
@@ -228,13 +246,30 @@ class AddEditRouteActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val newPlan = response.body()!!
                         
-                        // Save preferred route if selected
-                        if (selectedRouteId != null) {
+                        // Create saved trip route if selected
+                        selectedRoute?.let { route ->
                             try {
-                                commuteApi.addPreferredRoute(
-                                    newPlan.id,
-                                    CreatePreferredRouteRequest(selectedRouteId!!)
+                                val savedRouteResponse = commuteApi.createSavedTripRoute(
+                                    CreateSavedTripRouteRequest(route)
                                 )
+                                if (savedRouteResponse.isSuccessful) {
+                                    savedTripRouteId = savedRouteResponse.body()?.id
+                                    // Update the commute plan with the saved trip route ID
+                                    savedTripRouteId?.let { routeId ->
+                                        val updateWithRoute = UpdateCommutePlanRequest(
+                                            commutePlanName = newPlan.commutePlanName,
+                                            notifyAt = newPlan.notifyAt,
+                                            arrivalTime = newPlan.arrivalTime,
+                                            reminderOffsetMin = newPlan.reminderOffsetMin,
+                                            recurrence = newPlan.recurrence,
+                                            startLocationId = newPlan.startLocationId,
+                                            endLocationId = newPlan.endLocationId,
+                                            savedTripRouteId = routeId,
+                                            commuteRecurrenceDayIds = newPlan.commuteRecurrenceDayIds
+                                        )
+                                        commuteApi.updateCommutePlan(newPlan.id, updateWithRoute)
+                                    }
+                                }
                             } catch (e: Exception) {
                                 // Log but don't fail - the commute plan was saved successfully
                             }
@@ -381,7 +416,7 @@ class AddEditRouteActivity : AppCompatActivity() {
     private fun setupRouteOptionsRecyclerView() {
         routeOptionsAdapter = RouteOptionsAdapter { route ->
             selectedRoute = route
-            selectedRouteId = "route_${route.hashCode()}" // Generate a unique ID
+            // savedTripRouteId will be set when we create the saved trip route
             binding.selectedRouteCard.isVisible = true
             binding.routeDuration.text = "${route.durationInMinutes} min"
             binding.routeSummary.text = route.summary

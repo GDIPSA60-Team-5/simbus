@@ -44,7 +44,6 @@ public class AuthService {
     }
     public Mono<MessageResponse> register(RegisterRequest request) {
         return userRepository.findByUserName(request.username())
-                .cast(MessageResponse.class)
                 .flatMap(existingUser ->
                         Mono.<MessageResponse>error(new IllegalArgumentException("Username already in use"))
                 )

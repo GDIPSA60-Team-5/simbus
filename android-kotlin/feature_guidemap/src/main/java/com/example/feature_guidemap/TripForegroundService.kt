@@ -149,12 +149,42 @@ class TripForegroundService : Service() {
     private fun checkTripProgress(location: Location) {
         serviceScope.launch {
             try {
-                // Get current user's active trip
-                // This would need to be implemented to check if location
-                // matches next waypoint and trigger notifications
+                // Update location on backend for proximity checks
+                updateLocationOnBackend(location.latitude, location.longitude)
+                
+                // Check if we should advance to next leg
+                // This is a simplified example - in reality you'd check if user 
+                // is close to the next waypoint
+                checkAndAdvanceTrip()
+                
             } catch (e: Exception) {
-                // Handle error
+                android.util.Log.e("TripForegroundService", "Error checking trip progress", e)
             }
+        }
+    }
+    
+    private suspend fun updateLocationOnBackend(latitude: Double, longitude: Double) {
+        try {
+            // This would call your backend API to update location
+            // For now, just log the location
+            android.util.Log.d("TripForegroundService", "Location: $latitude, $longitude")
+        } catch (e: Exception) {
+            android.util.Log.e("TripForegroundService", "Failed to update location", e)
+        }
+    }
+    
+    private suspend fun checkAndAdvanceTrip() {
+        try {
+            // Get current trip status from TripService
+            // Check if user has reached a waypoint
+            // If so, call backend to advance trip
+            
+            // This is where you'd implement the logic to automatically
+            // advance the trip based on location proximity
+            android.util.Log.d("TripForegroundService", "Checking trip advancement conditions")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("TripForegroundService", "Failed to check trip advancement", e)
         }
     }
 }

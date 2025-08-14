@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,6 +21,7 @@ public class TripService {
     
     private final TripRepository tripRepository;
     private final TripNotificationService tripNotificationService;
+    private final FCMNotificationService fcmNotificationService;
     
     public Mono<Trip> startTrip(String username, String startLocation, String endLocation, 
                                Coordinates startCoordinates, Coordinates endCoordinates,
@@ -102,6 +103,19 @@ public class TripService {
     public Mono<Trip> getTripById(String tripId) {
         return tripRepository.findById(tripId)
                 .switchIfEmpty(Mono.error(new RuntimeException("Trip not found")));
+    }
+    
+    /**
+     * Simple method to start trip from commute plan (called by scheduler)
+     */
+    public void startTripFromPlan(com.example.springbackend.model.CommutePlan plan) {
+        try {
+            // Send FCM notification
+            fcmNotificationService.sendCommuteStarted(plan.getUserId(), plan.getCommutePlanName());
+            log.info("Started commute for plan: {} user: {}", plan.getCommutePlanName(), plan.getUserId());
+        } catch (Exception e) {
+            log.error("Failed to start trip from plan {}: {}", plan.getId(), e.getMessage());
+        }
     }
     
     private Trip.TripRoute convertToTripRoute(DirectionsResponseDTO.RouteDTO routeDTO) {

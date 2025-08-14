@@ -13,5 +13,9 @@ public interface TripRepository extends ReactiveCrudRepository<Trip, String> {
     
     Mono<Trip> findByUsernameAndStatus(String username, Trip.TripStatus status);
     
+    Flux<Trip> findByUsernameAndStatusOrderByStartTimeDesc(String username, Trip.TripStatus status);
+    
+    Flux<Trip> findByStatus(Trip.TripStatus status);
+    
     Flux<Trip> findByUsernameOrderByStartTimeDesc(String username);
 }

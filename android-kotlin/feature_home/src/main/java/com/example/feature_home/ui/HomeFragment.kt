@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.core.di.SecureStorageManager
 import com.example.core.permission.LocationPermissionManager
 import com.example.core.service.TripService
@@ -30,6 +31,8 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.*
 import android.content.Intent
+import android.widget.ImageView
+import android.widget.LinearLayout
 import com.example.feature_guidemap.MapsNavigationActivity
 import dagger.hilt.android.AndroidEntryPoint
 import com.example.core.api.UserApi
@@ -43,6 +46,7 @@ import iss.nus.edu.sg.feature_saveroute.AddEditRouteActivity
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
+import com.example.feature_home.R
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(), OnMapReadyCallback {
@@ -102,8 +106,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        locationPermissionManager =
-            LocationPermissionManager(fragment = this)
+        locationPermissionManager = LocationPermissionManager(fragment = this)
         setupUI(savedInstanceState)
         setupOnClickListeners()
         loadUserData()
@@ -142,7 +145,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 startActivity(intent)
             }
         }
-        
+
         // Navigation FAB click listener
         binding.fabNavigation.setOnClickListener {
             val intent = Intent(requireContext(), MapsNavigationActivity::class.java)
@@ -166,7 +169,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             val intent = Intent(requireContext(), MapsNavigationActivity::class.java)
             startActivity(intent)
         }
-        
+
         // Collapse button for active trip overlay
         binding.ivCollapse.setOnClickListener {
             collapseActiveTripOverlay()
@@ -182,14 +185,65 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
     private fun setupCommuteRecyclerView() {
         dailyCommuteAdapter = DailyCommuteAdapter()
-        
+
         binding.commuteRecyclerView.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = dailyCommuteAdapter
-            
+
             // Add snap helper for pager-like behavior
             val snapHelper = PagerSnapHelper()
             snapHelper.attachToRecyclerView(this)
+
+            // Add scroll listener for slide indicators
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                    super.onScrollStateChanged(recyclerView, newState)
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                        val position = layoutManager.findFirstVisibleItemPosition()
+                        updateSlideIndicator(position)
+                    }
+                }
+            })
+        }
+    }
+
+    /** Sets up slide indicator dots for a horizontal RecyclerView pager */
+    private fun setupSlideIndicator(itemCount: Int) {
+        binding.slideIndicator.removeAllViews()
+
+        // Create dots
+        for (i in 0 until itemCount) {
+            val dot = ImageView(requireContext()).apply {
+                setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.dot_inactive
+                    )
+                )
+                val params = LinearLayout.LayoutParams(16, 16)
+                params.marginEnd = 8
+                layoutParams = params
+            }
+            binding.slideIndicator.addView(dot)
+        }
+
+        // Set first dot as active if we have items
+        if (itemCount > 0) {
+            updateSlideIndicator(0)
+        }
+    }
+
+    /** Updates the slide indicator to show the active position */
+    private fun updateSlideIndicator(activePosition: Int) {
+        for (i in 0 until binding.slideIndicator.childCount) {
+            val dot = binding.slideIndicator.getChildAt(i) as ImageView
+            val drawableRes = if (i == activePosition) {
+                R.drawable.dot_active
+            } else {
+                R.drawable.dot_inactive
+            }
+            dot.setImageDrawable(ContextCompat.getDrawable(requireContext(), drawableRes))
         }
     }
 
@@ -215,7 +269,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             startActivity(intent)
         }
     }
-
 
     private fun handleLocationPermissionAndSetup() {
         locationPermissionManager.requestLocationPermissions(locationPermissionRequest) { granted ->
@@ -284,7 +337,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         super.onStart()
         mapView.onStart()
     }
-
 
     override fun onPause() {
         mapView.onPause()
@@ -358,7 +410,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private fun displayCommuteData(commutePlans: List<com.example.core.api.CommutePlan>) {
         val dayCommutes = organizeCommutesByDay(commutePlans)
         dailyCommuteAdapter.updateDays(dayCommutes)
-        
+
+        // Setup slide indicator after adapter is updated
+        setupSlideIndicator(dayCommutes.size)
+
         // Update subtitle with summary
         val commuteInfo = if (commutePlans.isEmpty()) {
             "No commute plans found"
@@ -372,22 +427,22 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val daysOfWeek = listOf("mon", "tue", "wed", "thu", "fri", "sat", "sun")
         val dayNames = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
         val today = LocalDate.now()
-        
+
         return (0..6).map { dayOffset ->
             val targetDate = today.plusDays(dayOffset.toLong())
             val dayOfWeekIndex = targetDate.dayOfWeek.value - 1 // Monday = 0
             val shortDayName = daysOfWeek[dayOfWeekIndex]
-            
+
             val dayDisplayName = when (dayOffset) {
                 0 -> "Today"
                 1 -> "Tomorrow"
                 else -> dayNames[dayOfWeekIndex]
             }
-            
+
             val dayCommutes = commutePlans.filter { commutePlan ->
                 commutePlan.commuteRecurrenceDayIds?.contains(shortDayName) == true
             }
-            
+
             DayCommutes(dayDisplayName, dayCommutes)
         }
     }
@@ -401,7 +456,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     Log.w("HomeFragment", "Failed to get user info for active trip check")
                     return@launch
                 }
-                
+
                 val username = userResponse.body()!!.username
                 val result = tripService.getActiveTrip(username)
                 result.fold(
@@ -432,14 +487,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             currentLeg?.routePoints?.let { points ->
                 if (points.size >= 2) {
                     val latLngPoints = points.map { LatLng(it.latitude, it.longitude) }
-                    
+
                     // Use different colors for different leg types
                     val color = when (currentLeg.type.uppercase()) {
                         "WALK" -> android.graphics.Color.BLUE
                         "BUS" -> android.graphics.Color.RED
                         else -> android.graphics.Color.GREEN
                     }
-                    
+
                     val polyline = map.addPolyline(
                         PolylineOptions()
                             .addAll(latLngPoints)
@@ -447,7 +502,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             .width(8f)
                     )
                     routePolylines.add(polyline)
-                    
+
                     // Show remaining legs with lighter color
                     trip.route.legs.drop(trip.currentLegIndex + 1).forEach { leg ->
                         leg.routePoints?.let { legPoints ->
@@ -463,12 +518,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                             }
                         }
                     }
-                    
+
                     // Focus camera on current leg
                     val boundsBuilder = LatLngBounds.Builder()
                     latLngPoints.forEach { boundsBuilder.include(it) }
                     val bounds = boundsBuilder.build()
-                    
+
                     try {
                         map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100))
                     } catch (e: Exception) {
@@ -476,7 +531,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     }
                 }
             }
-            
+
             // Show active trip overlay with current leg instruction
             showActiveTripOverlay(trip, currentLeg)
         }
@@ -508,7 +563,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         binding.subTitle.text = "Ready for your journey?"
     }
 
-
     private fun collapseActiveTripOverlay() {
         binding.layoutActiveTrip.visibility = View.GONE
     }
@@ -516,7 +570,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         mapView.onResume()
-        // Check for trip updates when returning to the fragment
         if (::tripService.isInitialized) {
             checkForActiveTrip()
         }

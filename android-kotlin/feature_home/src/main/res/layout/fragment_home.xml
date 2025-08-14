@@ -338,20 +338,18 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/tabLayout"
+                <LinearLayout
+                    android:id="@+id/slideIndicator"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginTop="12dp"
-                    app:tabIndicatorColor="@android:color/transparent"
-                    app:tabIndicatorHeight="0dp"
-                    app:tabSelectedTextColor="@color/black" />
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/commuteRecyclerView"
                     android:layout_width="match_parent"
-                    android:layout_height="240dp"
+                    android:layout_height="480dp"
                     android:layout_marginHorizontal="-48dp"
                     android:clipChildren="false"
                     android:clipToPadding="false"
