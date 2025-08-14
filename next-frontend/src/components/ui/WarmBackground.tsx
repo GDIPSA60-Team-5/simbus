@@ -2,17 +2,27 @@
 
 import React from 'react';
 
+type VariantType = 'default' | 'dashboard' | 'users' | 'chatbot' | 'analytics' | 'feedback';
+
 interface WarmBackgroundProps {
   children: React.ReactNode;
-  variant?: 'default' | 'dashboard' | 'users' | 'chatbot' | 'analytics' | 'feedback';
+  variant?: VariantType;
 }
 
-export const WarmBackground: React.FC<WarmBackgroundProps> = ({ 
-  children, 
-  variant = 'default' 
+interface GradientSet {
+  primary: string;
+  secondary: string;
+  tertiary: string;
+  quaternary: string;
+  accent?: string; // Made optional instead of explicitly undefined
+}
+
+export const WarmBackground: React.FC<WarmBackgroundProps> = ({
+  children,
+  variant = 'default'
 }) => {
-  const getGradientStyles = () => {
-    const baseGradients = {
+  const getGradientStyles = (): GradientSet => {
+    const baseGradients: Record<VariantType, GradientSet> = {
       default: {
         primary: 'radial-gradient(circle at 20% 20%, rgba(255, 154, 0, 0.3) 0%, transparent 50%)',
         secondary: 'radial-gradient(circle at 80% 40%, rgba(255, 193, 7, 0.25) 0%, transparent 50%)',
@@ -52,7 +62,7 @@ export const WarmBackground: React.FC<WarmBackgroundProps> = ({
       },
     };
 
-    return baseGradients[variant] || baseGradients.default;
+    return baseGradients[variant];
   };
 
   const gradients = getGradientStyles();
@@ -60,15 +70,15 @@ export const WarmBackground: React.FC<WarmBackgroundProps> = ({
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Base warm background */}
-      <div 
+      <div
         className="fixed inset-0 -z-10"
         style={{
           background: 'linear-gradient(135deg, #FFF8F0 0%, #FFF4E6 25%, #FFFBF0 50%, #FFF8F0 75%, #FFF2E6 100%)'
         }}
       />
-      
+
       {/* Animated radial gradients */}
-      <div 
+      <div
         className="fixed inset-0 -z-10 opacity-80"
         style={{
           background: `
@@ -81,10 +91,10 @@ export const WarmBackground: React.FC<WarmBackgroundProps> = ({
           animation: 'float 20s ease-in-out infinite'
         }}
       />
-      
+
       {/* Additional floating orbs for extra warmth */}
       <div className="fixed inset-0 -z-10 opacity-60">
-        <div 
+        <div
           className="absolute w-96 h-96 rounded-full"
           style={{
             top: '10%',
@@ -93,7 +103,7 @@ export const WarmBackground: React.FC<WarmBackgroundProps> = ({
             animation: 'float-slow 25s ease-in-out infinite'
           }}
         />
-        <div 
+        <div
           className="absolute w-80 h-80 rounded-full"
           style={{
             top: '60%',
@@ -102,7 +112,7 @@ export const WarmBackground: React.FC<WarmBackgroundProps> = ({
             animation: 'float-reverse 22s ease-in-out infinite'
           }}
         />
-        <div 
+        <div
           className="absolute w-64 h-64 rounded-full"
           style={{
             bottom: '20%',
