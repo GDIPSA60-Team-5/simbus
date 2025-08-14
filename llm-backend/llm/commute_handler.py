@@ -66,8 +66,11 @@ def handle_schedule_commute(
             endLocationId=data.get("endLocationId"),
             recurrence=data.get("recurrence"),
             commuteRecurrenceDayIds=data.get("commuteRecurrenceDayIds", []),
-            savedTripRouteId=data.get("savedTripRouteId")
+            savedTripRouteId=data.get("savedTripRouteId"),
+            userId=data.get("userId")
         )
+        
+        print(f"Created CommutePlan: \n{commute_plan}")
 
         return CommutePlanResponseDTO(creationSuccess=True, commutePlan=commute_plan)
 
