@@ -38,6 +38,7 @@ class AuthController @Inject constructor(
         return try {
             val resp = authApi.login(request)
             Result.success(resp)
+
         } catch (e: HttpException) {
             // Try to parse {"message":"..."} from error body (if backend provides it)
             val parsed = try {

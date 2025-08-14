@@ -52,6 +52,7 @@ class LoginActivity : AppCompatActivity() {
             result.fold(onSuccess = { authResponse ->
                 val token = authResponse.token
                 secureStorageManager.saveToken(token)
+                secureStorageManager.saveUsername(username)
                 Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
                 startActivity(Intent(this@LoginActivity, NavigateActivity::class.java))
                 finish()
