@@ -30,7 +30,7 @@ const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [userFilter, setUserFilter] = useState<UserFilterType>('all');
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
-  
+
   const { users, loading: usersLoading, error: usersError, refresh, deleteUser } = useUsers();
   const { stats, loading: statsLoading } = useStats();
   const { items: sidebarItems, activeItem } = useNavigation();
@@ -46,8 +46,8 @@ const UsersPage: React.FC = () => {
 
     if (searchQuery) {
       filtered = filtered.filter(user =>
-        user.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.userType.toLowerCase().includes(searchQuery.toLowerCase())
+        (user.userName?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
+        (user.userType?.toLowerCase() ?? '').includes(searchQuery.toLowerCase())
       );
     }
 
@@ -73,8 +73,8 @@ const UsersPage: React.FC = () => {
     });
   };
 
-  const getUserTypeColor = (userType: string): string => {
-    switch (userType.toLowerCase()) {
+  const getUserTypeColor = (userType?: string): string => {
+    switch ((userType ?? '').toLowerCase()) {
       case 'admin':
         return 'bg-red-100 text-red-800';
       case 'user':
@@ -83,6 +83,7 @@ const UsersPage: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
 
   const userStats = [
     {
@@ -124,10 +125,10 @@ const UsersPage: React.FC = () => {
         onRefresh={refresh}
         isRefreshing={usersLoading || statsLoading}
         notifications={[]}
-        onNotificationClick={() => {}}
+        onNotificationClick={() => { }}
         sidebarItems={sidebarItems}
         activeSidebarItem={activeItem}
-        onSidebarItemClick={() => {}}
+        onSidebarItemClick={() => { }}
         variant="users"
       >
         {/* Stats Grid */}
@@ -242,7 +243,7 @@ const UsersPage: React.FC = () => {
                           <button className="p-2 rounded-lg bg-white/60 border border-white/30 hover:bg-white/80 transition-all">
                             <Edit className="w-4 h-4 text-gray-600" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => setShowDeleteModal(user.id)}
                             className="p-2 rounded-lg bg-white/60 border border-white/30 hover:bg-red-50 hover:border-red-300 transition-all"
                           >
@@ -271,11 +272,11 @@ const UsersPage: React.FC = () => {
                   <p className="text-gray-600">This action cannot be undone</p>
                 </div>
               </div>
-              
+
               <p className="text-gray-600 mb-6">
                 Are you sure you want to delete this user? All associated data will be permanently removed.
               </p>
-              
+
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowDeleteModal(null)}
