@@ -57,7 +57,8 @@ data class CreateCommutePlanRequest(
     val reminderOffsetMin: Int?,
     val recurrence: Boolean?,
     val startLocationId: String,
-    val endLocationId: String
+    val endLocationId: String,
+    val commuteRecurrenceDayIds: List<String>? = null
 )
 
 data class UpdateCommutePlanRequest(
@@ -67,7 +68,8 @@ data class UpdateCommutePlanRequest(
     val reminderOffsetMin: Int?,
     val recurrence: Boolean?,
     val startLocationId: String?,
-    val endLocationId: String?
+    val endLocationId: String?,
+    val commuteRecurrenceDayIds: List<String>? = null
 )
 
 data class PreferredRoute(

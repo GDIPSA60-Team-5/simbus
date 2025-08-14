@@ -165,14 +165,17 @@ class AddEditRouteActivity : AppCompatActivity() {
         val arrivalTime = binding.ArrivalTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
         val reminderOffset = binding.NotfiEdit.text?.toString()?.toIntOrNull()
         
-        // Determine recurrence based on selected days
-        val hasRecurrence = binding.MonCheck.isChecked ||
-                binding.TuesCheck.isChecked ||
-                binding.WedCheck.isChecked ||
-                binding.ThursCheck.isChecked ||
-                binding.FriCheck.isChecked ||
-                binding.SatCheck.isChecked ||
-                binding.SunCheck.isChecked
+        // Collect selected recurrence days
+        val recurrenceDays = mutableListOf<String>()
+        if (binding.MonCheck.isChecked) recurrenceDays.add("mon")
+        if (binding.TuesCheck.isChecked) recurrenceDays.add("tue")
+        if (binding.WedCheck.isChecked) recurrenceDays.add("wed")
+        if (binding.ThursCheck.isChecked) recurrenceDays.add("thu")
+        if (binding.FriCheck.isChecked) recurrenceDays.add("fri")
+        if (binding.SatCheck.isChecked) recurrenceDays.add("sat")
+        if (binding.SunCheck.isChecked) recurrenceDays.add("sun")
+        
+        val hasRecurrence = recurrenceDays.isNotEmpty()
 
         lifecycleScope.launch {
             try {
@@ -184,7 +187,8 @@ class AddEditRouteActivity : AppCompatActivity() {
                         reminderOffsetMin = reminderOffset,
                         recurrence = hasRecurrence,
                         startLocationId = fromLocationId,
-                        endLocationId = toLocationId
+                        endLocationId = toLocationId,
+                        commuteRecurrenceDayIds = if (hasRecurrence) recurrenceDays else null
                     )
                     
                     val response = commuteApi.updateCommutePlan(currentCommutePlan!!.id, updateRequest)
@@ -216,7 +220,8 @@ class AddEditRouteActivity : AppCompatActivity() {
                         reminderOffsetMin = reminderOffset,
                         recurrence = hasRecurrence,
                         startLocationId = fromLocationId!!,
-                        endLocationId = toLocationId!!
+                        endLocationId = toLocationId!!,
+                        commuteRecurrenceDayIds = if (hasRecurrence) recurrenceDays else null
                     )
                     
                     val response = commuteApi.createCommutePlan(createRequest)
@@ -288,6 +293,17 @@ class AddEditRouteActivity : AppCompatActivity() {
             binding.StartTimeEdit.setText(commutePlan.notifyAt)
             binding.ArrivalTimeEdit.setText(commutePlan.arrivalTime ?: "")
             binding.NotfiEdit.setText(commutePlan.reminderOffsetMin?.toString() ?: "")
+            
+            // Set recurrence day checkboxes
+            commutePlan.commuteRecurrenceDayIds?.let { days ->
+                binding.MonCheck.isChecked = days.contains("mon")
+                binding.TuesCheck.isChecked = days.contains("tue")
+                binding.WedCheck.isChecked = days.contains("wed")
+                binding.ThursCheck.isChecked = days.contains("thu")
+                binding.FriCheck.isChecked = days.contains("fri")
+                binding.SatCheck.isChecked = days.contains("sat")
+                binding.SunCheck.isChecked = days.contains("sun")
+            }
             
             updateSummary()
         }
