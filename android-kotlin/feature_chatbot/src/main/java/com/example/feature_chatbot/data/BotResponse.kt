@@ -1,5 +1,8 @@
 package com.example.feature_chatbot.data
 
+import com.example.core.model.Coordinates
+import com.example.core.model.Route
+
 sealed class BotResponse {
     data class Message(val message: String) : BotResponse()
 

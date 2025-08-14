@@ -14,8 +14,7 @@ public class FeedbackTest {
 
         Feedback feedback = Feedback.builder()
                 .id("123")
-                .userId(1001L)
-                .historyId(2002L)
+                .userId("1001L")
                 .feedbackText("This is great!")
                 .rating(5)
                 .tagList("tag1,tag2")
@@ -24,7 +23,6 @@ public class FeedbackTest {
 
         assertEquals("123", feedback.getId());
         assertEquals(1001L, feedback.getUserId());
-        assertEquals(2002L, feedback.getHistoryId());
         assertEquals("This is great!", feedback.getFeedbackText());
         assertEquals(5, feedback.getRating());
         assertEquals("tag1,tag2", feedback.getTagList());
@@ -37,8 +35,7 @@ public class FeedbackTest {
         LocalDateTime now = LocalDateTime.now();
 
         feedback.setId("456");
-        feedback.setUserId(3003L);
-        feedback.setHistoryId(4004L);
+        feedback.setUserId("3003L");
         feedback.setFeedbackText("Needs improvement");
         feedback.setRating(3);
         feedback.setTagList("tag3,tag4");
@@ -46,7 +43,6 @@ public class FeedbackTest {
 
         assertEquals("456", feedback.getId());
         assertEquals(3003L, feedback.getUserId());
-        assertEquals(4004L, feedback.getHistoryId());
         assertEquals("Needs improvement", feedback.getFeedbackText());
         assertEquals(3, feedback.getRating());
         assertEquals("tag3,tag4", feedback.getTagList());
@@ -59,8 +55,8 @@ public class FeedbackTest {
 
         Feedback feedback = new Feedback(
                 "789",
-                5005L,
-                6006L,
+                "5005L",
+                "5005L",
                 "Excellent service",
                 4,
                 "tag5,tag6",
@@ -68,7 +64,6 @@ public class FeedbackTest {
 
         assertEquals("789", feedback.getId());
         assertEquals(5005L, feedback.getUserId());
-        assertEquals(6006L, feedback.getHistoryId());
         assertEquals("Excellent service", feedback.getFeedbackText());
         assertEquals(4, feedback.getRating());
         assertEquals("tag5,tag6", feedback.getTagList());
@@ -81,8 +76,7 @@ public class FeedbackTest {
 
         Feedback feedback1 = Feedback.builder()
                 .id("abc")
-                .userId(101L)
-                .historyId(201L)
+                .userId("101L")
                 .feedbackText("Good job")
                 .rating(5)
                 .tagList("tagA,tagB")
@@ -91,8 +85,7 @@ public class FeedbackTest {
 
         Feedback feedback2 = Feedback.builder()
                 .id("abc") // same id and fields for equality
-                .userId(101L)
-                .historyId(201L)
+                .userId("101L")
                 .feedbackText("Good job")
                 .rating(5)
                 .tagList("tagA,tagB")
@@ -101,8 +94,7 @@ public class FeedbackTest {
 
         Feedback feedback3 = Feedback.builder()
                 .id("def") // different id and fields for inequality
-                .userId(102L)
-                .historyId(202L)
+                .userId("102L")
                 .feedbackText("Needs work")
                 .rating(2)
                 .tagList("tagC")
@@ -135,7 +127,6 @@ public class FeedbackTest {
 
         assertNull(feedback.getId());
         assertNull(feedback.getUserId());
-        assertNull(feedback.getHistoryId());
         assertNull(feedback.getFeedbackText());
         assertNull(feedback.getRating());
         assertNull(feedback.getTagList());
@@ -185,7 +176,6 @@ public class FeedbackTest {
 
         feedback.setId(null);
         feedback.setUserId(null);
-        feedback.setHistoryId(null);
         feedback.setFeedbackText(null);
         feedback.setRating(null);
         feedback.setTagList(null);
@@ -193,7 +183,6 @@ public class FeedbackTest {
 
         assertNull(feedback.getId());
         assertNull(feedback.getUserId());
-        assertNull(feedback.getHistoryId());
         assertNull(feedback.getFeedbackText());
         assertNull(feedback.getRating());
         assertNull(feedback.getTagList());

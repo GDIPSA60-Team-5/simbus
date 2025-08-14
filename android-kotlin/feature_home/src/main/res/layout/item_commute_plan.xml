@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:layout_marginBottom="4dp">
+
+    <TextView
+        android:id="@+id/commuteName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Morning Commute"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Notify: "
+            android:textSize="12sp"
+            android:textColor="@color/half_black" />
+
+        <TextView
+            android:id="@+id/notifyTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="07:30"
+            android:textSize="12sp"
+            android:textColor="@color/half_black" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Arrive: "
+            android:textSize="12sp"
+            android:textColor="@color/half_black" />
+
+        <TextView
+            android:id="@+id/arriveTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="08:30"
+            android:textSize="12sp"
+            android:textColor="@color/half_black" />
+
+    </LinearLayout>
+
+</LinearLayout>

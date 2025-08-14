@@ -6,21 +6,19 @@ import android.graphics.Color
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.example.feature_chatbot.R
 import com.example.feature_chatbot.data.BotResponse
-import com.example.feature_chatbot.data.Route
-import com.example.feature_chatbot.data.RouteLeg
+import com.example.core.model.Route
+import com.example.core.model.RouteLeg
+import com.example.core.model.Coordinates
 import com.example.feature_chatbot.databinding.ItemChatBotDirectionsBinding
 import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.example.feature_chatbot.BuildConfig
-import com.example.feature_chatbot.data.Coordinates
 import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.AlignSelf
 import com.google.android.flexbox.FlexboxLayout
+import com.example.feature_guidemap.MapsNavigationActivity
 import java.net.URLEncoder
 
 class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding) :
@@ -37,19 +35,53 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
     private var allRoutes: List<Route> = emptyList()
     private var startCoordinates: Coordinates? = null
     private var endCoordinates: Coordinates? = null
+    private var startLocation: String = ""
+    private var endLocation: String = ""
 
     fun bind(directions: BotResponse.Directions) {
         startCoordinates = directions.startCoordinates
         endCoordinates = directions.endCoordinates
+        startLocation = directions.startLocation
+        endLocation = directions.endLocation
 
         bindLocationInfo(directions)
         bindRoutes(directions.suggestedRoutes)
 
         allRoutes = directions.suggestedRoutes ?: emptyList()
-
         selectedRouteIndex = 0
         updateRouteSelection()
         showSelectedRouteOnStaticMap()
+
+        // Set Start Journey button click listener here
+        binding.startJourneyButton.setOnClickListener {
+            sendSelectedRouteToMapsNavigation()
+        }
+    }
+
+    private fun sendSelectedRouteToMapsNavigation() {
+        if (selectedRouteIndex !in allRoutes.indices) return
+
+        val selectedRoute = allRoutes[selectedRouteIndex]
+        val context = itemView.context
+
+        val intent = android.content.Intent(context, MapsNavigationActivity::class.java)
+        intent.putExtra("selected_route", selectedRoute)
+        
+        // Pass location information
+        intent.putExtra("start_location", startLocation)
+        intent.putExtra("end_location", endLocation)
+        
+        // Pass coordinates if available
+        startCoordinates?.let { coords ->
+            intent.putExtra("start_latitude", coords.latitude)
+            intent.putExtra("start_longitude", coords.longitude)
+        }
+        endCoordinates?.let { coords ->
+            intent.putExtra("end_latitude", coords.latitude)
+            intent.putExtra("end_longitude", coords.longitude)
+        }
+        
+        context.startActivity(intent)
     }
 
 
@@ -64,35 +96,70 @@ class BotDirectionsViewHolder(private val binding: ItemChatBotDirectionsBinding)
             .placeholder(R.drawable.placeholder_map) // your placeholder drawable
             .error(R.drawable.error_map) // your error drawable
             .into(staticMapImageView)
+            
+        // Add click listener to navigate to full map view
+        staticMapImageView.setOnClickListener {
+            sendSelectedRouteToMapsNavigation()
+        }
     }
 
     private fun buildStaticMapUrl(route: Route): String {
         val baseUrl = "https://maps.googleapis.com/maps/api/staticmap"
-        val size = "600x300"
-        val weight = 6
+        val size = "800x400" // Larger size for better visibility
         val apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
+        
+        // Modern color scheme for different transport modes
+        val walkColor = "4285F4" // Google Blue for walking
+        val busColor = "34A853" // Google Green for bus
+        val defaultColor = "EA4335" // Google Red for other modes
+        
+        val legsToShow = route.legs
+        val allMarkers = mutableListOf<String>()
+        val allPaths = mutableListOf<String>()
 
-        val colors = listOf("FF0000", "0000FF", "FFA500") // red, blue, orange fully opaque
-
-        val maxLegsToShow = 3
-        val legsToShow = route.legs.take(maxLegsToShow)
-
-        val pathParams = legsToShow.mapIndexed { index, leg ->
-            val color = colors[index % colors.size]
-            val safePolyline = URLEncoder.encode(leg.legGeometry, "UTF-8")
-            "path=color:0x$color|weight:$weight|enc:$safePolyline"
-        }.joinToString("&")
-
+        // Add start marker with custom styling
         val startLat = startCoordinates?.latitude ?: 0.0
         val startLng = startCoordinates?.longitude ?: 0.0
+        allMarkers.add("markers=color:0x4285F4|size:mid|label:S|$startLat,$startLng")
+
+        // Process each leg for paths only (no intermediate markers)
+        legsToShow.forEachIndexed { index, leg ->
+            val color = when (leg.type.uppercase()) {
+                "WALK" -> walkColor
+                "BUS" -> busColor
+                else -> defaultColor
+            }
+            
+            val weight = if (leg.type.uppercase() == "BUS") 8 else 6 // Thicker lines for bus routes
+            
+            // Create path for this leg
+            val routePoints = leg.routePoints
+            if (routePoints != null && routePoints.isNotEmpty()) {
+                val pathString = routePoints.joinToString("|") { "${it.latitude},${it.longitude}" }
+                allPaths.add("path=color:0x$color|weight:$weight|$pathString")
+            } else {
+                // Fallback to polyline with modern styling
+                val safePolyline = URLEncoder.encode(leg.legGeometry, "UTF-8")
+                allPaths.add("path=color:0x$color|weight:$weight|enc:$safePolyline")
+            }
+        }
+
+        // Add end marker with custom styling
         val endLat = endCoordinates?.latitude ?: 0.0
         val endLng = endCoordinates?.longitude ?: 0.0
+        allMarkers.add("markers=color:0xEA4335|size:mid|label:E|$endLat,$endLng")
+        
 
-        val markers =
-            "markers=color:green|label:S|$startLat,$startLng&" +
-                    "markers=color:red|label:E|$endLat,$endLng"
+        // Combine all components
+        val pathParams = allPaths.joinToString("&")
+        val markerParams = allMarkers.joinToString("&")
+        
+        // Add map styling for modern look
+        val style = "style=feature:all|element:geometry|color:0xf5f5f5&" +
+                   "style=feature:water|element:all|color:0xc9c9c9&" +
+                   "style=feature:road|element:all|color:0xffffff"
 
-        return "$baseUrl?size=$size&$pathParams&$markers&key=$apiKey"
+        return "$baseUrl?size=$size&$pathParams&$markerParams&$style&key=$apiKey"
     }
 
 
