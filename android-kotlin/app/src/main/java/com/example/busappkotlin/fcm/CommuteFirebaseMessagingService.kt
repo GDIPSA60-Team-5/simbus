@@ -107,7 +107,7 @@ class CommuteFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Sending token to server: $token")
         
         // Check if user is logged in
-        if (secureStorageManager.getToken() == null) {
+        if (secureStorageManager.getToken().isNullOrEmpty()) {
             Log.d(TAG, "User not logged in, skipping token update")
             return
         }
