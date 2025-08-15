@@ -143,8 +143,8 @@ jobs:
             --extra-vars "backend_env_b64='${{ secrets.BACKEND_ENV_B64 }}' \
             image_tag='${{ inputs.image_tag }}' \
             docker_username='${{ secrets.DOCKER_USERNAME }}' \
-            firebase_json='${{ secrets.FIREBASE_SERVICE_ACCOUNT }} \
-            aws_server_ip='${{ steps.tf-output.outputs.INSTANCE_IP }}'"
+            aws_server_ip='${{ steps.tf-output.outputs.INSTANCE_IP }}' \
+            firebase_json='${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'"
         env:
           ANSIBLE_HOST_KEY_CHECKING: False
 
