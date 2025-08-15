@@ -4,17 +4,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FeedbackTest {
 
+    private LocalDateTime now;
+
+    @BeforeEach
+    void setup() {
+        now = LocalDateTime.now();
+    }
+
     @Test
     void testBuilderAndGetters() {
-        LocalDateTime now = LocalDateTime.now();
-
         Feedback feedback = Feedback.builder()
                 .id("123")
-                .userId("1001L")
+                .userId("1001")
                 .feedbackText("This is great!")
                 .rating(5)
                 .tagList("tag1,tag2")
@@ -22,7 +28,7 @@ public class FeedbackTest {
                 .build();
 
         assertEquals("123", feedback.getId());
-        assertEquals(1001L, feedback.getUserId());
+        assertEquals("1001", feedback.getUserId());
         assertEquals("This is great!", feedback.getFeedbackText());
         assertEquals(5, feedback.getRating());
         assertEquals("tag1,tag2", feedback.getTagList());
@@ -32,17 +38,16 @@ public class FeedbackTest {
     @Test
     void testNoArgsConstructorAndSetters() {
         Feedback feedback = new Feedback();
-        LocalDateTime now = LocalDateTime.now();
 
         feedback.setId("456");
-        feedback.setUserId("3003L");
+        feedback.setUserId("3003");
         feedback.setFeedbackText("Needs improvement");
         feedback.setRating(3);
         feedback.setTagList("tag3,tag4");
         feedback.setSubmittedAt(now);
 
         assertEquals("456", feedback.getId());
-        assertEquals(3003L, feedback.getUserId());
+        assertEquals("3003", feedback.getUserId());
         assertEquals("Needs improvement", feedback.getFeedbackText());
         assertEquals(3, feedback.getRating());
         assertEquals("tag3,tag4", feedback.getTagList());
@@ -51,19 +56,19 @@ public class FeedbackTest {
 
     @Test
     void testAllArgsConstructor() {
-        LocalDateTime now = LocalDateTime.now();
-
         Feedback feedback = new Feedback(
-                "789",
-                "5005L",
-                "5005L",
-                "Excellent service",
-                4,
-                "tag5,tag6",
-                now);
+                "789",          // id
+                "user5005",     // userName <-- added
+                "5005",         // userId
+                "Excellent service", // feedbackText
+                4,              // rating
+                "tag5,tag6",    // tagList
+                now             // submittedAt
+        );
 
         assertEquals("789", feedback.getId());
-        assertEquals(5005L, feedback.getUserId());
+        assertEquals("user5005", feedback.getUserName());
+        assertEquals("5005", feedback.getUserId());
         assertEquals("Excellent service", feedback.getFeedbackText());
         assertEquals(4, feedback.getRating());
         assertEquals("tag5,tag6", feedback.getTagList());
@@ -72,11 +77,9 @@ public class FeedbackTest {
 
     @Test
     void testEqualsHashCodeAndToString() {
-        LocalDateTime now = LocalDateTime.now();
-
         Feedback feedback1 = Feedback.builder()
                 .id("abc")
-                .userId("101L")
+                .userId("101")
                 .feedbackText("Good job")
                 .rating(5)
                 .tagList("tagA,tagB")
@@ -84,8 +87,8 @@ public class FeedbackTest {
                 .build();
 
         Feedback feedback2 = Feedback.builder()
-                .id("abc") // same id and fields for equality
-                .userId("101L")
+                .id("abc")
+                .userId("101")
                 .feedbackText("Good job")
                 .rating(5)
                 .tagList("tagA,tagB")
@@ -93,27 +96,23 @@ public class FeedbackTest {
                 .build();
 
         Feedback feedback3 = Feedback.builder()
-                .id("def") // different id and fields for inequality
-                .userId("102L")
+                .id("def")
+                .userId("102")
                 .feedbackText("Needs work")
                 .rating(2)
                 .tagList("tagC")
                 .submittedAt(now.plusDays(1))
                 .build();
 
-        // equals and hashCode positive case
         assertEquals(feedback1, feedback2);
         assertEquals(feedback1.hashCode(), feedback2.hashCode());
 
-        // equals and hashCode negative case
         assertNotEquals(feedback1, feedback3);
         assertNotEquals(feedback1.hashCode(), feedback3.hashCode());
 
-        // equals null and different class
         assertNotEquals(null, feedback1);
         assertNotEquals("some string", feedback1);
 
-        // toString contains key field values
         String toString = feedback1.toString();
         assertTrue(toString.contains("id=abc"));
         assertTrue(toString.contains("userId=101"));
@@ -138,11 +137,9 @@ public class FeedbackTest {
         Feedback feedback1 = new Feedback();
         Feedback feedback2 = new Feedback();
 
-        // Both empty objects should be equal
         assertEquals(feedback1, feedback2);
         assertEquals(feedback1.hashCode(), feedback2.hashCode());
 
-        // Change one field to non-null to test inequality
         feedback2.setId("someId");
         assertNotEquals(feedback1, feedback2);
     }
