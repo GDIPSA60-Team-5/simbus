@@ -65,8 +65,15 @@ class BusArrivalNotificationService @Inject constructor(
         
         // Also check immediately for testing
         android.util.Log.d("BusArrivalNotification", "Running immediate check for debugging...")
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-            checkBusArrivalsForCurrentTrip()
+        try {
+            // Use a simple thread for immediate testing instead of coroutine
+            Thread {
+                kotlinx.coroutines.runBlocking {
+                    checkBusArrivalsForCurrentTrip()
+                }
+            }.start()
+        } catch (e: Exception) {
+            android.util.Log.e("BusArrivalNotification", "Error in immediate check", e)
         }
     }
     

@@ -1301,7 +1301,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         dialog.setContentView(R.layout.dialog_trip_completed)
         dialog.setCancelable(false)
         
-        val backToHomeButton = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_back_to_home)
+        val backToHomeButton = dialog.findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_back_to_home)
         backToHomeButton.setOnClickListener {
             dialog.dismiss()
             navigateToHome()

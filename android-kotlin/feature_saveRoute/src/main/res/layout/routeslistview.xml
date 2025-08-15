@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@drawable/btn_bg_light">
+        android:background="@drawable/btn_bg_dark">
 
         <!-- Route number & frequency -->
         <LinearLayout
