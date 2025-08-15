@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">feature_guideMap</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="end_trip">END TRIP</string>
 </resources>
