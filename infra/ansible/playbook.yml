@@ -69,12 +69,11 @@
         owner: ubuntu
         mode: "0644"
 
-    - name: Write Firebase service account JSON to EC2
+    - name: Write Firebase JSON from base64
       copy:
-        content: "{{ firebase_json | to_nice_json }}"
+        content: "{{ firebase_json | b64decode }}"
         dest: /home/ubuntu/firebase-service-account.json
         owner: ubuntu
-        group: ubuntu
         mode: "0600"
 
     - name: Copy prometheus.yml to EC2 server
