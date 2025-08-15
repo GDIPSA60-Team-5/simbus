@@ -2,4 +2,6 @@
     <string name="app_name">feature_guideMap</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="end_trip">END TRIP</string>
+    <string name="you_ve_completed_a_trip">You\'ve completed a trip!</string>
+    <string name="great_job_your_journey_has_been_completed_successfully">Great job! Your journey has been completed successfully.</string>
 </resources>
