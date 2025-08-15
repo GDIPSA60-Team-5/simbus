@@ -31,4 +31,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Scan changed files on feature branches, all files on PRs
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          VALIDATE_JAVA: true
+          VALIDATE_KOTLIN: true
+          VALIDATE_PYTHON: true
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_TYPESCRIPT: true
+
         continue-on-error: true
