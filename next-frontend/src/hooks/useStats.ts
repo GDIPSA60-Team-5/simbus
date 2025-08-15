@@ -12,6 +12,9 @@ export interface StatsResponse {
   botRequestCount: number;
   botSuccessCount: number;
   botSuccessRate: number;
+  avgResponseTimeMs: number;
+  minResponseTimeMs: number;
+  maxResponseTimeMs: number;
   // Add system metrics from Actuator
   systemCpuUsage?: number;
   processCpuUsage?: number;
