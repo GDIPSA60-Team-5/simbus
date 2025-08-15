@@ -15,17 +15,19 @@ from llm.utils import (
     find_missing_slots,
     show_help,
     flatten_slots,
+    get_user_saved_locations
 )
 from llm.next_bus_handler import handle_next_bus
 from llm.routing_handler import handle_routing
-from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ErrorResponseDTO, ChatRequest
+from llm.commute_handler import handle_schedule_commute
+from llm.dto import DirectionsResponseDTO, MessageResponseDTO, ErrorResponseDTO, ChatRequest, CommutePlanResponseDTO
 
 
 app = FastAPI()
 model = get_model()
 
 
-@app.post("/chat", response_model=Union[MessageResponseDTO, DirectionsResponseDTO])
+@app.post("/chat", response_model=Union[MessageResponseDTO, DirectionsResponseDTO, CommutePlanResponseDTO, ErrorResponseDTO])
 def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
@@ -36,7 +38,7 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
     print(f"Incoming JWT_Token: {jwt_token}")
     user_input = request.userInput.strip()
     current_location = request.currentLocation
-    user_name = "Aung"  # Replace with session or actual user name
+    user_name = "user"  # Replace with session or actual user name
 
     ctx = get_user_context(user_name)
     ctx["current_location"] = current_location
@@ -82,8 +84,15 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
 
         # Step 2: Slot extraction
         recent_history = get_recent_history(ctx["history"], MAX_HISTORY_LENGTH)
+        
+        allowed_locations = None
+        if ctx["state"]["intent"] == "schedule_commute":
+            location_map = get_user_saved_locations(jwt_token)
+            allowed_locations = list(location_map.keys())  # names only for prompts
+            print(f"Allowed locations for user: {allowed_locations}")
+            
         extraction_prompt = build_extraction_prompt(
-            active_intent, required_slots, recent_history
+            active_intent, required_slots, recent_history, allowed_locations
         )
         print(f"\nSlot extraction prompt: {extraction_prompt}\n")
         response = model.generate(extraction_prompt, max_tokens=100)
@@ -139,6 +148,18 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
                     endCoordinates=backend_result["endCoordinates"],
                     suggestedRoutes=backend_result["suggestedRoutes"]
                 )
+                
+            elif active_intent == "schedule_commute":
+                # Call the handler
+                result = handle_schedule_commute(current_slots, jwt_token)
+                # Append assistant's message for history
+                if isinstance(result, CommutePlanResponseDTO) and result.commutePlan:
+                    msg = f"Commute plan '{result.commutePlan.commutePlanName}' created successfully."
+                    ctx["history"].append({"role": "assistant", "content": msg})
+                    return result
+                elif isinstance(result, ErrorResponseDTO):
+                    ctx["history"].append({"role": "assistant", "content": result.message})
+                    return result
 
             else:
                 backend_result = f"Intent '{active_intent}' is recognized, but no handler implemented."
@@ -149,7 +170,7 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
 
         # Step 5: If still missing slots → follow-up prompt
         followup_prompt = build_followup_prompt(
-            active_intent, current_slots, recent_history, missing_after_extraction
+            active_intent, current_slots, recent_history, missing_after_extraction, allowed_locations
         )
         print(f"Followup-prompt: {followup_prompt}")
         reply = model.generate(followup_prompt, max_tokens=300)

@@ -132,12 +132,14 @@ public class UserCommutePlanController {
      */
     public record CommutePlanUpdateRequest(
             String commutePlanName,
-            LocalTime notifyAt,
+            String notifyAt,
             LocalTime arrivalTime,
             Integer reminderOffsetMin,
             Boolean recurrence,
             String startLocationId,
-            String endLocationId
+            String endLocationId,
+            String savedTripRouteId,
+            java.util.List<String> commuteRecurrenceDayIds
     ) {}
 
     /**
@@ -161,6 +163,10 @@ public class UserCommutePlanController {
                         updates.startLocationId() : existingPlan.getStartLocationId())
                 .endLocationId(updates.endLocationId() != null ?
                         updates.endLocationId() : existingPlan.getEndLocationId())
+                .savedTripRouteId(updates.savedTripRouteId() != null ?
+                        updates.savedTripRouteId() : existingPlan.getSavedTripRouteId())
+                .commuteRecurrenceDayIds(updates.commuteRecurrenceDayIds() != null ?
+                        updates.commuteRecurrenceDayIds() : existingPlan.getCommuteRecurrenceDayIds())
                 .build();
     }
 }

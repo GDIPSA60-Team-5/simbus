@@ -4,6 +4,7 @@ import com.example.springbackend.model.User;
 import com.example.springbackend.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12,11 +13,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/admin/users")
 @CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"})
 public class AdminUserController {
-
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    public AdminUserController(UserRepository userRepository) {
+    public AdminUserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Get all users (admin only)
@@ -63,6 +65,68 @@ public class AdminUserController {
                 userRepository.countUsers(),
                 userRepository.count()
         ).map(tuple -> new UserStatsDTO(tuple.getT1(), tuple.getT2()));
+    }
+
+    // Create a new user (admin only)
+    @PostMapping
+    public Mono<ResponseEntity<User>> createUser(@RequestBody CreateUserRequest request) {
+        return userRepository.findByUserName(request.getUsername())
+                .hasElement()
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.just(ResponseEntity.badRequest().<User>build());
+                    }
+                    
+                    String userType = request.getUserType() != null && 
+                                     (request.getUserType().equals("admin") || request.getUserType().equals("user")) 
+                                     ? request.getUserType() : "user";
+                    
+                    User newUser = User.builder()
+                            .userName(request.getUsername())
+                            .email(request.getEmail())
+                            .passwordHash(passwordEncoder.encode(request.getPassword()))
+                            .userType(userType)
+                            .build();
+                    
+                    return userRepository.save(newUser)
+                            .map(savedUser -> {
+                                savedUser.setPasswordHash(null);
+                                return ResponseEntity.ok(savedUser);
+                            });
+                });
+    }
+
+    // DTO for creating a user
+    public static class CreateUserRequest {
+        private String username;
+        private String email;
+        private String password;
+        private String userType;
+
+        public String getUsername() { return username; }
+        public String getEmail() { return email; }
+        public String getPassword() { return password; }
+        public String getUserType() { return userType; }
+
+        public void setUsername(String username) { this.username = username; }
+        public void setEmail(String email) { this.email = email; }
+        public void setPassword(String password) { this.password = password; }
+        public void setUserType(String userType) { this.userType = userType; }
+    }
+
+    // DTO for updating a user
+    public static class UpdateUserRequest {
+        private String username;
+        private String email;
+        private String password;
+
+        public String getUsername() { return username; }
+        public String getEmail() { return email; }
+        public String getPassword() { return password; }
+
+        public void setUsername(String username) { this.username = username; }
+        public void setEmail(String email) { this.email = email; }
+        public void setPassword(String password) { this.password = password; }
     }
 
     public static class UserStatsDTO {

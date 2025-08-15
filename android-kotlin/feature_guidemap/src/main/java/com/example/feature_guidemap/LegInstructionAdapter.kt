@@ -40,7 +40,6 @@ class LegInstructionAdapter(
         private val stopCode: TextView = itemView.findViewById(R.id.tv_stop_code)
 
         fun bind(leg: RouteLeg, position: Int) {
-            // Set transport icon and color based on leg type
             when (leg.type.uppercase()) {
                 "WALK" -> {
                     transportIcon.setImageResource(R.drawable.ic_navigation) // Using available icon

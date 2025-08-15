@@ -1,6 +1,5 @@
 import { 
   Activity, 
-  Users, 
   Bot, 
   Star, 
   BarChart3 
@@ -15,10 +14,9 @@ export interface NavigationItem {
 
 export const navigationItems: NavigationItem[] = [
   { id: 'overview', label: 'Overview', icon: Activity, href: '/dashboard' },
-  { id: 'users', label: 'Users', icon: Users, href: '/users' },
+  { id: 'analytics', label: 'App Analytics', icon: BarChart3, href: '/analytics' },
   { id: 'chatbot', label: 'Chatbot Analytics', icon: Bot, href: '/chatbot' },
   { id: 'feedback', label: 'User Feedback', icon: Star, href: '/feedback' },
-  { id: 'analytics', label: 'App Analytics', icon: BarChart3, href: '/analytics' },
 ];
 
 export const getActiveNavItem = (pathname: string): string => {
@@ -29,8 +27,6 @@ export const getActiveNavItem = (pathname: string): string => {
   switch (path) {
     case 'dashboard':
       return 'overview';
-    case 'users':
-      return 'users';
     case 'chatbot':
       return 'chatbot';
     case 'feedback':

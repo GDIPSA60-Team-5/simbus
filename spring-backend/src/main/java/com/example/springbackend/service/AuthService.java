@@ -1,6 +1,8 @@
 package com.example.springbackend.service;
 
-import com.example.springbackend.dto.request.AuthRequest;
+import com.example.springbackend.dto.MessageResponse;
+import com.example.springbackend.dto.request.LoginRequest;
+import com.example.springbackend.dto.request.RegisterRequest;
 import com.example.springbackend.dto.response.AuthResponse;
 import com.example.springbackend.security.UserDetailsAuthenticationManager;
 import com.example.springbackend.model.User;
@@ -32,7 +34,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Mono<AuthResponse> login(AuthRequest authRequest) {
+    public Mono<AuthResponse> login(LoginRequest authRequest) {
         return authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()))
                 .map(auth -> {
@@ -41,19 +43,54 @@ public class AuthService {
                 });
     }
 
-    public Mono<Object> register(AuthRequest authRequest) {
-        return userRepository.findByUserName(authRequest.username())
-                .flatMap(existingUser ->
-                        Mono.error(new IllegalArgumentException("Username already in use"))
-                )
-                .switchIfEmpty(
-                        userRepository.save(
-                                User.builder()
-                                        .userName(authRequest.username())
-                                        .passwordHash(passwordEncoder.encode(authRequest.password()))
-                                        .createdAt(new Date())
-                                        .build()
-                        ).thenReturn("registration successful")
-                );
+    public Mono<AuthResponse> adminLogin(LoginRequest authRequest) {
+        return authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()))
+                .flatMap(auth -> {
+                    return userRepository.findByUserName(authRequest.username())
+                            .filter(user -> "admin".equals(user.getUserType()))
+                            .switchIfEmpty(Mono.error(new BadCredentialsException("Admin access required")))
+                            .map(user -> {
+                                String token = jwtTokenProvider.generateToken(authRequest.username());
+                                return new AuthResponse(token);
+                            });
+                });
     }
+
+    public Mono<MessageResponse> register(RegisterRequest request) {
+        // Check if username already exists
+        Mono<Boolean> usernameExists = userRepository.findByUserName(request.username())
+                .hasElement();
+
+        // Check if email already exists
+        Mono<Boolean> emailExists = userRepository.findByEmail(request.email())
+                .hasElement();
+
+        return Mono.zip(usernameExists, emailExists)
+                .flatMap(tuple -> {
+                    boolean usernameTaken = tuple.getT1();
+                    boolean emailTaken = tuple.getT2();
+
+                    if (usernameTaken && emailTaken) {
+                        return Mono.<MessageResponse>error(new IllegalArgumentException("Username and email are already in use"));
+                    } else if (usernameTaken) {
+                        return Mono.<MessageResponse>error(new IllegalArgumentException("Username already in use"));
+                    } else if (emailTaken) {
+                        return Mono.<MessageResponse>error(new IllegalArgumentException("Email already in use"));
+                    } else {
+                        // Both username and email are available, create user
+                        User user = User.builder()
+                                .userName(request.username())
+                                .userType("user")
+                                .email(request.email())
+                                .passwordHash(passwordEncoder.encode(request.password()))
+                                .createdAt(new Date())
+                                .build();
+
+                        return userRepository.save(user)
+                                .then(Mono.just(new MessageResponse("Registration successful")));
+                    }
+                });
+    }
+
 }

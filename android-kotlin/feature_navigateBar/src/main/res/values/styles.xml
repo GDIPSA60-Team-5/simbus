@@ -7,7 +7,7 @@
         <item name="android:layout_marginEnd">0dp</item>
         <item name="android:layout_marginHorizontal">0dp</item>
         <item name="android:background">@drawable/bg_half_dark</item>
-        <item name="android:textColor">#fffffff</item>
+        <item name="android:textColor">#ffffff</item>
         <item name="android:textColorHint">#CCffffff</item>
         <item name="android:paddingHorizontal">16dp</item>
         <item name="android:paddingVertical">10dp</item>

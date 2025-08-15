@@ -13,4 +13,7 @@ public class StatsDTO {
     private long botRequestCount;
     private long botSuccessCount;
     private double botSuccessRate;
+    private double avgResponseTimeMs;
+    private double maxResponseTimeMs;
+    private double minResponseTimeMs;
 }

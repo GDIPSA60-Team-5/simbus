@@ -1,27 +1,39 @@
 import json
-from llm.utils import current_datetime, serialize_for_json
+from llm.utils import serialize_for_json
 
 
-def build_extraction_prompt(predicted_intent, required_slots, history):
-    general_rules = """
+def build_extraction_prompt(predicted_intent, required_slots, history, allowed_locations=None):
+    
+    # Show allowed locations if intent is schedule_commute
+    locations_text = ""
+    if predicted_intent == "schedule_commute" and allowed_locations:
+        locations_text = (
+            "\n- Only select locations from the allowed list below. "
+            "Do not use or infer any other location.\n"
+            f"Allowed locations: {', '.join(allowed_locations)}\n"
+        )
+        
+    general_rules = f"""
 Rules:
-- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "Current Location").
-- Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
+- Locations are expressed as names (e.g., "NUS", "Orchard MRT", "Current Location").{locations_text}
+- Return all time values in 24-hour HH:mm format (e.g., "08:30").
+- For recurring days, extract any mention of days of the week or phrases like 'every weekday' or 'weekends', and map them to short day codes.
 - Do not include a slot in the output if its value cannot be extracted.
 """.strip()
 
     # Define intent-specific examples
     examples = {
-        "schedule_commute": """
+        "schedule_commute": """  
 Example:
 
-User: "Notify me when I should leave to arrive at YIH by 10 AM tomorrow"
+User: "Remind me to leave home to school at 8 am every weekday"
 JSON:
 {
     "slots": {
-        "start_location": "Current Location",
-        "end_location": "YIH",
-        "arrival_time": "yyyy-mm-ddT10:00:00"
+        "start_location": "home",
+        "end_location": "school",
+        "notification_start_time": "08:00",
+        "recurrence_days": ["mon", "tue", "wed", "thu", "fri"]
     }
 }
 """,
@@ -61,9 +73,6 @@ Current intent: "{predicted_intent}"
 Extract these slots if available:
 {json.dumps(required_slots, indent=2)}
 
-Context:
-- Current datetime: {current_datetime()}
-
 {general_rules}
 
 {example_text}
@@ -79,30 +88,33 @@ Respond with a JSON object containing only a "slots" field.
     return f"{system_prompt}\n\nConversation:\n{dialogue}\n\nJSON:"
 
 
-def build_followup_prompt(intent, current_slots, history, missing_slots):
+def build_followup_prompt(intent, current_slots, history, missing_slots, allowed_locations=None):
+    
+    # Show allowed locations if intent is schedule_commute
+    locations_text = ""
+    if intent == "schedule_commute" and allowed_locations:
+        locations_text = (
+            "\n- Only select locations from the allowed list below. "
+            "Do not use or infer any other location.\n"
+            f"Allowed locations: {', '.join(allowed_locations)}"
+        )
+    
     # Base detailed extraction rules & missing slots info (always included)
     base_message = f"""
 Ask the user for the missing slot(s):
 {json.dumps(missing_slots, indent=2)}
 
-Context:
-- Current datetime: {current_datetime()}
-
 Rules:
-- Locations are expressed as names (e.g., "NUS-ISS", "Orchard MRT", "Current Location").
-- Return all datetime values in ISO 8601 (e.g., "2025-08-01T09:00:00").
-- Do not include a slot in the output if its value cannot be extracted.
+- Locations are expressed as names (e.g., "NUS", "Orchard MRT", "Current Location").{locations_text}
+- Return all time values in 24-hour HH:mm format (e.g., "08:30").
+- For recurring days, extract any mention of days of the week or phrases like 'every weekday' or 'weekends', and map them to short day codes (eg. ["sat", "sun", "mon"]).
+- Do not include a slot in the output if its value cannot be extracted.- Do not include a slot in the output if its value cannot be extracted.
     """.strip()
 
     # Build a custom status message
     if set(missing_slots) == {"boarding_bus_stop_name", "boarding_bus_stop_code"}:
         status_message = (
             "Ask the user for either the boarding bus stop name or code.\n\n"
-            + base_message
-        )
-    elif set(missing_slots) == {"notification_start_time", "arrival_time"}:
-        status_message = (
-            "Please ask the user to specify either their desired arrival time or when they want to be notified.\n\n"
             + base_message
         )
     else:

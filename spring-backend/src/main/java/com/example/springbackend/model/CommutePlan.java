@@ -14,22 +14,15 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommutePlan {
-
-	@Id
-	private String id;
-
-	private String commutePlanName;
-	private LocalTime notifyAt;
-	private LocalTime arrivalTime;
-	private Integer reminderOffsetMin;
-	private Boolean recurrence;
-
-	private String startLocationId;  // reference to Location.id
-	private String endLocationId;    // reference to Location.id
-	private String userId;           // reference to User.id
-
-	// IDs for related entities, loaded separately if needed
-	private List<String> commuteHistoryIds;
-	private List<String> preferredRouteIds;
-	private List<String> commuteRecurrenceDayIds;
+		@Id private String id;
+		private String commutePlanName;
+		private String notifyAt;
+		private LocalTime arrivalTime;
+		private Integer reminderOffsetMin;
+		private Boolean recurrence;
+		private String startLocationId;
+		private String endLocationId;
+		private String userId;
+		private String savedTripRouteId;
+		private List<String> commuteRecurrenceDayIds;
 }

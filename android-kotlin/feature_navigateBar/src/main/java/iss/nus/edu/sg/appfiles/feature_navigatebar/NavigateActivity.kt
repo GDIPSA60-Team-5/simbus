@@ -6,8 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.feature_home.ui.HomeFragment
 import dagger.hilt.android.AndroidEntryPoint
 import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.MenuFragment
-import iss.nus.edu.sg.appfiles.feature_navigatebar.bar.SchedulesFragment
 import iss.nus.edu.sg.appfiles.feature_navigatebar.databinding.ActivityNavigateBinding
+import iss.nus.edu.sg.feature_saveroute.SchedulesFragment
 
 @AndroidEntryPoint
 class NavigateActivity : AppCompatActivity(), BottomNavFragment.OnNavItemSelectedListener {

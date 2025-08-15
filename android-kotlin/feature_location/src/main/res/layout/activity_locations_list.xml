@@ -168,7 +168,7 @@
             android:id="@+id/fab_add_location"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/btn_bg_dark"
+            android:background="@drawable/black_circle"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless">
@@ -177,8 +177,8 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_icon1"
-                app:tint="@android:color/white" />
+                android:src="@drawable/plus_white"
+                 />
 
         </FrameLayout>
 

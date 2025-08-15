@@ -14,7 +14,6 @@ class ChatItemDiffCallback : DiffUtil.ItemCallback<ChatItem>() {
             else -> false
         }
     }
-
     override fun areContentsTheSame(oldItem: ChatItem, newItem: ChatItem): Boolean {
         return oldItem == newItem
     }

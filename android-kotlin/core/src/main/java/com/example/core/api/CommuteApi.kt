@@ -32,6 +32,9 @@ interface CommuteApi {
     
     @GET("/api/user/commute-plans/{id}/preferred-routes")
     suspend fun getPreferredRoutes(@Path("id") commutePlanId: String): Response<List<PreferredRoute>>
+    
+    @POST("/api/saved-trip-routes")
+    suspend fun createSavedTripRoute(@Body request: CreateSavedTripRouteRequest): Response<SavedTripRoute>
 }
 
 @Parcelize
@@ -45,6 +48,7 @@ data class CommutePlan(
     val startLocationId: String?,
     val endLocationId: String?,
     val userId: String,
+    val savedTripRouteId: String?,
     val commuteHistoryIds: List<String>?,
     val preferredRouteIds: List<String>?,
     val commuteRecurrenceDayIds: List<String>?
@@ -57,7 +61,9 @@ data class CreateCommutePlanRequest(
     val reminderOffsetMin: Int?,
     val recurrence: Boolean?,
     val startLocationId: String,
-    val endLocationId: String
+    val endLocationId: String,
+    val savedTripRouteId: String? = null,
+    val commuteRecurrenceDayIds: List<String>? = null
 )
 
 data class UpdateCommutePlanRequest(
@@ -67,7 +73,9 @@ data class UpdateCommutePlanRequest(
     val reminderOffsetMin: Int?,
     val recurrence: Boolean?,
     val startLocationId: String?,
-    val endLocationId: String?
+    val endLocationId: String?,
+    val savedTripRouteId: String? = null,
+    val commuteRecurrenceDayIds: List<String>? = null
 )
 
 data class PreferredRoute(
@@ -78,4 +86,14 @@ data class PreferredRoute(
 
 data class CreatePreferredRouteRequest(
     val routeId: String
+)
+
+data class SavedTripRoute(
+    val id: String,
+    val routeData: com.example.core.model.Route,
+    val userId: String
+)
+
+data class CreateSavedTripRouteRequest(
+    val routeData: com.example.core.model.Route
 )

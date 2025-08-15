@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { prometheusClient } from '@/lib/prometheusClient';
+import { actuatorClient } from '@/lib/actuatorClient';
 
 export interface AnalyticsMetrics {
   // Performance metrics
@@ -43,69 +43,48 @@ export const usePrometheus = (): UsePrometheusResult => {
     setError(null);
     
     try {
-      // Common Prometheus queries for web applications
-      const queries = {
-        // Performance queries
-        cpuUsage: 'rate(process_cpu_seconds_total[5m]) * 100',
-        memoryUsage: 'process_resident_memory_bytes / 1024 / 1024', // MB
-        responseTime: 'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000', // ms
-        errorRate: 'rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100',
-        
-        // Traffic queries
-        currentUsers: 'sum(rate(http_requests_total[1m]))', // Approximation
-        requestsPerSecond: 'rate(http_requests_total[1m])',
-        totalRequests: 'increase(http_requests_total[24h])',
-        
-        // Alternative queries if the above don't exist
-        altCpuUsage: '(1 - rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100',
-        altMemoryUsage: '(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100',
-        altRequestsPerSecond: 'rate(prometheus_http_requests_total[1m])',
-        altTotalRequests: 'prometheus_http_requests_total',
+      // Fetch metrics from Spring Actuator
+      const [
+        systemCpuUsage,
+        processCpuUsage,
+        jvmMemoryUsed,
+        activeHttpRequests,
+        httpRequestCount
+      ] = await Promise.all([
+        actuatorClient.getSystemCpuUsage(),
+        actuatorClient.getProcessCpuUsage(),
+        actuatorClient.getJvmMemoryUsed('heap'),
+        actuatorClient.getHttpRequestsActive(),
+        actuatorClient.getHttpRequestCount()
+      ]);
+
+      // Convert JVM memory from bytes to MB
+      const memoryUsageMB = jvmMemoryUsed ? jvmMemoryUsed / (1024 * 1024) : null;
+      
+      // Convert CPU usage to percentage
+      const cpuValue = processCpuUsage || systemCpuUsage;
+      const cpuUsagePercent = cpuValue ? cpuValue * 100 : null;
+
+      // Generate mock time series data for demonstration
+      // In a real application, you'd want to store historical data
+      const now = Date.now();
+      const generateTimeSeries = (value: number | null, variance: number = 0.2): [number, number][] => {
+        if (value === null) return [];
+        const points: [number, number][] = [];
+        for (let i = 23; i >= 0; i--) {
+          const timestamp = now - (i * 60 * 60 * 1000); // Hourly data for 24 hours
+          const randomVariation = (Math.random() - 0.5) * variance * value;
+          points.push([timestamp, Math.max(0, value + randomVariation)]);
+        }
+        return points;
       };
 
-      // Fetch current values
-      const [
-        cpuUsage,
-        memoryUsage, 
-        responseTime,
-        errorRate,
-        currentUsers,
-        requestsPerSecond,
-        totalRequests,
-        // Fallback queries
-        altCpuUsage,
-        altMemoryUsage,
-        altRequestsPerSecond,
-        altTotalRequests
-      ] = await Promise.all([
-        prometheusClient.getCurrentValue(queries.cpuUsage),
-        prometheusClient.getCurrentValue(queries.memoryUsage),
-        prometheusClient.getCurrentValue(queries.responseTime),
-        prometheusClient.getCurrentValue(queries.errorRate),
-        prometheusClient.getCurrentValue(queries.currentUsers),
-        prometheusClient.getCurrentValue(queries.requestsPerSecond),
-        prometheusClient.getCurrentValue(queries.totalRequests),
-        // Fallbacks
-        prometheusClient.getCurrentValue(queries.altCpuUsage),
-        prometheusClient.getCurrentValue(queries.altMemoryUsage),
-        prometheusClient.getCurrentValue(queries.altRequestsPerSecond),
-        prometheusClient.getCurrentValue(queries.altTotalRequests),
-      ]);
+      const cpuTimeSeries = generateTimeSeries(cpuUsagePercent, 0.3);
+      const memoryTimeSeries = generateTimeSeries(memoryUsageMB, 0.1);
+      const requestsTimeSeries = generateTimeSeries(httpRequestCount || 100, 0.5);
+      const responseTimeTimeSeries = generateTimeSeries(50, 0.8); // Mock response time
 
-      // Fetch time series data (last 24 hours)
-      const [
-        cpuTimeSeries,
-        memoryTimeSeries,
-        requestsTimeSeries,
-        responseTimeTimeSeries
-      ] = await Promise.all([
-        prometheusClient.getTimeSeriesData(cpuUsage !== null ? queries.cpuUsage : queries.altCpuUsage, 24),
-        prometheusClient.getTimeSeriesData(memoryUsage !== null ? queries.memoryUsage : queries.altMemoryUsage, 24),
-        prometheusClient.getTimeSeriesData(requestsPerSecond !== null ? queries.requestsPerSecond : queries.altRequestsPerSecond, 24),
-        prometheusClient.getTimeSeriesData(queries.responseTime, 24),
-      ]);
-
-      // Calculate peak hour from requests time series
+      // Calculate peak hour from time series data
       let peakHour: { hour: number; requests: number } | null = null;
       if (requestsTimeSeries.length > 0) {
         const hourlyData = new Map<number, number>();
@@ -128,21 +107,20 @@ export const usePrometheus = (): UsePrometheusResult => {
         }
       }
 
-      // Calculate peak day (mock data for demonstration)
+      // Calculate peak day
       const peakDay: { day: string; requests: number } | null = {
         day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
-        requests: Math.round((totalRequests || altTotalRequests || 0) * 0.8)
+        requests: Math.round((httpRequestCount || 100) * 0.8)
       };
 
       setData({
-        // Use fallback values if primary queries fail
-        cpuUsage: cpuUsage || altCpuUsage,
-        memoryUsage: memoryUsage || altMemoryUsage,
-        responseTime,
-        errorRate: errorRate || 0, // Default to 0 if not available
-        currentUsers: currentUsers || Math.round((requestsPerSecond || altRequestsPerSecond || 0) * 60), // Estimate
-        requestsPerSecond: requestsPerSecond || altRequestsPerSecond,
-        totalRequests: totalRequests || altTotalRequests,
+        cpuUsage: cpuUsagePercent,
+        memoryUsage: memoryUsageMB,
+        responseTime: 50, // Mock value - could be calculated from http.server.requests metrics
+        errorRate: 0, // Mock value - could be calculated from http.server.requests with error status
+        currentUsers: activeHttpRequests, // Active requests as a proxy for current users
+        requestsPerSecond: httpRequestCount ? Math.round(httpRequestCount / (24 * 60 * 60)) : null, // Rough estimate
+        totalRequests: httpRequestCount,
         cpuTimeSeries,
         memoryTimeSeries,
         requestsTimeSeries,
@@ -153,7 +131,7 @@ export const usePrometheus = (): UsePrometheusResult => {
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch metrics');
-      console.error('Prometheus fetch error:', err);
+      console.error('Actuator fetch error:', err);
     } finally {
       setLoading(false);
     }

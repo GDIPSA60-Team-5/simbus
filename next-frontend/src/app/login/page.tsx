@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, User, Lock, ArrowRight, Bus, Users, MessageSquare, Star } from "lucide-react";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function LoginPage() {
+// Separate component that uses useSearchParams
+function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +34,7 @@ export default function LoginPage() {
 
     try {
       await login(username, password);
-      
+
       // Get redirect URL from search params or default to dashboard
       const redirectTo = searchParams.get('redirect') || '/dashboard';
       router.push(redirectTo);
@@ -59,7 +60,7 @@ export default function LoginPage() {
     },
     {
       icon: MessageSquare,
-      title: "Chatbot Performance", 
+      title: "Chatbot Performance",
       description: "Monitor AI interactions and success rates",
       iconColor: "bg-blue-100 text-blue-600"
     },
@@ -105,7 +106,7 @@ export default function LoginPage() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full pl-12 pr-4 py-4 bg-white bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
+            className="w-full pl-12 pr-4 py-4 bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
             required
           />
         </div>
@@ -121,7 +122,7 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full pl-12 pr-14 py-4 bg-white bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
+            className="w-full pl-12 pr-14 py-4 bg-opacity-40 backdrop-blur-xl border border-white border-opacity-60 rounded-2xl text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all duration-300 hover:bg-opacity-50 shadow-lg"
             required
           />
           <button
@@ -133,37 +134,32 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Remember Me & Forgot Password */}
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center text-gray-700 cursor-pointer hover:text-gray-900 transition-colors">
-            <input type="checkbox" className="mr-3 rounded border-gray-300 bg-white bg-opacity-60 text-orange-600 focus:ring-orange-500" />
-            Remember me
-          </label>
-          <button className="text-gray-700 hover:text-orange-600 transition-colors font-medium">
-            Forgot password?
-          </button>
-        </div>
 
-        {/* Login Button */}
+        {/* Login / View Analytics Button */}
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full group relative py-5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-2xl font-bold text-white shadow-2xl shadow-orange-300 hover:shadow-3xl hover:shadow-orange-400 transition-all duration-500 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden transform hover:-translate-y-1"
+          className="w-full relative py-5 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 rounded-2xl font-bold text-white shadow-2xl shadow-orange-300 hover:shadow-3xl hover:shadow-orange-400 transition-all duration-500 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute inset-0 bg-white bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          {/* Gradient hover overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"></div>
+
+          {/* Subtle shine overlay */}
+          <div className="absolute inset-0 bg-white bg-opacity-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"></div>
+
           <div className="relative flex items-center justify-center">
             {loading ? (
               <div className="w-7 h-7 border-3 border-white border-opacity-30 border-t-white rounded-full animate-spin"></div>
             ) : (
               <div className="flex items-center">
-                <Bus className="mr-3 h-6 w-6 transition-transform group-hover:scale-110" />
+                <Bus className="mr-3 h-6 w-6 transition-transform hover:scale-110" />
                 <span className="text-xl">View Analytics</span>
-                <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
+                <ArrowRight className="ml-3 h-6 w-6 transition-transform hover:translate-x-2" />
               </div>
             )}
           </div>
         </button>
+
       </div>
 
       {/* Error Message */}
@@ -183,5 +179,26 @@ export default function LoginPage() {
         </p>
       </div>
     </AuthLayout>
+  );
+}
+
+// Loading fallback component
+function LoginLoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-100">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading login page...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main page component wrapped with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoadingFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }

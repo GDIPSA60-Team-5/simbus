@@ -3,9 +3,11 @@ import re
 import ast
 import sys
 import time as timing
-from datetime import datetime, date
+import requests
+from datetime import datetime, time
 import pytz
-from llm.state import SLOT_TYPES, REQUIRED_SLOTS, user_conversations
+from typing import List, Dict
+from llm.state import SLOT_TYPES, REQUIRED_SLOTS, user_conversations, BACKEND_URL
 
 
 def typewriter_print(text, delay=0.015):
@@ -71,7 +73,7 @@ def show_help(user_name):
 Hi {user_name}, here’s what I can help you with:
 
 1. Get directions (e.g., “How do I get from Clementi Mall to Changi Airport?”)
-2. Plan your trip to arrive on time (e.g., “Notify me when I should leave to arrive at YIH by 10 AM tomorrow.”)
+2. Plan your trip to arrive on time (e.g., “Remind me to leave Bukit Panjang to NUS at 08:00 every Monday, Wednesday, and Friday.”)
 3. Check bus arrival times (e.g., “When is bus D1 arriving at University Town?”)
 4. Restart the conversation if needed (e.g., “Reset.”)
 
@@ -105,30 +107,31 @@ def reset_conversation_for_user(user_name):
 def convert_slot_value(slot, value):
     expected_type = SLOT_TYPES.get(slot)
 
-    if expected_type is datetime:
+    if expected_type is time:
         if not isinstance(value, str):
             return None
 
         value = value.strip().lower()
-        # Try parsing ISO 8601 directly
-        try:
-            return datetime.fromisoformat(value)
-        except ValueError:
-            pass
-
-        # Handle only-time formats and assume today's date
+        # Try parsing time in multiple formats
         time_formats = ["%H:%M", "%I:%M %p", "%I %p"]
         for fmt in time_formats:
             try:
-                parsed_time = datetime.strptime(value, fmt).time()
-                return datetime.combine(date.today(), parsed_time)
+                return datetime.strptime(value, fmt).time()
             except ValueError:
                 continue
-
         return None
 
     elif expected_type is str:
         return str(value).strip()
+
+    elif expected_type == List[str]:
+        if isinstance(value, str):
+            # Assume comma-separated string: "mon, wed, fri"
+            return [v.strip().lower() for v in value.split(",") if v.strip()]
+        elif isinstance(value, list):
+            return [str(v).strip().lower() for v in value]
+        else:
+            return []
 
     return value
 
@@ -151,6 +154,8 @@ def serialize_for_json(obj):
         return [serialize_for_json(item) for item in obj]
     elif isinstance(obj, datetime):
         return obj.isoformat()
+    elif isinstance(obj, time):
+        return obj.strftime("%H:%M")  # Convert time to "HH:mm" string
     return obj
 
 
@@ -177,3 +182,22 @@ def flatten_slots(required_slots):
         else:
             flat.append(slot)
     return flat
+
+
+def get_user_saved_locations(jwt_token: str) -> Dict[str, str]:
+    """
+    Fetch user's saved locations and return a mapping from name -> id.
+    """
+    url = f"{BACKEND_URL}/api/locations"
+    headers = {"Authorization": jwt_token}
+
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        response.raise_for_status()
+        locations = response.json()  # expecting a list of location objects
+        # Map name to id
+        location_map = {loc["locationName"]: loc["id"] for loc in locations if "locationName" in loc and "id" in loc}
+        return location_map
+    except requests.RequestException as e:
+        print(f"Failed to fetch user locations: {e}")
+        return {}

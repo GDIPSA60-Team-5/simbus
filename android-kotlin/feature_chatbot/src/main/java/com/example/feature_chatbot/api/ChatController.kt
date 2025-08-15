@@ -57,14 +57,24 @@ class ChatController @Inject constructor(
 
     private fun BotResponse.toDisplayString(): String = when (this) {
         is BotResponse.Directions -> {
-            val routes = suggestedRoutes?.joinToString("\n") { route: Route ->
+            val routes = suggestedRoutes?.joinToString("\n") { route ->
                 "Summary: ${route.summary}\nDuration: ${route.durationInMinutes} minutes"
             } ?: "No routes found."
             "Directions from $startLocation to $endLocation:\n$routes"
         }
         is BotResponse.Message -> message
         is BotResponse.Error -> message
+        is BotResponse.CommutePlanResponse ->
+            if (creationSuccess) "Commute plan created: ${commutePlan.commutePlanName}"
+            else "Failed to create commute plan"
+        is BotResponse.NextBus -> {
+            val servicesInfo = services.joinToString("\n") { bus ->
+                "${bus.serviceName}: arriving"
+            }
+            "Next buses at $stopName ($stopCode):\n$servicesInfo"
+        }
     }
+
 
     private fun getErrorMessage(e: Exception): String = when (e) {
         is JsonSyntaxException -> "Sorry, I couldn't understand the response."

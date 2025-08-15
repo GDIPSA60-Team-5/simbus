@@ -32,22 +32,13 @@ class TripHistoryActivity : AppCompatActivity() {
         binding = ActivityTripHistoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupToolbar()
+        binding.ivBack.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
         setupRecyclerView()
         setupClickListeners()
         loadTripHistory()
-    }
-
-    private fun setupToolbar() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(true)
-            setDisplayShowHomeEnabled(true)
-        }
-        
-        binding.toolbar.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
     }
 
     private fun setupRecyclerView() {

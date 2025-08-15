@@ -38,6 +38,11 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    
+    // Firebase BoM for version management
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging.ktx)
+    
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)

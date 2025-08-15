@@ -15,11 +15,18 @@ interface UserApi {
     
     @GET("/api/notifications/{userId}")
     suspend fun getUserNotifications(@Path("userId") userId: String): Response<List<UserNotification>>
+    
+    @POST("/api/user/fcm-token")
+    suspend fun updateFcmToken(@Body body: UpdateFcmTokenRequest): Response<Unit>
 }
 
 data class ChangePasswordRequest(
     val currentPassword: String,
     val newPassword: String
+)
+
+data class UpdateFcmTokenRequest(
+    val fcmToken: String
 )
 
 data class User(

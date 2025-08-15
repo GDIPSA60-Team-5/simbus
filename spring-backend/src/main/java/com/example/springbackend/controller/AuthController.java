@@ -1,9 +1,9 @@
 package com.example.springbackend.controller;
 
 import com.example.springbackend.dto.*;
-import com.example.springbackend.dto.request.AuthRequest;
+import com.example.springbackend.dto.request.LoginRequest;
+import com.example.springbackend.dto.request.RegisterRequest;
 import com.example.springbackend.dto.response.AuthResponse;
-import com.example.springbackend.model.User;
 import com.example.springbackend.repository.UserRepository;
 import com.example.springbackend.service.AuthService;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest authRequest) {
+    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody LoginRequest authRequest) {
         return authService.login(authRequest)
                 .map(ResponseEntity::ok)
                 .onErrorResume(e -> {
@@ -44,9 +44,9 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<MessageResponse>> register(@RequestBody AuthRequest authRequest) {
+    public Mono<ResponseEntity<MessageResponse>> register(@RequestBody RegisterRequest authRequest) {
         return authService.register(authRequest)
-                .map(result -> ResponseEntity.ok(new MessageResponse((String)result)))
+                .map(ResponseEntity::ok)
                 .onErrorResume(e -> {
                     if (e instanceof IllegalArgumentException) {
                         return Mono.just(ResponseEntity
@@ -64,10 +64,10 @@ public class AuthController {
         return userDetailsMono
                 .flatMap(userDetails -> 
                     userRepository.findByUserName(userDetails.getUsername())
-                            .map(user -> new CurrentUserResponse(user.getId(), user.getUserName()))
+                            .map(user -> new CurrentUserResponse(user.getId(), user.getUserName(), user.getUserType()))
                 );
     }
     
     // Response DTO for current user
-    public record CurrentUserResponse(String id, String username) {}
+    public record CurrentUserResponse(String id, String username, String userType) {}
 }
