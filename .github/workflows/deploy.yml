@@ -30,6 +30,8 @@ on:
         required: true
       BACKEND_ENV_B64:
         required: true
+      FIREBASE_SERVICE_ACCOUNT:
+        required: true
     outputs:
       instance_ip:
         description: "Public IP of the Terraform-deployed instance"
@@ -141,6 +143,7 @@ jobs:
             --extra-vars "backend_env_b64='${{ secrets.BACKEND_ENV_B64 }}' \
             image_tag='${{ inputs.image_tag }}' \
             docker_username='${{ secrets.DOCKER_USERNAME }}' \
+            firebase_json='${{ secrets.FIREBASE_SERVICE_ACCOUNT }} \
             aws_server_ip='${{ steps.tf-output.outputs.INSTANCE_IP }}'"
         env:
           ANSIBLE_HOST_KEY_CHECKING: False

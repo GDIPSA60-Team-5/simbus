@@ -5,6 +5,7 @@
     docker_username: "{{ docker_username }}"
     backend_env_b64: "{{ backend_env_b64 }}"
     aws_server_ip: "{{ aws_server_ip }}"
+    firebase_json: "{{ firebase_json }}"
 
   tasks:
     - name: Check if Docker is installed
@@ -67,6 +68,14 @@
         dest: /home/ubuntu/nginx.conf
         owner: ubuntu
         mode: "0644"
+
+    - name: Write Firebase service account JSON to EC2
+      copy:
+        content: "{{ firebase_json | to_nice_json }}"
+        dest: /home/ubuntu/firebase-service-account.json
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
 
     - name: Copy prometheus.yml to EC2 server
       copy:
