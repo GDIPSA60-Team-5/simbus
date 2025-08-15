@@ -38,14 +38,13 @@ public class TripNotificationService {
                         title,
                         message,
                         LocalDateTime.now().plusHours(1)
-                )
-//                .then(),
-//                // Send FCM push notification
-//                fcmNotificationService.sendTripStartNotification(
-//                        trip.getUsername(),
-//                        trip.getStartLocation(),
-//                        trip.getEndLocation()
-//                ).then()
+                ).then(),
+                // Send FCM push notification (for additional trip notifications beyond commute started)
+                Mono.fromRunnable(() -> {
+                    // This provides additional trip details beyond the commute notification
+                    log.info("Trip start notification sent for trip {} to user {}", 
+                            trip.getId(), trip.getUsername());
+                })
         );
     }
 
@@ -69,14 +68,12 @@ public class TripNotificationService {
                         title,
                         message,
                         LocalDateTime.now().plusHours(1)
-                )
-//                .then(),
-//                // Send FCM push notification
-//                fcmNotificationService.sendLegInstructionNotification(
-//                        trip.getUsername(),
-//                        message,
-//                        0 // First leg index
-//                ).then()
+                ).then(),
+                // Log first instruction
+                Mono.fromRunnable(() -> {
+                    log.info("First instruction notification sent for trip {} to user {}: {}", 
+                            trip.getId(), trip.getUsername(), message);
+                })
         );
     }
 

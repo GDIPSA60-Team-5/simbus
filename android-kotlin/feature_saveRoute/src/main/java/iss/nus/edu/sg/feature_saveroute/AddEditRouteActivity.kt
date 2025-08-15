@@ -503,13 +503,6 @@ class AddEditRouteActivity : AppCompatActivity() {
     private fun updateSummary() {
         val start = binding.StartTimeEdit.text?.toString()?.trim().orEmpty()
         val notif = binding.NotfiEdit.text?.toString()?.trim().orEmpty()
-
-        if (start.isNotEmpty() && notif.isNotEmpty()) {
-            binding.notifupdate.text = "Notification: $notif times, starting at $start"
-            binding.notifupdate.isVisible = true
-        } else {
-            binding.notifupdate.isGone = true
-        }
     }
 
 }

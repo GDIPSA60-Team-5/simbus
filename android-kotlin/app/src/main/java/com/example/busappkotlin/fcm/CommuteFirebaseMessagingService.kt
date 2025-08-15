@@ -26,6 +26,9 @@ class CommuteFirebaseMessagingService : FirebaseMessagingService() {
     
     @Inject
     lateinit var secureStorageManager: SecureStorageManager
+    
+    @Inject
+    lateinit var busArrivalNotificationService: com.example.feature_trip_notification.BusArrivalNotificationService
 
     companion object {
         private const val TAG = "CommuteFCM"
@@ -37,16 +40,21 @@ class CommuteFirebaseMessagingService : FirebaseMessagingService() {
         
         Log.d(TAG, "From: ${remoteMessage.from}")
         
-        // Check if message contains data payload
+        // Check if message contains data payload first (for enhanced notifications)
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Message data payload: ${remoteMessage.data}")
             handleDataMessage(remoteMessage.data)
         }
         
-        // Check if message contains notification payload
+        // Check if message contains notification payload (for simple notifications)
         remoteMessage.notification?.let {
-            Log.d(TAG, "Message Notification Body: ${it.body}")
-            handleNotification(it.title, it.body)
+            Log.d(TAG, "Message Notification: ${it.title} - ${it.body}")
+            if (it.title?.contains("Commute") == true && it.title?.contains("Started") == true) {
+                // Extract commute name from title or use default
+                val commuteName = extractCommuteName(it.title) ?: "Your Commute"
+                tripNotificationManager.showCommuteStartedNotification(commuteName)
+                Log.d(TAG, "Handled commute started notification for: $commuteName")
+            }
         }
     }
 
@@ -54,6 +62,18 @@ class CommuteFirebaseMessagingService : FirebaseMessagingService() {
         val messageType = data["type"]
         
         when (messageType) {
+            "COMMUTE_STARTED" -> {
+                val commutePlanName = data["commutePlanName"] ?: "Your Commute"
+                val userId = data["userId"]
+                
+                Log.d(TAG, "Handling enhanced commute started for: $commutePlanName")
+                
+                // Show enhanced commute notification with click action
+                tripNotificationManager.showCommuteStartedNotificationWithNavigation(commutePlanName)
+                
+                // Start bus arrival monitoring for this trip
+                startBusArrivalMonitoring()
+            }
             TYPE_COMMUTE_START -> {
                 val commutePlanId = data["commute_plan_id"]
                 val startLocation = data["start_location"] ?: "Unknown"
@@ -101,6 +121,24 @@ class CommuteFirebaseMessagingService : FirebaseMessagingService() {
         
         // Send token to server
         sendTokenToServer(token)
+    }
+
+    private fun extractCommuteName(title: String?): String? {
+        // Extract commute name from "Commute <Name> Started"
+        return title?.let {
+            val regex = "Commute\\s+(.+?)\\s+Started".toRegex()
+            regex.find(it)?.groupValues?.get(1)
+        }
+    }
+    
+    private fun startBusArrivalMonitoring() {
+        // Start bus arrival monitoring for active trips
+        try {
+            busArrivalNotificationService.startBusArrivalMonitoring()
+            Log.d(TAG, "Started bus arrival monitoring service")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start bus arrival monitoring", e)
+        }
     }
 
     private fun sendTokenToServer(token: String) {

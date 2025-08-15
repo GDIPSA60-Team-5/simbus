@@ -31,7 +31,7 @@ class BusArrivalNotificationService @Inject constructor(
     
     companion object {
         private const val WORK_NAME = "bus_arrival_monitoring"
-        private const val CHECK_INTERVAL_MINUTES = 2L // Check every 2 minutes
+        private const val CHECK_INTERVAL_MINUTES = 1L // Check every 2 minutes
         private const val NOTIFICATION_THRESHOLD_MINUTES = 5L // Notify when bus is ≤ 5 minutes away
     }
     
@@ -43,6 +43,8 @@ class BusArrivalNotificationService @Inject constructor(
      * Starts monitoring bus arrivals for active trips
      */
     fun startBusArrivalMonitoring() {
+        android.util.Log.d("BusArrivalNotification", "Starting bus arrival monitoring...")
+        
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -58,6 +60,14 @@ class BusArrivalNotificationService @Inject constructor(
                 ExistingPeriodicWorkPolicy.REPLACE,
                 monitoringRequest
             )
+        
+        android.util.Log.d("BusArrivalNotification", "Bus arrival monitoring WorkManager task enqueued")
+        
+        // Also check immediately for testing
+        android.util.Log.d("BusArrivalNotification", "Running immediate check for debugging...")
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            checkBusArrivalsForCurrentTrip()
+        }
     }
     
     /**
@@ -73,18 +83,29 @@ class BusArrivalNotificationService @Inject constructor(
      */
     suspend fun checkBusArrivalsForCurrentTrip() {
         try {
+            android.util.Log.d("BusArrivalNotification", "Checking bus arrivals for current trip...")
+            
             // Get current user
             val userResponse = userApi.getCurrentUser()
+            android.util.Log.d("BusArrivalNotification", "User API response: success=${userResponse.isSuccessful}, code=${userResponse.code()}")
+            
             if (!userResponse.isSuccessful || userResponse.body() == null) {
+                android.util.Log.w("BusArrivalNotification", "Failed to get current user or user is null")
                 return
             }
             
             val username = userResponse.body()!!.username
+            android.util.Log.d("BusArrivalNotification", "Current username: $username")
             
             // Get active trip
             val activeTrip = tripService.getActiveTrip(username).getOrNull()
+            android.util.Log.d("BusArrivalNotification", "Active trip: ${if (activeTrip != null) "Found trip ${activeTrip.id}" else "No active trip"}")
+            
             if (activeTrip != null) {
+                android.util.Log.d("BusArrivalNotification", "Checking bus arrivals for trip ${activeTrip.id}")
                 checkAndNotifyBusArrivals(activeTrip)
+            } else {
+                android.util.Log.d("BusArrivalNotification", "No active trip found for user $username")
             }
         } catch (e: Exception) {
             // Log error but don't crash
@@ -96,18 +117,26 @@ class BusArrivalNotificationService @Inject constructor(
         val route = trip.route
         val currentLegIndex = trip.currentLegIndex
         
+        android.util.Log.d("BusArrivalNotification", "Checking trip: currentLegIndex=$currentLegIndex, totalLegs=${route.legs.size}")
+        
         // Check if current leg is WALK and next leg is BUS
         if (currentLegIndex < route.legs.size) {
             val currentLeg = route.legs[currentLegIndex]
             val nextLegIndex = currentLegIndex + 1
             
+            android.util.Log.d("BusArrivalNotification", "Current leg: type=${currentLeg.type}, toStopName=${currentLeg.toStopName}")
+            
             if (currentLeg.type.uppercase() == "WALK" && 
                 nextLegIndex < route.legs.size) {
                 
                 val nextLeg = route.legs[nextLegIndex]
+                android.util.Log.d("BusArrivalNotification", "Next leg: type=${nextLeg.type}, busService=${nextLeg.busServiceNumber}")
+                
                 if (nextLeg.type.uppercase() == "BUS" && 
                     currentLeg.toStopName != null && 
                     nextLeg.busServiceNumber != null) {
+                    
+                    android.util.Log.d("BusArrivalNotification", "Getting bus arrivals for stop: ${currentLeg.toStopName}, service: ${nextLeg.busServiceNumber}")
                     
                     // Get bus arrivals for the bus stop and service
                     try {
@@ -116,15 +145,26 @@ class BusArrivalNotificationService @Inject constructor(
                             nextLeg.busServiceNumber
                         )
                         
+                        android.util.Log.d("BusArrivalNotification", "Bus API response: success=${response.isSuccessful}, code=${response.code()}")
+                        
                         if (response.isSuccessful && response.body() != null) {
                             val busArrivals = response.body()!!
+                            android.util.Log.d("BusArrivalNotification", "Got ${busArrivals.size} bus arrivals")
                             processBusArrivals(busArrivals, nextLeg, currentLeg.toStopName!!)
+                        } else {
+                            android.util.Log.w("BusArrivalNotification", "Bus API failed or returned null")
                         }
                     } catch (e: Exception) {
                         android.util.Log.e("BusArrivalNotification", "Error fetching bus arrivals", e)
                     }
+                } else {
+                    android.util.Log.d("BusArrivalNotification", "Next leg is not BUS or missing data")
                 }
+            } else {
+                android.util.Log.d("BusArrivalNotification", "Current leg is not WALK or no next leg")
             }
+        } else {
+            android.util.Log.d("BusArrivalNotification", "Current leg index exceeds route legs")
         }
     }
     
@@ -185,14 +225,22 @@ class BusArrivalWorker(
     
     override suspend fun doWork(): Result = coroutineScope {
         try {
+            android.util.Log.d("BusArrivalWorker", "Worker started - checking bus arrivals...")
+            
             // Get the service manually from the application context
             val app = applicationContext as? dagger.hilt.android.HiltAndroidApp
+            android.util.Log.d("BusArrivalWorker", "App context: ${if (app != null) "HiltAndroidApp found" else "Not HiltAndroidApp"}")
+            
             if (app != null) {
                 val entryPoint = dagger.hilt.android.EntryPointAccessors.fromApplication(
                     applicationContext,
                     BusArrivalWorkerEntryPoint::class.java
                 )
+                android.util.Log.d("BusArrivalWorker", "Entry point created, calling checkBusArrivalsForCurrentTrip...")
                 entryPoint.getBusArrivalNotificationService().checkBusArrivalsForCurrentTrip()
+                android.util.Log.d("BusArrivalWorker", "Worker completed successfully")
+            } else {
+                android.util.Log.e("BusArrivalWorker", "Application context is not HiltAndroidApp")
             }
             Result.success()
         } catch (e: Exception) {

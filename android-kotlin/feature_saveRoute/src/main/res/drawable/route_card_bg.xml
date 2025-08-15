@@ -3,7 +3,7 @@
     <!-- Selected state (50% white) -->
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="#80FFFFFF" /> <!-- 80 = 50% alpha -->
+            <solid android:color="#80000000" /> <!-- 80 = 50% alpha -->
             <corners android:radius="8dp" />    <!-- match your original radius -->
         </shape>
     </item>

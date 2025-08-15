@@ -12,5 +12,4 @@ public interface CommutePlanRepository extends ReactiveCrudRepository<CommutePla
     Flux<CommutePlan> findByUserId(String userId);
 
     Flux<CommutePlan> findByCommuteRecurrenceDayIdsContaining(String dayCode);
-
 }

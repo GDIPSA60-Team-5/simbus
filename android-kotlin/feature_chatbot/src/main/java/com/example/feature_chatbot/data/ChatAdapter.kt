@@ -42,6 +42,8 @@ class ChatAdapter(
             is ChatItem.BotMessage -> when (item.botResponse) {
                 is BotResponse.Message -> ChatViewType.BOT_MESSAGE_TEXT
                 is BotResponse.Directions -> ChatViewType.BOT_MESSAGE_DIRECTIONS
+                is BotResponse.CommutePlanResponse -> ChatViewType.BOT_MESSAGE_TEXT
+                is BotResponse.NextBus -> ChatViewType.BOT_MESSAGE_TEXT
                 is BotResponse.Error -> ChatViewType.BOT_MESSAGE_ERROR
             }
         }.ordinal
@@ -65,6 +67,32 @@ class ChatAdapter(
         when (val botResponse = item.botResponse) {
             is BotResponse.Message -> (holder as BotTextMessageViewHolder).bind(botResponse.message)
             is BotResponse.Directions -> (holder as BotDirectionsViewHolder).bind(botResponse)
+            is BotResponse.CommutePlanResponse -> {
+                val message = if (botResponse.creationSuccess) {
+                    "✅ Commute plan '${botResponse.commutePlan.commutePlanName}' created successfully!"
+                } else {
+                    "❌ Failed to create commute plan. Please try again."
+                }
+                (holder as BotTextMessageViewHolder).bind(message)
+            }
+            is BotResponse.NextBus -> {
+                val busInfo = buildString {
+                    appendLine("🚌 Bus arrivals at ${botResponse.stopName} (${botResponse.stopCode}):")
+                    appendLine()
+                    botResponse.services.forEach { bus ->
+                        appendLine("Bus ${bus.serviceName} (${bus.operator}):")
+                        if (bus.arrivals.isNotEmpty()) {
+                            bus.arrivals.take(3).forEach { arrival ->
+                                appendLine("  • $arrival")
+                            }
+                        } else {
+                            appendLine("  • No upcoming arrivals")
+                        }
+                        appendLine()
+                    }
+                }
+                (holder as BotTextMessageViewHolder).bind(busInfo.trim())
+            }
             is BotResponse.Error -> (holder as BotErrorViewHolder).bind(botResponse.message)
         }
     }

@@ -1,6 +1,7 @@
 package com.example.feature_trip_notification
 
 import android.Manifest
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -150,11 +152,12 @@ class TripNotificationManager @Inject constructor(
     /**
      * Shows trip completion notification
      */
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun showTripCompletionNotification() {
         if (!hasNotificationPermission()) return
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle("Trip Completed")
             .setContentText("You have reached your destination!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -172,6 +175,81 @@ class TripNotificationManager @Inject constructor(
         notificationManager.cancel(TRIP_START_NOTIFICATION_ID)
         notificationManager.cancel(INSTRUCTION_NOTIFICATION_ID)
         notificationManager.cancel(BUS_ARRIVAL_NOTIFICATION_ID)
+    }
+    
+    /**
+     * Shows commute started notification - called when FCM is received
+     */
+    fun showCommuteStartedNotification(commutePlanName: String) {
+        if (!hasNotificationPermission()) return
+        
+        val intent = Intent().apply {
+            setClassName(context, "com.example.busappkotlin.ui.MainActivity")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Commute Started")
+            .setContentText("Time to start your commute!")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+        
+        NotificationManagerCompat.from(context).notify(TRIP_START_NOTIFICATION_ID, notification)
+    }
+    
+    /**
+     * Shows enhanced commute started notification with navigation
+     */
+    fun showCommuteStartedNotificationWithNavigation(commutePlanName: String) {
+        if (!hasNotificationPermission()) return
+        
+        // Create intent to open MapsNavigationActivity directly
+        val intent = Intent().apply {
+            setClassName(context, "com.example.feature_guidemap.MapsNavigationActivity")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("trigger_source", "scheduled_commute")
+            putExtra("commute_plan_name", commutePlanName)
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Commute $commutePlanName Started")
+            .setContentText("Tap to open navigation and start your journey")
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText("Your scheduled commute '$commutePlanName' is ready to start. Tap to open navigation and begin your journey."))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 500, 250, 500))
+            .build()
+        
+        NotificationManagerCompat.from(context).notify(TRIP_START_NOTIFICATION_ID, notification)
+    }
+    
+    // TODO: Add more notification functions as needed
+    fun showCommuteReminderNotification(minutesBefore: Int) {
+        // Placeholder: Show reminder X minutes before commute
+    }
+    
+    fun showCommuteDelayNotification(delay: String) {
+        // Placeholder: Show notification if commute is delayed
+    }
+    
+    fun showCommuteWeatherNotification(weather: String) {
+        // Placeholder: Show weather-related commute notification
     }
     
     private fun hasNotificationPermission(): Boolean {
