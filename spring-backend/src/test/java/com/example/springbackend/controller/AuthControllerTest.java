@@ -3,6 +3,7 @@ package com.example.springbackend.controller;
 import com.example.springbackend.dto.request.LoginRequest;
 import com.example.springbackend.dto.response.AuthResponse;
 import com.example.springbackend.dto.MessageResponse;
+import com.example.springbackend.repository.UserRepository;
 import com.example.springbackend.service.AuthService;
 
 import org.junit.jupiter.api.Assertions;
@@ -33,6 +34,9 @@ public class AuthControllerTest {
 
         @MockitoBean
         private AuthService authService;
+
+        @MockitoBean
+        private UserRepository userRepository;
 
         // -------- LOGIN --------
 

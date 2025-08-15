@@ -7,7 +7,6 @@ import com.example.springbackend.service.implementation.LtaBusServiceProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.*;
 import org.springframework.web.util.UriBuilder;
@@ -15,7 +14,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -23,73 +21,67 @@ import java.util.function.Function;
 
 import static org.mockito.Mockito.*;
 
+
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class LtaBusServiceProviderTest {
 
     private WebClient webClient;
     private RequestHeadersUriSpec uriSpec;
-    private RequestHeadersUriSpec uriSpec2;
     private RequestHeadersSpec headersSpec;
     private ResponseSpec responseSpec;
 
     private LtaBusServiceProvider ltaService;
 
-    @Value("${api.lta.key:dummyApiKey}")
-    private String apiKey = "dummyApiKey"; // fallback if no property injection in test
+    private final String apiKey = "dummyApiKey";
 
     @BeforeEach
-    public void setup() throws Exception {
+    public void setup() {
         webClient = mock(WebClient.class);
-
         uriSpec = mock(RequestHeadersUriSpec.class);
-        uriSpec2 = mock(RequestHeadersUriSpec.class);
         headersSpec = mock(RequestHeadersSpec.class);
         responseSpec = mock(ResponseSpec.class);
 
+        // Mock chain
         when(webClient.get()).thenReturn(uriSpec);
-
-        // Mock the uri(...) calls to return a new RequestHeadersUriSpec mock
-        when(uriSpec.uri(anyString())).thenReturn(uriSpec2);
-        when(uriSpec.uri(any(Function.class))).thenReturn(uriSpec2);
-
-        // header(...) called on the uriSpec2 mock
-        when(uriSpec2.header(anyString(), anyString())).thenReturn(headersSpec);
-
-        // retrieve() returns responseSpec
+        when(uriSpec.uri(anyString())).thenReturn(headersSpec);
+        when(uriSpec.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any())).thenReturn(headersSpec);
+        when(headersSpec.header(anyString(), anyString())).thenReturn(headersSpec);
         when(headersSpec.retrieve()).thenReturn(responseSpec);
 
-        // Initialize service with mocked WebClient
+        // Initialize service
         ltaService = new LtaBusServiceProvider(webClient);
-
-        // Inject the apiKey value into the private field via reflection
-        Field apiKeyField = LtaBusServiceProvider.class.getDeclaredField("apiKey");
-        apiKeyField.setAccessible(true);
-        apiKeyField.set(ltaService, apiKey);
+        // Inject apiKey manually (since @Value won't work here)
+        try {
+            var field = LtaBusServiceProvider.class.getDeclaredField("apiKey");
+            field.setAccessible(true);
+            field.set(ltaService, apiKey);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     public void testGetAllBusStops() {
-        // Prepare mock response DTO
+        // Mock response
         LtaDtos.BusStop ltaBusStop = new LtaDtos.BusStop("1234", "Test Stop", 1.23, 4.56);
         LtaDtos.LtaBusStopsResponse response = new LtaDtos.LtaBusStopsResponse(List.of(ltaBusStop));
-
         when(responseSpec.bodyToMono(LtaDtos.LtaBusStopsResponse.class)).thenReturn(Mono.just(response));
 
         Flux<BusStop> result = ltaService.getAllBusStops();
 
         StepVerifier.create(result)
                 .expectNextMatches(busStop ->
-                        busStop.code().equals("1234") &&
-                                busStop.name().equals("Test Stop") &&
-                                busStop.latitude() == 1.23 &&
-                                busStop.longitude() == 4.56 &&
-                                busStop.sourceApi().equals("LTA")
+                        busStop.code().equals("1234")
+                                && busStop.name().equals("Test Stop")
+                                && busStop.latitude() == 1.23
+                                && busStop.longitude() == 4.56
+                                && busStop.sourceApi().equals("LTA")
                 )
                 .verifyComplete();
 
         verify(webClient).get();
-        verify(uriSpec).uri("/BusStops");
-        verify(uriSpec2).header("AccountKey", apiKey);
+        verify(uriSpec).uri(any(Function.class));
+        verify(headersSpec).header("AccountKey", apiKey);
         verify(headersSpec).retrieve();
         verify(responseSpec).bodyToMono(LtaDtos.LtaBusStopsResponse.class);
     }
@@ -98,19 +90,14 @@ public class LtaBusServiceProviderTest {
     public void testGetBusArrivals() {
         String busStopCode = "1234";
 
-        // Prepare mock NextBus instances with ISO 8601 datetime strings
+        // Prepare mock response
         LtaDtos.NextBus nb1 = new LtaDtos.NextBus("2025-08-11T10:00:00+08:00[Asia/Singapore]");
         LtaDtos.NextBus nb2 = new LtaDtos.NextBus("2025-08-11T10:10:00+08:00[Asia/Singapore]");
         LtaDtos.NextBus nb3 = new LtaDtos.NextBus(null); // null arrival
-
         LtaDtos.Service service = new LtaDtos.Service("12", "OperatorX", nb1, nb2, nb3);
         LtaDtos.LtaArrivalsResponse response = new LtaDtos.LtaArrivalsResponse(List.of(service));
 
         when(responseSpec.bodyToMono(LtaDtos.LtaArrivalsResponse.class)).thenReturn(Mono.just(response));
-
-        // uri() called with Function<UriBuilder, URI> returns uriSpec2
-        when(uriSpec.uri(ArgumentMatchers.<Function<UriBuilder, URI>>any()))
-                .thenReturn(uriSpec2);
 
         Flux<BusArrival> result = ltaService.getBusArrivals(busStopCode);
 
@@ -121,13 +108,14 @@ public class LtaBusServiceProviderTest {
                     if (busArrival.arrivals().size() != 2) return false;
                     ZonedDateTime expected1 = ZonedDateTime.parse("2025-08-11T10:00:00+08:00[Asia/Singapore]");
                     ZonedDateTime expected2 = ZonedDateTime.parse("2025-08-11T10:10:00+08:00[Asia/Singapore]");
-                    return busArrival.arrivals().get(0).equals(expected1) && busArrival.arrivals().get(1).equals(expected2);
+                    return busArrival.arrivals().get(0).equals(expected1)
+                            && busArrival.arrivals().get(1).equals(expected2);
                 })
                 .verifyComplete();
 
         verify(webClient).get();
         verify(uriSpec).uri(any(Function.class));
-        verify(uriSpec2).header("AccountKey", apiKey);
+        verify(headersSpec).header("AccountKey", apiKey);
         verify(headersSpec).retrieve();
         verify(responseSpec).bodyToMono(LtaDtos.LtaArrivalsResponse.class);
     }

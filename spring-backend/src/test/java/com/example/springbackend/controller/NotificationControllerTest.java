@@ -11,7 +11,6 @@ import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -60,13 +59,13 @@ class NotificationControllerTest {
     }
 
     @Test
-    @DisplayName("GET /notifications/user/{userID} returns notifications for a user")
+    @DisplayName("GET /api/notifications/{userID} returns notifications for a user")
     void testGetUserNotifications() {
         when(notificationService.getUserNotifications("user1"))
                 .thenReturn(Flux.just(sampleNotification));
 
         webTestClient.get()
-                .uri("/notifications/user/user1")
+                .uri("/api/notifications/user1")  // ✅ fixed URI
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(UserNotification.class)
@@ -75,7 +74,7 @@ class NotificationControllerTest {
     }
 
     @Test
-    @DisplayName("POST /notifications creates a new notification")
+    @DisplayName("POST /api/notifications creates a new notification")
     void testSendNotification() {
         when(notificationService.sendNotification(
                 ArgumentMatchers.anyString(),
@@ -86,8 +85,8 @@ class NotificationControllerTest {
         )).thenReturn(Mono.just(sampleNotification));
 
         webTestClient.post()
-                .uri("/notifications")
-                .contentType(MediaType.APPLICATION_JSON)
+                .uri("/api/notifications")  // ✅ matches controller
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .bodyValue(sampleRequest)
                 .exchange()
                 .expectStatus().isCreated()
@@ -100,13 +99,13 @@ class NotificationControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /notifications/{id} deletes a notification")
+    @DisplayName("DELETE /api/notifications/{id} deletes a notification")
     void testDeleteNotification() {
         when(notificationService.deleteNotification("notif1"))
                 .thenReturn(Mono.empty());
 
         webTestClient.delete()
-                .uri("/notifications/notif1")
+                .uri("/api/notifications/notif1")  // ✅ matches controller
                 .exchange()
                 .expectStatus().isNoContent();
     }
