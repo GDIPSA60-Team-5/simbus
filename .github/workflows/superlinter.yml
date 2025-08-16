@@ -1,6 +1,6 @@
 name: Lint
 
-on: # yamllint disable-line rule:truthy
+on:
   push:
     branches:
       - feature/**
@@ -31,5 +31,3 @@ jobs:
           VALIDATE_GITLEAKS: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
-
-        continue-on-error: true
