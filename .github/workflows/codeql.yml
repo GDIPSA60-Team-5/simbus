@@ -53,10 +53,9 @@ jobs:
         run: |
           mvn clean install -DskipTests
 
-      # Build Next.js frontend (optional, for better CodeQL scanning)
       - name: Build Next.js Project
         if: matrix.language == 'javascript-typescript'
-        working-directory: javascript
+        working-directory: next-frontend
         run: |
           npm ci
           npm run build
