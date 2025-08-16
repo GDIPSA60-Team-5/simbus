@@ -20,7 +20,7 @@ jobs:
         id: validate
         run: |
           case "${{ inputs.folder }}" in
-            next-frontend|spring-backend|android-kotlin|llm-backend)
+            next-frontend|spring-backend)
               echo "folder=${{ inputs.folder }}" >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -30,7 +30,6 @@ jobs:
           esac
 
   next-frontend:
-    if: needs.validate.outputs.folder == 'next-frontend'
     needs: validate
     runs-on: ubuntu-latest
     steps:
@@ -83,7 +82,6 @@ jobs:
           reporter: jest-junit
 
   spring-backend:
-    if: needs.validate.outputs.folder == 'spring-backend'
     needs: validate
     runs-on: ubuntu-latest
     steps:
@@ -122,6 +120,7 @@ jobs:
           file: spring-backend/target/site/jacoco/jacoco.xml
           flags: backend
           name: spring-backend-coverage
+          overwrite: true
 
       - name: 📊 Upload JaCoCo Coverage Report
         uses: actions/upload-artifact@v4
@@ -131,125 +130,10 @@ jobs:
           path: spring-backend/target/site/jacoco/
           retention-days: 30
 
-  android-kotlin:
-    if: needs.validate.outputs.folder == 'android-kotlin'
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: ☕ Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: gradle
-
-      - name: Create local.properties file
-        run: |
-          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > android-kotlin/local.properties
-          echo "sdk.dir=$ANDROID_HOME" >> android-kotlin/local.properties
-
-      - name: 🤖 Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Make gradlew executable
-        run: chmod +x android-kotlin/gradlew
-
-      - name: 🧪 Run Unit Tests
-        run: |
-          cd android-kotlin
-          ./gradlew testDebugUnitTest
-
-      - name: 🏗️ Build Debug APK
-        run: |
-          cd android-kotlin
-          ./gradlew assembleDebug
-
-      - name: 🏗️ Build Release APK
-        run: |
-          cd android-kotlin
-          ./gradlew assembleRelease
-
-      - name: Check if Spring Boot test reports exist
-        id: check_spring_test_results
-        run: |
-          if ls spring-backend/target/surefire-reports/*.xml 1> /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 📊 Publish Test Results
-        uses: dorny/test-reporter@v2.1.1
-        if: steps.check_python_test_results.outputs.exists == 'true'
-        with:
-          name: Android Unit Tests
-          path: android-kotlin/app/build/test-results/testDebugUnitTest/*.xml
-          reporter: java-junit
-
-      - name: 📈 Upload Coverage
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: GDIPSA60-Team-5/simbus
-          directory: android-kotlin/app/build/reports/jacoco/testDebugUnitTestCoverage
-          flags: android
-
-  llm-backend:
-    if: needs.validate.outputs.folder == 'llm-backend'
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: 📥 Install Dependencies
-        run: |
-          cd llm-backend
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-xdist
-
-      - name: 🧪 Run Tests with Coverage
-        run: |
-          cd llm-backend
-          pytest --cov=. --cov-report=xml --cov-report=html --junitxml=test-results.xml -v
-
-      - name: 📊 Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: GDIPSA60-Team-5/simbus
-          directory: llm-backend
-          flags: llm-backend
-
-      - name: Check if Python test results exist
-        id: check_python_test_results
-        run: |
-          if ls llm-backend/test-results.xml 1> /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 📈 Publish Test Results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Python Tests
-          path: llm-backend/test-results.xml
-          reporter: python-pytest
-
   # Consolidated reporting job
   report-summary:
     if: always()
-    needs:
-      [validate, next-frontend, spring-backend, android-kotlin, llm-backend]
+    needs: [validate, next-frontend, spring-backend]
     runs-on: ubuntu-latest
     steps:
       - name: 📋 Build Summary
@@ -270,17 +154,6 @@ jobs:
             echo "| Spring Backend | $emoji $status | Tests and build completed |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [[ "${{ needs.android-kotlin.result }}" != "skipped" ]]; then
-            status="${{ needs.android-kotlin.result }}"
-            emoji="✅"; [[ "$status" != "success" ]] && emoji="❌"
-            echo "| Android Kotlin | $emoji $status | Unit tests and APK build completed |" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          if [[ "${{ needs.llm-backend.result }}" != "skipped" ]]; then
-            status="${{ needs.llm-backend.result }}"
-            emoji="✅"; [[ "$status" != "success" ]] && emoji="❌"
-            echo "| LLM Backend | $emoji $status | Tests and coverage completed |" >> $GITHUB_STEP_SUMMARY
-          fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Coverage Reports Available" >> $GITHUB_STEP_SUMMARY
