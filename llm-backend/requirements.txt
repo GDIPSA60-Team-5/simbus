@@ -5,3 +5,9 @@ gpt4all
 uvicorn
 fastapi
 python-dotenv
+PyJWT
+pandas
+numpy
+sentence-transformers
+scikit-learn
+joblib
