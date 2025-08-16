@@ -15,7 +15,7 @@ public class UserService {
     }
 
     /**
-     * Update the FCM token for a user by username123
+     * Update the FCM token for a user by username
      */
     public Mono<User> updateFcmToken(String username, String fcmToken) {
         return userRepository.findByUserName(username)
