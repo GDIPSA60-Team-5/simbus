@@ -21,7 +21,8 @@ jobs:
     uses: ./.github/workflows/build-and-test.yml
     with:
       folder: ${{ matrix.folder }}
-    secrets: inherit
+    secrets:
+      MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
 
   no_changes_notice:
     needs: detect-changed

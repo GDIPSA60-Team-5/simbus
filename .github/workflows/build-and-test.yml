@@ -6,6 +6,9 @@ on:
       folder:
         required: true
         type: string
+    secrets:
+      MAPS_API_KEY:
+        required: true
 
 jobs:
   validate:
@@ -144,7 +147,7 @@ jobs:
 
       - name: Create local.properties file
         run: |
-          echo "MAPS_API_KEY=${{ secrets.MAP_API_KEY }}" > android-kotlin/local.properties
+          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > android-kotlin/local.properties
           echo "sdk.dir=$ANDROID_HOME" >> android-kotlin/local.properties
 
       - name: 🤖 Setup Android SDK

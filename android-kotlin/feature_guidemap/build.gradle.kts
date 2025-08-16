@@ -26,6 +26,7 @@ android {
         minSdk = 29
         manifestPlaceholders["googleMapsKey"] = mapsApiKey
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
     }
 
     buildTypes {

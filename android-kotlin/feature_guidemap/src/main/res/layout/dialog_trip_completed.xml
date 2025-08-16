@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/overlay_completion"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -23,7 +24,7 @@
             android:layout_gravity="center"
             android:layout_marginBottom="16dp"
             android:src="@drawable/ic_navigation"
-            android:tint="@color/direction_right" />
+            app:tint="@color/direction_right" />
 
         <!-- Completion Message -->
         <TextView
@@ -31,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:gravity="center"
-            android:text="You've completed a trip!"
+            android:text="@string/you_ve_completed_a_trip"
             android:textColor="@android:color/black"
             android:textSize="24sp"
             android:textStyle="bold"
@@ -44,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:gravity="center"
-            android:text="Great job! Your journey has been completed successfully."
+            android:text="@string/great_job_your_journey_has_been_completed_successfully"
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:scrollHorizontally="true" />

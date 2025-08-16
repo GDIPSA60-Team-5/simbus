@@ -28,7 +28,13 @@ jobs:
       - name: Super-linter
         uses: super-linter/super-linter/slim@v8.0.0
         env:
+          VALIDATE_JAVA: true
+          VALIDATE_KOTLIN: true
+          VALIDATE_PYTHON: true
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_TYPESCRIPT: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Scan changed files on feature branches, all files on PRs
           VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          # Scan changed files on feature branches, all files on PRs
+
         continue-on-error: true
