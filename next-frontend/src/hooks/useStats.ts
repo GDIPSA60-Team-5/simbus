@@ -29,11 +29,11 @@ export const useStats = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async (): Promise<StatsResponse> => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '/';
 
     try {
       // Fetch business logic stats from your existing API
-      const businessStats = await apiGet<StatsResponse>(`${backendUrl}/api/stats`);
+      const businessStats = await apiGet<StatsResponse>(`${backendUrl}api/stats`);
       console.log('Business stats:', businessStats);
 
       // Fetch system metrics from Spring Actuator
@@ -71,7 +71,7 @@ export const useStats = () => {
     } catch (err) {
       // If Actuator metrics fail, fallback to just business stats
       console.warn('Actuator metrics unavailable, using business stats only:', err);
-      return await apiGet<StatsResponse>(`${backendUrl}/api/stats`);
+      return await apiGet<StatsResponse>(`${backendUrl}api/stats`);
     }
   }, []);
 

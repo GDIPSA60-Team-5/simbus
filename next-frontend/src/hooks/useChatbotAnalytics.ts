@@ -19,8 +19,8 @@ export const useChatbotAnalytics = () => {
       setLoading(true);
       setError(null);
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const data = await apiGet<ResponseTypeCount[]>(`${backendUrl}/api/chatbot-analytics/response-types`);
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '/';
+      const data = await apiGet<ResponseTypeCount[]>(`${backendUrl}api/chatbot-analytics/response-types`);
 
       setResponseTypes(data);
     } catch (err) {
