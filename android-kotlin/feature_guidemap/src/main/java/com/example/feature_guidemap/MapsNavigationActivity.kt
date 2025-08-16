@@ -60,20 +60,20 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     private var routePolylines: MutableList<Polyline> = mutableListOf()
     private var isMapReady = false
     private var hasLocationPermission = false
-    
+
     private var selectedRoute: Route? = null
     private var currentLegIndex = 0
     private lateinit var legAdapter: LegInstructionAdapter
     private var currentTrip: Trip? = null
-    
+
     // Navigation modes
     private var isActiveMode = false
     private var previewRoute: Route? = null
-    
+
     // Location tracking for active navigation
     private var locationCallback: LocationCallback? = null
     private var isLocationUpdatesActive = false
-    
+
     // Permission management
     private lateinit var locationPermissionManager: LocationPermissionManager
     private val permissionLauncher = registerForActivityResult(
@@ -81,13 +81,13 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     ) { permissions ->
         locationPermissionManager.handlePermissionResult(permissions)
     }
-    
+
     @Inject
     lateinit var tripService: TripService
-    
+
     @Inject
     lateinit var userApi: UserApi
-    
+
     @Inject
     lateinit var busApi: BusApi
 
@@ -119,15 +119,15 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
 
         initViews()
         supportActionBar?.hide()
-        
+
         // Check if we already have location permissions
         hasLocationPermission = locationPermissionManager.hasLocationPermissions()
-        
+
         // Request permissions if not granted
         if (!hasLocationPermission) {
             requestLocationPermissions()
         }
-        
+
         initializeNavigationMode()
     }
 
@@ -135,17 +135,27 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         isMapReady = true
-        
-        // Setup map if we already have location permission
-        if (hasLocationPermission) {
+
+        // Setup map based on permission status
+        if (hasLocationPermission && checkLocationPermissions()) {
             setupMapWithLocation()
         } else {
             setupMapBasic()
         }
-        
+
         setupRouteDisplay()
     }
 
+    private fun checkLocationPermissions(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+    }
 
     private fun setupMapBasic() {
         with(googleMap) {
@@ -159,18 +169,19 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             moveCamera(CameraUpdateFactory.newLatLngZoom(singapore, 15f))
         }
     }
-    
+
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun setupMapWithLocation() {
         with(googleMap) {
             // Enable location if permission granted
-            if (ContextCompat.checkSelfPermission(
-                    this@MapsNavigationActivity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
+            try {
                 isMyLocationEnabled = true
                 uiSettings.isMyLocationButtonEnabled = false
+            } catch (e: SecurityException) {
+                // Handle case where permission was revoked after check
+                android.util.Log.e("MapsNavigation", "Location permission was revoked", e)
+                setupMapBasic()
+                return
             }
 
             // Disable default UI elements since we have custom ones
@@ -186,12 +197,12 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         // Get current location and center map
         getCurrentLocation()
     }
-    
+
     private fun displayRoute() {
         if (!isMapReady || !::googleMap.isInitialized) {
             return
         }
-        
+
         selectedRoute?.let { route ->
             if (isActiveMode) {
                 // Active mode: focus on current leg
@@ -202,33 +213,33 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun displayFullRoute(route: Route) {
         if (!isMapReady || !::googleMap.isInitialized) {
             return
         }
-        
+
         // Clear existing polylines and markers
         routePolylines.forEach { it.remove() }
         routePolylines.clear()
         googleMap.clear()
-        
+
         var allLatLngPoints = mutableListOf<LatLng>()
-        
+
         // Draw all route legs with consistent styling
         route.legs.forEachIndexed { index, leg ->
             leg.routePoints?.let { points ->
                 if (points.size >= 2) {
                     val latLngPoints = points.map { LatLng(it.latitude, it.longitude) }
                     allLatLngPoints.addAll(latLngPoints)
-                    
+
                     // Use different colors for different transport modes
                     val color = when (leg.type.uppercase()) {
                         "WALK" -> ContextCompat.getColor(this, R.color.direction_straight)
                         "BUS" -> ContextCompat.getColor(this, R.color.direction_right)
                         else -> ContextCompat.getColor(this, R.color.direction_destination)
                     }
-                    
+
                     val polyline = googleMap.addPolyline(
                         PolylineOptions()
                             .addAll(latLngPoints)
@@ -239,12 +250,12 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
         }
-        
+
         // Add start and end markers
         if (route.legs.isNotEmpty()) {
             val firstLeg = route.legs.first()
             val lastLeg = route.legs.last()
-            
+
             firstLeg.routePoints?.firstOrNull()?.let { startPoint ->
                 googleMap.addMarker(
                     MarkerOptions()
@@ -253,7 +264,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
                 )
             }
-            
+
             lastLeg.routePoints?.lastOrNull()?.let { endPoint ->
                 googleMap.addMarker(
                     MarkerOptions()
@@ -263,37 +274,37 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 )
             }
         }
-        
+
         // Fit camera to show entire route with padding for instruction card
         if (allLatLngPoints.isNotEmpty()) {
             val boundsBuilder = LatLngBounds.Builder()
             allLatLngPoints.forEach { boundsBuilder.include(it) }
             val bounds = boundsBuilder.build()
-            
+
             // Adjust bounds to account for instruction card at bottom
             val instructionCardHeightDp = 240f
             val instructionCardHeightPx = instructionCardHeightDp * resources.displayMetrics.density
-            
+
             // Get screen dimensions
             val displayMetrics = resources.displayMetrics
             val screenHeight = displayMetrics.heightPixels
             val screenWidth = displayMetrics.widthPixels
-            
+
             // Calculate effective map area (excluding instruction card)
             val effectiveMapHeight = screenHeight - instructionCardHeightPx
-            
+
             // Expand bounds slightly to account for the bottom instruction card
             val southwest = bounds.southwest
             val northeast = bounds.northeast
             val latSpan = northeast.latitude - southwest.latitude
-            
+
             // Add extra space at the bottom by shifting the bounds up
             val bottomPadding = latSpan * 0.3 // Add 30% more space at bottom
             val adjustedBounds = LatLngBounds(
                 LatLng(southwest.latitude - bottomPadding, southwest.longitude),
                 northeast
             )
-            
+
             try {
                 googleMap.animateCamera(
                     CameraUpdateFactory.newLatLngBounds(adjustedBounds, 100)
@@ -313,7 +324,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             hasLocationPermission = granted
             if (granted) {
                 // Setup map with location if map is ready
-                if (isMapReady && ::googleMap.isInitialized) {
+                if (isMapReady && ::googleMap.isInitialized && checkLocationPermissions()) {
                     setupMapWithLocation()
                 }
             } else {
@@ -327,12 +338,8 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         if (!isMapReady || !::googleMap.isInitialized) {
             return
         }
-        
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+
+        try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 location?.let {
                     val currentLatLng = LatLng(it.latitude, it.longitude)
@@ -352,6 +359,8 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     )
                 }
             }
+        } catch (e: SecurityException) {
+            android.util.Log.e("MapsNavigation", "Location permission was revoked", e)
         }
     }
 
@@ -365,14 +374,14 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         binding.btnSimulateNext.setOnClickListener { simulateNextLeg() }
         binding.btnEndTrip.setOnClickListener { showEndTripConfirmation() }
     }
-    
+
     private fun setupViewPager() {
         selectedRoute?.let { route ->
             legAdapter = LegInstructionAdapter(route.legs) { legIndex ->
                 focusOnLeg(legIndex)
             }
             binding.vpLegInstructions.adapter = legAdapter
-            
+
             // Set up page change listener
             binding.vpLegInstructions.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
@@ -384,33 +393,33 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     focusOnLeg(position)
                     updatePageIndicators(position)
-                    
+
                     // Show bus arrivals for active mode when viewing walking legs
                     if (isActiveMode) {
                         showBusArrivalsForActiveLeg(position)
                     }
                 }
             })
-            
+
             // Initial setup
             setupPageIndicators(route.legs.size)
-            
+
             // Set ViewPager to current leg (important for when returning to activity)
             binding.vpLegInstructions.setCurrentItem(currentLegIndex, false)
-            
+
             focusOnLeg(currentLegIndex)
             updatePageIndicators(currentLegIndex)
-            
+
             // Show bus arrivals for the initial leg in active mode
             if (isActiveMode) {
                 showBusArrivalsForActiveLeg(currentLegIndex)
             }
         }
     }
-    
+
     private fun setupPageIndicators(count: Int) {
         binding.llPageIndicators.removeAllViews()
-        
+
         for (i in 0 until count) {
             val indicator = View(this).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -424,34 +433,34 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             binding.llPageIndicators.addView(indicator)
         }
     }
-    
+
     private fun updatePageIndicators(selectedIndex: Int) {
         for (i in 0 until binding.llPageIndicators.childCount) {
             binding.llPageIndicators.getChildAt(i).alpha = if (i == selectedIndex) 1.0f else 0.3f
         }
     }
-    
+
     private fun focusOnLeg(legIndex: Int) {
         if (!isMapReady || !::googleMap.isInitialized) {
             return
         }
-        
+
         selectedRoute?.let { route ->
             if (legIndex < route.legs.size) {
                 // Clear existing polylines and markers
                 routePolylines.forEach { it.remove() }
                 routePolylines.clear()
                 googleMap.clear()
-                
+
                 // Draw all route legs with different styles
                 var allLatLngPoints = mutableListOf<LatLng>()
-                
+
                 route.legs.forEachIndexed { index, leg ->
                     leg.routePoints?.let { points ->
                         if (points.size >= 2) {
                             val latLngPoints = points.map { LatLng(it.latitude, it.longitude) }
                             allLatLngPoints.addAll(latLngPoints)
-                            
+
                             val polyline = when {
                                 index < legIndex -> {
                                     // Previous legs - grey and thin
@@ -491,7 +500,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         }
                     }
                 }
-                
+
                 // Add markers for current leg
                 val currentLeg = route.legs[legIndex]
                 currentLeg.routePoints?.let { points ->
@@ -500,7 +509,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         addLegMarkers(currentLeg, latLngPoints.first(), latLngPoints.last())
                     }
                 }
-                
+
                 // Focus camera on current leg with padding for instruction card
                 currentLeg.routePoints?.let { points ->
                     if (points.size >= 2) {
@@ -508,33 +517,33 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         val boundsBuilder = LatLngBounds.Builder()
                         latLngPoints.forEach { boundsBuilder.include(it) }
                         val bounds = boundsBuilder.build()
-                        
+
                         // Adjust bounds to account for instruction card at bottom
                         val instructionCardHeightDp = 240f
                         val instructionCardHeightPx = instructionCardHeightDp * resources.displayMetrics.density
-                        
+
                         // Get screen dimensions
                         val displayMetrics = resources.displayMetrics
                         val screenHeight = displayMetrics.heightPixels
                         val screenWidth = displayMetrics.widthPixels
-                        
+
                         // Calculate effective map area (excluding instruction card)
                         val effectiveMapHeight = screenHeight - instructionCardHeightPx
                         val mapAspectRatio = screenWidth / effectiveMapHeight
-                        
+
                         // Expand bounds slightly to account for the bottom instruction card
                         val southwest = bounds.southwest
                         val northeast = bounds.northeast
                         val latSpan = northeast.latitude - southwest.latitude
                         val lngSpan = northeast.longitude - southwest.longitude
-                        
+
                         // Add extra space at the bottom by shifting the bounds up
                         val bottomPadding = latSpan * 0.3 // Add 30% more space at bottom
                         val adjustedBounds = LatLngBounds(
                             LatLng(southwest.latitude - bottomPadding, southwest.longitude),
                             northeast
                         )
-                        
+
                         try {
                             googleMap.animateCamera(
                                 CameraUpdateFactory.newLatLngBounds(adjustedBounds, 100)
@@ -551,33 +560,33 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun addLegMarkers(leg: RouteLeg, startPos: LatLng, endPos: LatLng) {
         if (!isMapReady || !::googleMap.isInitialized) {
             return
         }
-        
+
         // Add start marker
         val startTitle = when (leg.type.uppercase()) {
             "WALK" -> "Start walking"
             "BUS" -> leg.fromStopName ?: "Bus stop"
             else -> "Start"
         }
-        
+
         googleMap.addMarker(
             MarkerOptions()
                 .position(startPos)
                 .title(startTitle)
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
         )
-        
+
         // Add end marker
         val endTitle = when (leg.type.uppercase()) {
             "WALK" -> leg.toStopName ?: "Destination"
             "BUS" -> leg.toStopName ?: "Bus stop"
             else -> "End"
         }
-        
+
         googleMap.addMarker(
             MarkerOptions()
                 .position(endPos)
@@ -599,11 +608,11 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         }
                         return@launch
                     }
-                    
+
                     val username = userResponse.body()!!.username
                     val startLocation = intent.getStringExtra("start_location") ?: "Unknown Start"
                     val endLocation = intent.getStringExtra("end_location") ?: "Unknown End"
-                    
+
                     // Get coordinates from intent if available
                     val startCoordinates = if (intent.hasExtra("start_latitude") && intent.hasExtra("start_longitude")) {
                         com.example.core.model.Coordinates(
@@ -611,14 +620,14 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                             intent.getDoubleExtra("start_longitude", 0.0)
                         )
                     } else null
-                    
+
                     val endCoordinates = if (intent.hasExtra("end_latitude") && intent.hasExtra("end_longitude")) {
                         com.example.core.model.Coordinates(
                             intent.getDoubleExtra("end_latitude", 0.0),
                             intent.getDoubleExtra("end_longitude", 0.0)
                         )
                     } else null
-                    
+
                     val result = tripService.startTrip(
                         username = username,
                         startLocation = startLocation,
@@ -627,7 +636,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         endCoordinates = endCoordinates,
                         route = selectedRoute!!
                     )
-                    
+
                     withContext(Dispatchers.Main) {
                         result.fold(
                             onSuccess = { trip ->
@@ -653,7 +662,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun zoomIn() {
         if (!isMapReady || !::googleMap.isInitialized) return
         googleMap.animateCamera(CameraUpdateFactory.zoomIn())
-        
+
         // Add bounce animation to the button
         binding.fabZoomIn.animate()
             .scaleX(0.8f)
@@ -672,7 +681,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun zoomOut() {
         if (!isMapReady || !::googleMap.isInitialized) return
         googleMap.animateCamera(CameraUpdateFactory.zoomOut())
-        
+
         // Add bounce animation to the button
         binding.fabZoomOut.animate()
             .scaleX(0.8f)
@@ -699,7 +708,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                     return@launch
                 }
-                
+
                 val username = userResponse.body()!!.username
                 val result = tripService.getActiveTrip(username)
                 result.fold(
@@ -720,7 +729,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                             }
                         }
                     },
-                    onFailure = { 
+                    onFailure = {
                         withContext(Dispatchers.Main) {
                             handlePreviewMode()
                         }
@@ -733,7 +742,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun handlePreviewMode() {
         previewRoute?.let { route ->
             enterPreviewMode(route)
@@ -742,44 +751,48 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             hideInstructionCard()
         }
     }
-    
+
     private fun enterActiveMode(trip: Trip) {
         isActiveMode = true
         currentTrip = trip
         selectedRoute = trip.route
         currentLegIndex = trip.currentLegIndex
-        
+
         // Hide start button, show active mode buttons and instruction card
         binding.btnStartNavigation.visibility = View.GONE
         binding.llActiveButtons.visibility = View.VISIBLE
         showInstructionCard()
-        
+
         setupRouteDisplay()
-        startLocationTracking()
-        
+
+        // Start location tracking only if we have permissions
+        if (checkLocationPermissions()) {
+            startLocationTracking()
+        }
+
         // Start bus arrival monitoring
         busArrivalNotificationService.startBusArrivalMonitoring()
-        
+
         // Check bus arrivals immediately for current leg
         CoroutineScope(Dispatchers.IO).launch {
             busArrivalNotificationService.checkBusArrivalsForCurrentTrip()
         }
     }
-    
+
     private fun enterPreviewMode(route: Route) {
         isActiveMode = false
         selectedRoute = route
         currentLegIndex = 0
-        
+
         // Show start button, hide active mode buttons and show instruction card (inactive mode)
         binding.btnStartNavigation.visibility = View.VISIBLE
         binding.llActiveButtons.visibility = View.GONE
         showInstructionCard()
-        
+
         setupRouteDisplay()
         stopLocationTracking()
     }
-    
+
     private fun setupRouteDisplay() {
         selectedRoute?.let { route ->
             if (isActiveMode) {
@@ -790,46 +803,46 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             displayRoute()
         }
     }
-    
+
     private fun setupActiveMode() {
         // Show active mode layout with ViewPager
         binding.root.findViewById<View>(R.id.layout_active_mode).visibility = View.VISIBLE
         binding.root.findViewById<View>(R.id.layout_inactive_mode).visibility = View.GONE
-        
+
         selectedRoute?.let { route ->
             setupViewPager()
         }
     }
-    
+
     private fun setupInactiveMode() {
         // Show inactive mode layout with all directions
         binding.root.findViewById<View>(R.id.layout_active_mode).visibility = View.GONE
         binding.root.findViewById<View>(R.id.layout_inactive_mode).visibility = View.VISIBLE
-        
+
         selectedRoute?.let { route ->
             setupAllDirectionsView(route)
         }
     }
-    
+
     private fun setupAllDirectionsView(route: Route) {
         val directionsContainer = binding.root.findViewById<LinearLayout>(R.id.ll_all_directions)
         directionsContainer.removeAllViews()
-        
+
         route.legs.forEachIndexed { index, leg ->
             val stepView = layoutInflater.inflate(R.layout.item_direction_step, directionsContainer, false)
-            
+
             val stepNumber = stepView.findViewById<TextView>(R.id.tv_step_number)
             val direction = stepView.findViewById<TextView>(R.id.tv_direction)
             val details = stepView.findViewById<TextView>(R.id.tv_details)
             val serviceInfo = stepView.findViewById<TextView>(R.id.tv_service_info)
             val transportIcon = stepView.findViewById<ImageView>(R.id.iv_transport_icon)
-            
+
             stepNumber.text = (index + 1).toString()
-            
+
             when (leg.type.uppercase()) {
                 "WALK" -> {
-                    direction.text = if (index == 0) "Walk to ${leg.toStopName ?: "destination"}" 
-                                   else "Walk to ${leg.toStopName ?: "next location"}"
+                    direction.text = if (index == 0) "Walk to ${leg.toStopName ?: "destination"}"
+                    else "Walk to ${leg.toStopName ?: "next location"}"
                     details.text = "${leg.durationInMinutes} min walk"
                     transportIcon.setImageResource(R.drawable.ic_walk)
                     transportIcon.setColorFilter(ContextCompat.getColor(this, R.color.direction_straight))
@@ -850,9 +863,9 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     serviceInfo.visibility = View.GONE
                 }
             }
-            
+
             directionsContainer.addView(stepView)
-            
+
             // Add bus arrivals after walking legs that lead to bus stops
             if (leg.type.uppercase() == "WALK" && index + 1 < route.legs.size) {
                 val nextLeg = route.legs[index + 1]
@@ -864,11 +877,11 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun getBusServiceNumberForStop(route: Route, walkLegIndex: Int): String? {
         // If the current leg is WALK, get the service number from the next BUS leg
         val nextLegIndex = walkLegIndex + 1
-        
+
         // Make sure there's a next leg and it's a BUS
         if (nextLegIndex < route.legs.size) {
             val nextLeg = route.legs[nextLegIndex]
@@ -876,7 +889,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 return nextLeg.busServiceNumber
             }
         }
-        
+
         // If we can't find a bus leg, check if we need to look at the second leg
         // (in case the first leg is WALK and we're at index 0)
         if (walkLegIndex == 0 && route.legs.size > 1) {
@@ -885,21 +898,21 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 return secondLeg.busServiceNumber
             }
         }
-        
+
         // Fallback: no service number available
         return null
     }
-    
+
     private fun addBusArrivalsView(container: LinearLayout, busStopName: String, busServiceNumber: String?) {
         val busArrivalsView = layoutInflater.inflate(R.layout.item_bus_arrivals, container, false)
         val busServicesContainer = busArrivalsView.findViewById<LinearLayout>(R.id.ll_bus_services)
         val loadingIndicator = busArrivalsView.findViewById<ProgressBar>(R.id.pb_loading)
-        
+
         container.addView(busArrivalsView)
-        
+
         // Show loading indicator
         loadingIndicator.visibility = View.VISIBLE
-        
+
         // Fetch bus arrivals
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -920,10 +933,10 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun displayBusArrivals(container: LinearLayout, busArrivals: List<BusArrival>) {
         container.removeAllViews()
-        
+
         if (busArrivals.isEmpty()) {
             val noDataText = TextView(this).apply {
                 text = "No bus arrival data available"
@@ -933,30 +946,30 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             container.addView(noDataText)
             return
         }
-        
+
         busArrivals.forEach { busArrival ->
             val serviceView = layoutInflater.inflate(R.layout.item_bus_service, container, false)
-            
+
             val serviceName = serviceView.findViewById<TextView>(R.id.tv_service_name)
             val nextArrival = serviceView.findViewById<TextView>(R.id.tv_next_arrival)
             val followingArrivals = serviceView.findViewById<TextView>(R.id.tv_following_arrivals)
-            
+
             serviceName.text = busArrival.serviceName
-            
+
             if (busArrival.arrivals.isNotEmpty()) {
                 try {
                     val now = OffsetDateTime.now()
-                    
+
                     // Parse first arrival time - handle the timezone offset format
                     val firstArrival = OffsetDateTime.parse(busArrival.arrivals[0])
                     val minutesUntilArrival = ChronoUnit.MINUTES.between(now, firstArrival)
-                    
+
                     nextArrival.text = when {
                         minutesUntilArrival <= 0 -> "Now"
                         minutesUntilArrival == 1L -> "1 min"
                         else -> "${minutesUntilArrival} min"
                     }
-                    
+
                     // Show following arrivals (next 2-3)
                     if (busArrival.arrivals.size > 1) {
                         val followingTimes = busArrival.arrivals.drop(1).take(2).map { arrivalTime ->
@@ -968,7 +981,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     } else {
                         followingArrivals.visibility = View.GONE
                     }
-                    
+
                 } catch (e: Exception) {
                     nextArrival.text = "-- min"
                     followingArrivals.visibility = View.GONE
@@ -977,11 +990,11 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 nextArrival.text = "No data"
                 followingArrivals.visibility = View.GONE
             }
-            
+
             container.addView(serviceView)
         }
     }
-    
+
     private fun showBusArrivalsError(container: LinearLayout) {
         container.removeAllViews()
         val errorText = TextView(this).apply {
@@ -991,23 +1004,23 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         container.addView(errorText)
     }
-    
+
     private fun showBusArrivalsForActiveLeg(legIndex: Int) {
         selectedRoute?.let { route ->
             val activeBusArrivalsContainer = binding.root.findViewById<LinearLayout>(R.id.ll_active_bus_arrivals)
             activeBusArrivalsContainer.removeAllViews()
             activeBusArrivalsContainer.visibility = View.GONE
-            
+
             // Check if current leg is WALK and leads to a bus stop
             if (legIndex < route.legs.size) {
                 val currentLeg = route.legs[legIndex]
-                
+
                 if (currentLeg.type.uppercase() == "WALK" && legIndex + 1 < route.legs.size) {
                     val nextLeg = route.legs[legIndex + 1]
                     if (nextLeg.type.uppercase() == "BUS" && currentLeg.toStopName != null) {
                         // Get the correct bus service number
                         val serviceNumber = getBusServiceNumberForStop(route, legIndex)
-                        
+
                         activeBusArrivalsContainer.visibility = View.VISIBLE
                         addBusArrivalsViewToContainer(activeBusArrivalsContainer, currentLeg.toStopName!!, serviceNumber)
                     }
@@ -1015,17 +1028,17 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun addBusArrivalsViewToContainer(parentContainer: LinearLayout, busStopName: String, busServiceNumber: String?) {
         val busArrivalsView = layoutInflater.inflate(R.layout.item_bus_arrivals, parentContainer, false)
         val busServicesContainer = busArrivalsView.findViewById<LinearLayout>(R.id.ll_bus_services)
         val loadingIndicator = busArrivalsView.findViewById<ProgressBar>(R.id.pb_loading)
-        
+
         parentContainer.addView(busArrivalsView)
-        
+
         // Show loading indicator
         loadingIndicator.visibility = View.VISIBLE
-        
+
         // Fetch bus arrivals
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -1046,16 +1059,16 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun showInstructionCard() {
         binding.bottomControls.visibility = View.VISIBLE
     }
-    
+
     private fun hideInstructionCard() {
         binding.bottomControls.visibility = View.GONE
         binding.llActiveButtons.visibility = View.GONE
     }
-    
+
     private fun showEndJourneyWarning(activeTrip: Trip) {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Active Journey")
@@ -1069,7 +1082,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             .setCancelable(false)
             .show()
     }
-    
+
     private fun endCurrentTripAndStartNew(currentTrip: Trip) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -1088,7 +1101,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    
+
     private fun updateTripProgress(newLegIndex: Int) {
         if (isActiveMode) {
             currentTrip?.let { trip ->
@@ -1102,7 +1115,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                                     // Update the local trip object to reflect the new state
                                     currentTrip = updatedTrip
                                 }
-                                
+
                                 // Check bus arrivals for the new leg
                                 busArrivalNotificationService.checkBusArrivalsForCurrentTrip()
                             }
@@ -1114,11 +1127,11 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     private fun startLocationTracking() {
         if (isLocationUpdatesActive) return
-        
+
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.lastLocation?.let { location ->
@@ -1129,12 +1142,12 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
         }
-        
+
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             5000L // Update every 5 seconds
         ).build()
-        
+
         try {
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
@@ -1146,7 +1159,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             android.util.Log.e("MapsNavigation", "Location permission not granted", e)
         }
     }
-    
+
     private fun stopLocationTracking() {
         locationCallback?.let { callback ->
             fusedLocationClient.removeLocationUpdates(callback)
@@ -1154,14 +1167,14 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             isLocationUpdatesActive = false
         }
     }
-    
+
     private fun updateCurrentLocationMarker(location: Location) {
         if (!isMapReady || !::googleMap.isInitialized) {
             return
         }
-        
+
         val currentLatLng = LatLng(location.latitude, location.longitude)
-        
+
         // Update current location marker
         currentLocationMarker?.remove()
         currentLocationMarker = googleMap.addMarker(
@@ -1171,21 +1184,21 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
         )
     }
-    
+
     private fun checkLegProgression(currentLocation: Location) {
         selectedRoute?.let { route ->
             if (currentLegIndex < route.legs.size) {
                 val currentLeg = route.legs[currentLegIndex]
                 val endPoint = currentLeg.routePoints?.lastOrNull()
-                
+
                 endPoint?.let { legEndPoint ->
                     val legEndLocation = Location("").apply {
                         latitude = legEndPoint.latitude
                         longitude = legEndPoint.longitude
                     }
-                    
+
                     val distanceToEnd = currentLocation.distanceTo(legEndLocation)
-                    
+
                     // If within 50 meters of leg end, progress to next leg
                     if (distanceToEnd <= 50f) {
                         val nextLegIndex = currentLegIndex + 1
@@ -1194,7 +1207,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                             updateTripProgress(nextLegIndex)
                             binding.vpLegInstructions.setCurrentItem(nextLegIndex, true)
                             focusOnLeg(nextLegIndex)
-                            
+
                             Toast.makeText(this, "Progressing to next step", Toast.LENGTH_SHORT).show()
                         } else {
                             // Journey completed
@@ -1205,7 +1218,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun completeJourney() {
         currentTrip?.let { trip ->
             CoroutineScope(Dispatchers.IO).launch {
@@ -1252,12 +1265,12 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             finish()
         }
     }
-    
+
     private fun simulateNextLeg() {
         selectedRoute?.let { route ->
             if (isActiveMode && currentTrip != null) {
                 val nextLegIndex = currentLegIndex + 1
-                
+
                 if (nextLegIndex < route.legs.size) {
                     // Move to next leg
                     currentLegIndex = nextLegIndex
@@ -1265,7 +1278,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                     binding.vpLegInstructions.setCurrentItem(nextLegIndex, true)
                     focusOnLeg(nextLegIndex)
                     showBusArrivalsForActiveLeg(nextLegIndex)
-                    
+
                     Toast.makeText(this, "Simulated progress to leg ${nextLegIndex + 1}", Toast.LENGTH_SHORT).show()
                 } else {
                     // Journey completed
@@ -1274,7 +1287,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun simulateJourneyCompletion() {
         currentTrip?.let { trip ->
             CoroutineScope(Dispatchers.IO).launch {
@@ -1295,32 +1308,32 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun showTripCompletionDialog() {
         val dialog = Dialog(this)
         dialog.setContentView(R.layout.dialog_trip_completed)
         dialog.setCancelable(false)
-        
+
         val backToHomeButton = dialog.findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_back_to_home)
         backToHomeButton.setOnClickListener {
             dialog.dismiss()
             navigateToHome()
         }
-        
+
         dialog.show()
     }
-    
+
     private fun navigateToHome() {
         // Navigate back to the main activity (home)
         val intent = Intent().apply {
             // Set flags to clear the task and start fresh
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        
+
         // Finish this activity and let the back navigation handle returning to home
         finish()
     }
-    
+
     private fun showEndTripConfirmation() {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("End Trip")
@@ -1331,7 +1344,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             .setNegativeButton("Cancel", null)
             .show()
     }
-    
+
     private fun endCurrentTrip() {
         currentTrip?.let { trip ->
             CoroutineScope(Dispatchers.IO).launch {
@@ -1342,7 +1355,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
                         busArrivalNotificationService.stopBusArrivalMonitoring()
                         binding.llActiveButtons.visibility = View.GONE
                         Toast.makeText(this@MapsNavigationActivity, "Trip ended", Toast.LENGTH_SHORT).show()
-                        
+
                         // Show completion dialog or just finish
                         showTripEndedDialog()
                     }
@@ -1357,7 +1370,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-    
+
     private fun showTripEndedDialog() {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Trip Ended")
@@ -1368,7 +1381,7 @@ class MapsNavigationActivity : AppCompatActivity(), OnMapReadyCallback {
             .setCancelable(false)
             .show()
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         stopLocationTracking()
