@@ -20,7 +20,7 @@ jobs:
         id: validate
         run: |
           case "${{ inputs.folder }}" in
-            next-frontend|spring-backend|android-kotlin|llm-backend)
+            next-frontend|spring-backend)
               echo "folder=${{ inputs.folder }}" >> "$GITHUB_OUTPUT"
               ;;
             *)
@@ -132,8 +132,7 @@ jobs:
   # Consolidated reporting job
   report-summary:
     if: always()
-    needs:
-      [validate, next-frontend, spring-backend, android-kotlin, llm-backend]
+    needs: [validate, next-frontend, spring-backend]
     runs-on: ubuntu-latest
     steps:
       - name: 📋 Build Summary
