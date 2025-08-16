@@ -1,7 +1,7 @@
 name: Push CD Pipeline
 on:
   push:
-    branches: [main, dev, staging, fix/**, test/**, feature/**]
+    branches: [main, dev, staging]
 
 permissions:
   contents: read
