@@ -25,22 +25,18 @@ jobs:
         with:
           base: dev
           filters: |
-            android-kotlin: android-kotlin/**
             spring-backend: spring-backend/**
-            llm-backend: llm-backend/**
             next-frontend: next-frontend/**
 
       - id: set-matrix
         run: |
           folders=()
-          if [ "${{ steps.filter.outputs.android-kotlin }}" = "true" ]; then folders+=("android-kotlin"); fi
           if [ "${{ steps.filter.outputs.spring-backend }}" = "true" ]; then folders+=("spring-backend"); fi
-          if [ "${{ steps.filter.outputs.llm-backend }}" = "true" ]; then folders+=("llm-backend"); fi
           if [ "${{ steps.filter.outputs.next-frontend }}" = "true" ]; then folders+=("next-frontend"); fi
 
           # If FORCE_ALL is true and no folders found, include all folders
           if [ "${FORCE_ALL}" = "true" ] && [ ${#folders[@]} -eq 0 ]; then
-            folders=("android-kotlin" "spring-backend" "llm-backend" "next-frontend")
+            folders=("spring-backend" "next-frontend")
           fi
 
           # Convert bash array to JSON array string
