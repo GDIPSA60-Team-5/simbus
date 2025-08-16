@@ -62,7 +62,7 @@ const validateAndSetUser = async (token: string, setUser: (user: User | null) =>
 
   try {
     // Fetch user details including userType
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_UR;
     const response = await fetch(`${backendUrl}/api/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
