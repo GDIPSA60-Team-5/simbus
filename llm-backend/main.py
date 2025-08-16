@@ -1,3 +1,4 @@
+import jwt
 from typing import Union
 from fastapi import FastAPI, Header, HTTPException
 from llm.model import get_model, predict_intent
@@ -36,9 +37,14 @@ def chat_endpoint(request: ChatRequest, authorization: str = Header(None)):
 
     jwt_token = authorization
     print(f"Incoming JWT_Token: {jwt_token}")
+    
+    # Extract username from jwt token
+    payload = jwt.decode((jwt_token.split(" ")[1]), options={"verify_signature": False})
+    print(f"JWT Payload: {payload}")
+    user_name = payload.get("sub")
+    
     user_input = request.userInput.strip()
     current_location = request.currentLocation
-    user_name = "user"  # Replace with session or actual user name
 
     ctx = get_user_context(user_name)
     ctx["current_location"] = current_location
