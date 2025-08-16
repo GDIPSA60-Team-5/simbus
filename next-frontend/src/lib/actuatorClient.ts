@@ -41,7 +41,7 @@ class ActuatorClient {
 
   async getMetric(metricName: string, tags?: Record<string, string>): Promise<ActuatorMetric> {
     let url = `${this.baseUrl}/actuator/metrics/${metricName}`;
-    
+
     if (tags) {
       const tagParams = Object.entries(tags)
         .map(([key, value]) => `tag=${key}:${value}`)
@@ -114,7 +114,7 @@ class ActuatorClient {
     const tags: Record<string, string> = {};
     if (status) tags.status = status;
     if (method) tags.method = method;
-    
+
     return this.getCurrentValue('http.server.requests', 'COUNT', tags);
   }
 
@@ -129,5 +129,5 @@ class ActuatorClient {
 
 // Create singleton instance
 export const actuatorClient = new ActuatorClient(
-  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+  process.env.NEXT_PUBLIC_BACKEND_URL || '/'
 );

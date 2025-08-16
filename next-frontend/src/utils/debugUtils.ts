@@ -1,20 +1,20 @@
 // Debugging utilities for development
 
 export const testBackendConnection = async () => {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '/';
   const testUrls = [
-    `${backendUrl}/stats`,
-    `${backendUrl}/user/feedbacks`,
+    `${backendUrl}api/stats`,
+    `${backendUrl}api/user/feedbacks`,
     'http://localhost:8080/api/stats',
     'http://localhost:8080/stats'
   ];
 
   console.log('🔍 Testing backend connections...');
-  
+
   for (const url of testUrls) {
     try {
       console.log(`📡 Testing: ${url}`);
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -22,9 +22,9 @@ export const testBackendConnection = async () => {
           'Authorization': `Bearer ${localStorage.getItem('authToken') || 'no-token'}`
         }
       });
-      
+
       console.log(`📊 ${url}: ${response.status} ${response.statusText}`);
-      
+
       if (response.status === 200) {
         try {
           const data = await response.json();
@@ -46,12 +46,12 @@ export const debugAuthToken = () => {
   const token = localStorage.getItem('authToken');
   console.log('🔑 Auth Token Debug:');
   console.log('Token exists:', !!token);
-  
+
   if (token) {
     try {
       const parts = token.split('.');
       console.log('Token parts count:', parts.length);
-      
+
       if (parts.length === 3) {
         const payload = JSON.parse(atob(parts[1]));
         console.log('Token payload:', payload);

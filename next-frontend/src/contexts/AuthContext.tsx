@@ -62,8 +62,8 @@ const validateAndSetUser = async (token: string, setUser: (user: User | null) =>
 
   try {
     // Fetch user details including userType
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_UR;
-    const response = await fetch(`${backendUrl}/api/auth/me`, {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '/';
+    const response = await fetch(`${backendUrl}api/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -184,9 +184,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [user?.token, logout]);
 
   const login = useCallback(async (username: string, password: string): Promise<void> => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || '/';
 
-    const response = await fetch(`${backendUrl}/api/admin/login`, {
+    const response = await fetch(`${backendUrl}api/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
