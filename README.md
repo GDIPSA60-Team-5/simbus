@@ -11,11 +11,11 @@
 
 1. **Android App** (`android-kotlin/local.properties`):
    - Check `MAPS_API_KEY` for Google Maps integration
-   - **Update `ONEMAP_API_TOKEN`** - the provided token expires in 3 days
 
 2. **Spring Backend**:
    - Check `spring-backend/application.properties` for database and API configurations
    - Check `spring-backend/.env` for environment-specific variables
+   - **Update `ONEMAP_API_TOKEN`** - the provided token expires in 3 days
 
 3. **Next.js Frontend** (`next-frontend/.env.local`):
    - Update backend URLs if running on different ports/hosts
