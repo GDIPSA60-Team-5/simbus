@@ -61,7 +61,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: GDIPSA60-Team-5/simbus
+          slug: GDIPSA60-Team-5/nimbus
           flags: frontend
 
       - name: Check if test results exist
@@ -158,4 +158,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Coverage Reports Available" >> $GITHUB_STEP_SUMMARY
           echo "- 📈 **JaCoCo HTML Report**: Download from [Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)" >> $GITHUB_STEP_SUMMARY
-          echo "- 📊 **Codecov Dashboard**: [View Online Coverage](https://codecov.io/gh/GDIPSA60-Team-5/simbus)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Codecov Dashboard**: [View Online Coverage](https://codecov.io/gh/GDIPSA60-Team-5/nimbus)" >> $GITHUB_STEP_SUMMARY
