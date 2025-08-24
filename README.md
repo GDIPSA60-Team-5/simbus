@@ -197,7 +197,6 @@ This project is developed for educational purposes as part of the NUS GdipSA60 p
 - **Land Transport Authority (LTA)** for real-time transport data
 - **Firebase** for authentication and push notification services
 - **Google Maps Platform** for mapping and location services
-- **OpenAI** for AI model inspiration and techniques
 
 ---
 
