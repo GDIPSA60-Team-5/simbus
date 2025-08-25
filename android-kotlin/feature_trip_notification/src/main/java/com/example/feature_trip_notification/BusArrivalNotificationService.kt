@@ -31,7 +31,7 @@ class BusArrivalNotificationService @Inject constructor(
     
     companion object {
         private const val WORK_NAME = "bus_arrival_monitoring"
-        private const val CHECK_INTERVAL_MINUTES = 1L // Check every 2 minutes
+        private const val CHECK_INTERVAL_MINUTES = 1L // Check every minute
         private const val NOTIFICATION_THRESHOLD_MINUTES = 5L // Notify when bus is ≤ 5 minutes away
     }
     
@@ -184,29 +184,46 @@ class BusArrivalNotificationService @Inject constructor(
             
             try {
                 val now = OffsetDateTime.now()
-                val firstArrival = OffsetDateTime.parse(relevantArrival.arrivals[0])
-                val minutesUntilArrival = ChronoUnit.MINUTES.between(now, firstArrival)
+                val arrivalTimes = mutableListOf<String>()
+                var shouldNotify = false
                 
-                // Send notification if bus is arriving soon
-                if (minutesUntilArrival in 1..NOTIFICATION_THRESHOLD_MINUTES) {
+                // Process up to 3 arrivals
+                val arrivalsToProcess = relevantArrival.arrivals.take(3)
+                
+                for (arrivalTimeStr in arrivalsToProcess) {
+                    val arrivalTime = OffsetDateTime.parse(arrivalTimeStr)
+                    val minutesUntilArrival = ChronoUnit.MINUTES.between(now, arrivalTime)
+                    
                     val arrivalText = when {
                         minutesUntilArrival <= 0 -> "Now"
-                        minutesUntilArrival == 1L -> "1 min"
-                        else -> "${minutesUntilArrival} min"
+                        minutesUntilArrival == 1L -> "1min"
+                        else -> "${minutesUntilArrival}mins"
                     }
                     
+                    arrivalTimes.add(arrivalText)
+                    
+                    // Check if we should notify (if any bus is within threshold)
+                    if (minutesUntilArrival in 1..NOTIFICATION_THRESHOLD_MINUTES) {
+                        shouldNotify = true
+                    }
+                }
+                
+                // Send notification if any bus is arriving soon
+                if (shouldNotify && arrivalTimes.isNotEmpty()) {
+                    val arrivalTimesText = arrivalTimes.joinToString(", ")
+                    
                     // Create unique key to prevent duplicate notifications
-                    val notificationKey = "${targetService}_${busStopName}_${minutesUntilArrival}"
+                    val notificationKey = "${targetService}_${busStopName}_${arrivalTimesText}"
                     val currentTime = System.currentTimeMillis()
                     
-                    // Only send notification if it's different from last one or enough time has passed (5+ minutes)
+                    // Only send notification if it's different from last one or enough time has passed (using CHECK_INTERVAL timing)
                     if (lastNotificationKey != notificationKey || 
-                        (currentTime - lastNotificationTime) > (5 * 60 * 1000)) {
+                        (currentTime - lastNotificationTime) > (CHECK_INTERVAL_MINUTES * 60 * 1000)) {
                         
                         tripNotificationManager.showBusArrivalNotification(
                             busService = targetService,
                             busStop = busStopName,
-                            arrivalTime = arrivalText
+                            arrivalTime = arrivalTimesText
                         )
                         
                         lastNotificationKey = notificationKey

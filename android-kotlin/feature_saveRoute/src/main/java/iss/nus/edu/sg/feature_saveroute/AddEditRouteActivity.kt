@@ -112,17 +112,6 @@ class AddEditRouteActivity : AppCompatActivity() {
         }
 
         binding.StartTimeEdit.setOnClickListener { showStartTimeClock() }
-        binding.ArrivalTimeEdit.setOnClickListener { showArrivalTimeClock() }
-        val numbers = (1..10).map { it.toString() }.toTypedArray()
-        binding.NotfiEdit.setOnClickListener {
-            AlertDialog.Builder(this)
-            .setTitle("Select a number")
-            .setItems(numbers){_,which->
-                binding.NotfiEdit.setText(numbers[which])
-                updateSummary()
-            }
-            .show()
-        }
 
 
     }
@@ -163,8 +152,6 @@ class AddEditRouteActivity : AppCompatActivity() {
         if (hasError) return
 
         val notifyAt = binding.StartTimeEdit.text?.toString() ?: ""
-        val arrivalTime = binding.ArrivalTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
-        val reminderOffset = binding.NotfiEdit.text?.toString()?.toIntOrNull()
         
         // Collect selected recurrence days
         val recurrenceDays = mutableListOf<String>()
@@ -184,8 +171,8 @@ class AddEditRouteActivity : AppCompatActivity() {
                     val updateRequest = UpdateCommutePlanRequest(
                         commutePlanName = commutePlanName,
                         notifyAt = notifyAt,
-                        arrivalTime = arrivalTime,
-                        reminderOffsetMin = reminderOffset,
+                        arrivalTime = null,
+                        reminderOffsetMin = null,
                         recurrence = hasRecurrence,
                         startLocationId = fromLocationId,
                         endLocationId = toLocationId,
@@ -209,8 +196,8 @@ class AddEditRouteActivity : AppCompatActivity() {
                                         val updateWithRoute = UpdateCommutePlanRequest(
                                             commutePlanName = updatedPlan.commutePlanName,
                                             notifyAt = updatedPlan.notifyAt,
-                                            arrivalTime = updatedPlan.arrivalTime,
-                                            reminderOffsetMin = updatedPlan.reminderOffsetMin,
+                                            arrivalTime = null,
+                                            reminderOffsetMin = null,
                                             recurrence = updatedPlan.recurrence,
                                             startLocationId = updatedPlan.startLocationId,
                                             endLocationId = updatedPlan.endLocationId,
@@ -234,8 +221,8 @@ class AddEditRouteActivity : AppCompatActivity() {
                     val createRequest = CreateCommutePlanRequest(
                         commutePlanName = commutePlanName,
                         notifyAt = notifyAt,
-                        arrivalTime = arrivalTime,
-                        reminderOffsetMin = reminderOffset,
+                        arrivalTime = null,
+                        reminderOffsetMin = null,
                         recurrence = hasRecurrence,
                         startLocationId = fromLocationId!!,
                         endLocationId = toLocationId!!,
@@ -259,8 +246,8 @@ class AddEditRouteActivity : AppCompatActivity() {
                                         val updateWithRoute = UpdateCommutePlanRequest(
                                             commutePlanName = newPlan.commutePlanName,
                                             notifyAt = newPlan.notifyAt,
-                                            arrivalTime = newPlan.arrivalTime,
-                                            reminderOffsetMin = newPlan.reminderOffsetMin,
+                                            arrivalTime = null,
+                                            reminderOffsetMin = null,
                                             recurrence = newPlan.recurrence,
                                             startLocationId = newPlan.startLocationId,
                                             endLocationId = newPlan.endLocationId,
@@ -326,8 +313,6 @@ class AddEditRouteActivity : AppCompatActivity() {
             binding.FromEdit.setText(startLocation?.locationName ?: "")
             binding.ToEdit.setText(endLocation?.locationName ?: "")
             binding.StartTimeEdit.setText(commutePlan.notifyAt)
-            binding.ArrivalTimeEdit.setText(commutePlan.arrivalTime ?: "")
-            binding.NotfiEdit.setText(commutePlan.reminderOffsetMin?.toString() ?: "")
             
             // Set recurrence day checkboxes
             commutePlan.commuteRecurrenceDayIds?.let { days ->
@@ -359,18 +344,6 @@ class AddEditRouteActivity : AppCompatActivity() {
         }
     }
 
-    private fun showArrivalTimeClock() {
-        val picker = MaterialTimePicker.Builder()
-            .setTimeFormat(TimeFormat.CLOCK_12H)
-            .setHour(12).setMinute(0)
-            .setTitleText("Select Arrival Time").build()
-
-        picker.show(supportFragmentManager, "arrivalTimePicker")
-        picker.addOnPositiveButtonClickListener {
-            val formattedTime = String.format("%02d:%02d", picker.hour, picker.minute)
-            binding.ArrivalTimeEdit.setText(formattedTime)
-        }
-    }
 
     private fun loadUserLocations() {
         lifecycleScope.launch {
@@ -438,7 +411,6 @@ class AddEditRouteActivity : AppCompatActivity() {
         }
         
         val startTime = binding.StartTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
-        val arrivalTime = binding.ArrivalTimeEdit.text?.toString()?.takeIf { it.isNotBlank() }
         
         val routingRequest = RoutingRequest(
             startCoordinates = "${fromLocation.latitude},${fromLocation.longitude}",
@@ -446,7 +418,7 @@ class AddEditRouteActivity : AppCompatActivity() {
             startLocation = fromLocation.locationName,
             endLocation = toLocation.locationName,
             startTime = startTime,
-            arrivalTime = arrivalTime
+            arrivalTime = null
         )
         
         lifecycleScope.launch {
@@ -502,7 +474,6 @@ class AddEditRouteActivity : AppCompatActivity() {
 
     private fun updateSummary() {
         val start = binding.StartTimeEdit.text?.toString()?.trim().orEmpty()
-        val notif = binding.NotfiEdit.text?.toString()?.trim().orEmpty()
     }
 
 }

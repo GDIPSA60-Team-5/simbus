@@ -1,357 +1,402 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/main_bg"
-    android:fillViewport="true">
+    android:background="@drawable/main_bg">
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="24dp">
+    <!-- Scrollable form content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingBottom="160dp"> <!-- space for FABs -->
 
-    <TextView
-        android:id="@+id/RoutePageTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Add Route"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilFrom"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:hint="From Location"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/RoutePageTitle"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-
-        <AutoCompleteTextView
-            android:id="@+id/FromEdit"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilTo"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="To Location"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tilFrom"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-
-        <AutoCompleteTextView
-            android:id="@+id/ToEdit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnGetRoutes"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Get Route Options"
-        android:textAllCaps="false"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tilTo" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/routeOptionsContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnGetRoutes">
-
-        <TextView
-            android:id="@+id/tvRouteOptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Select a Route"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerRouteOptions"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvRouteOptions" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/selectedRouteCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:visibility="gone"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/routeOptionsContainer">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="24dp">
 
             <TextView
+                android:id="@+id/RoutePageTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Selected Route"
+                android:layout_marginTop="16dp"
+                android:text="Add Route"
+                android:textColor="@color/black"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:textSize="16sp" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
 
+            <!-- From Location -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilFrom"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:hint="From Location"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="@color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintTextColor="@color/gray"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/RoutePageTitle">
+
+                <AutoCompleteTextView
+                    android:id="@+id/FromEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/text_input_background"
+                    android:inputType="none"
+                    android:padding="16dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- To Location -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilTo"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="To Location"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="@color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintTextColor="@color/gray"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilFrom">
+
+                <AutoCompleteTextView
+                    android:id="@+id/ToEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/text_input_background"
+                    android:inputType="none"
+                    android:padding="16dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Get Routes Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnGetRoutes"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/btn_bg_dark"
+                app:backgroundTint="@null"
+                android:text="Get Route Options"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:elevation="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilTo"
+                app:rippleColor="#33FFFFFF"/>
+
+            <!-- Route Options -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/routeOptionsContainer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/btnGetRoutes">
+
+                <TextView
+                    android:id="@+id/tvRouteOptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select a Route"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerRouteOptions"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvRouteOptions"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Selected Route Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/selectedRouteCard"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/routeOptionsContainer">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selected Route"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/routeDuration"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="25 min"
+                        android:textSize="14sp"/>
+
+                    <TextView
+                        android:id="@+id/routeSummary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Route summary"
+                        android:textColor="@color/gray"
+                        android:textSize="12sp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Start Time -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilStartTime"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="Start Time"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="@color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:hintTextColor="@color/gray"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/selectedRouteCard">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/StartTimeEdit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/text_input_background"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:padding="16dp"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Days Frequency -->
             <TextView
-                android:id="@+id/routeDuration"
+                android:id="@+id/DaysFrequencyText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="25 min"
-                android:textSize="14sp" />
+                android:layout_marginTop="24dp"
+                android:text="Select Days"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tilStartTime"/>
+
+            <LinearLayout
+                android:id="@+id/FrequencyLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/DaysFrequencyText">
+
+                <!-- Day CheckBoxes -->
+                <CheckBox 
+                    android:id="@+id/MonCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="M"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <CheckBox 
+                    android:id="@+id/TuesCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="T"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <CheckBox 
+                    android:id="@+id/WedCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="W"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <CheckBox 
+                    android:id="@+id/ThursCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="T"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <CheckBox 
+                    android:id="@+id/FriCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="F"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <CheckBox 
+                    android:id="@+id/SatCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="S"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                    
+                <CheckBox 
+                    android:id="@+id/SunCheck"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_margin="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/day_toggle_glass_selector"
+                    android:button="@null"
+                    android:gravity="center"
+                    android:text="S"
+                    android:textColor="@color/day_toggle_text_selector"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/routeSummary"
+                android:id="@+id/frequencyError"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Route summary"
-                android:textSize="12sp"
-                android:textColor="@color/gray" />
+                android:layout_marginTop="8dp"
+                android:text="Please select at least one day"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/FrequencyLayout"/>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 
-    </com.google.android.material.card.MaterialCardView>
-
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilStartTime"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:hint="Start Time"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/selectedRouteCard"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/StartTimeEdit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusable="false"
-            android:clickable="true"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilArrivalTime"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Arrival Time (Optional)"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tilStartTime"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/ArrivalTimeEdit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusable="false"
-            android:clickable="true"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilNotifications"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="Notification Count"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tilArrivalTime"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/NotfiEdit"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusable="false"
-            android:clickable="true"
-            android:inputType="none" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <TextView
-        android:id="@+id/notifupdate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="test"
-        android:visibility="gone"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tilNotifications"
-        app:layout_constraintStart_toStartOf="parent" />
-
-
-
-    <TextView
-        android:id="@+id/DaysFrequencyText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select Days"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/notifupdate"
-        app:layout_constraintStart_toStartOf="parent" />
-
+    <!-- FAB container at the bottom -->
     <LinearLayout
-        android:id="@+id/FrequencyLayout"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
         android:orientation="horizontal"
-        android:layout_marginTop="12dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/DaysFrequencyText">
+        android:paddingBottom="50dp"
+        android:gravity="center"
+        android:spacing="16dp"> <!-- optional spacing -->
 
-        <CheckBox
-            android:id="@+id/MonCheck"
-            android:text="M"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
-        <CheckBox
-            android:id="@+id/TuesCheck"
-            android:text="T"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
-        <CheckBox
-            android:id="@+id/WedCheck"
-            android:text="W"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
-        <CheckBox
-            android:id="@+id/ThursCheck"
-            android:text="T"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
-        <CheckBox
-            android:id="@+id/FriCheck"
-            android:text="F"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
-        <CheckBox
-            android:id="@+id/SatCheck"
-            android:text="S"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
-        <CheckBox
-            android:id="@+id/SunCheck"
-            android:text="S"
-            style="@style/DayToggle"
-            android:layout_margin="4dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/RouteCancelButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginEnd="16dp"
+            app:backgroundTint="@android:color/black"
+            app:fabCustomSize="80dp"
+            app:maxImageSize="64dp"
+            app:shapeAppearanceOverlay="@style/CircleShape"
+            app:srcCompat="@drawable/outline_close_24"
+            app:tint="@android:color/white"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/RouteSaveButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="16dp"
+            app:backgroundTint="#C4713C"
+            app:fabCustomSize="80dp"
+            app:maxImageSize="64dp"
+            app:shapeAppearanceOverlay="@style/CircleShape"
+            app:srcCompat="@drawable/outline_check_24"
+            app:tint="@android:color/white"/>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/frequencyError"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/holo_red_dark"
-        android:visibility="gone"
-        android:text="Please select at least one day"
-        android:layout_marginTop="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/FrequencyLayout" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/centerGuideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/RouteCancelButton"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        app:fabCustomSize="80dp"
-        app:maxImageSize="64dp"
-        app:srcCompat="@drawable/outline_close_24"
-        app:tint="@android:color/white"
-        app:backgroundTint="@android:color/black"
-        app:layout_constraintEnd_toStartOf="@id/centerGuideline"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="50dp"
-        app:shapeAppearanceOverlay="@style/CircleShape" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/RouteSaveButton"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        app:fabCustomSize="80dp"
-        app:maxImageSize="64dp"
-        app:srcCompat="@drawable/outline_check_24"
-        app:tint="@android:color/white"
-        app:backgroundTint="#C4713C"
-        app:layout_constraintStart_toEndOf="@id/centerGuideline"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginStart="32dp"
-        android:layout_marginBottom="50dp"
-        app:shapeAppearanceOverlay="@style/CircleShape" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
