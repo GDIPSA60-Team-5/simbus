@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- when checked: dark glass circle -->
+    <item android:state_checked="true">
+        <shape android:shape="oval">
+            <solid android:color="#E6000000" />
+            <stroke android:width="1dp" android:color="#33FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- when unchecked: light glass circle -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#66FFFFFF" />
+            <stroke android:width="1dp" android:color="#33000000" />
+        </shape>
+    </item>
+</selector>
